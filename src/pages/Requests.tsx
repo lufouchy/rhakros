@@ -47,6 +47,7 @@ interface AdjustmentRequest {
   reason: string;
   status: RequestStatus;
   created_at: string;
+  userName?: string;
 }
 
 const recordTypeLabels: Record<RecordType, string> = {
@@ -98,7 +99,23 @@ const Requests = () => {
     const { data, error } = await query;
 
     if (!error && data) {
-      setRequests(data as AdjustmentRequest[]);
+      // Fetch user names for admin view
+      if (isAdmin) {
+        const userIds = [...new Set(data.map((r) => r.user_id))];
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('user_id, full_name')
+          .in('user_id', userIds);
+        
+        const profileMap = new Map(profiles?.map((p) => [p.user_id, p.full_name]) || []);
+        
+        setRequests(data.map((r) => ({
+          ...r,
+          userName: profileMap.get(r.user_id) || 'Usuário',
+        })) as AdjustmentRequest[]);
+      } else {
+        setRequests(data as AdjustmentRequest[]);
+      }
     }
     
     setLoading(false);
@@ -323,9 +340,9 @@ const Requests = () => {
                               ? 'Atestado Médico'
                               : 'Ajuste de Ponto'}
                           </h3>
-                          {isAdmin && request.profiles && (
+                          {isAdmin && request.userName && (
                             <p className="text-sm text-muted-foreground">
-                              {request.profiles.full_name}
+                              {request.userName}
                             </p>
                           )}
                         </div>
