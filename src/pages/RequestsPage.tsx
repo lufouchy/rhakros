@@ -1,12 +1,11 @@
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import AppLayout from '@/components/layout/AppLayout';
-import EmployeeDashboard from './EmployeeDashboard';
-import AdminDashboard from './AdminDashboard';
+import Requests from './Requests';
 import { Loader2 } from 'lucide-react';
 
-const Index = () => {
-  const { user, userRole, loading } = useAuth();
+const RequestsPage = () => {
+  const { user, loading } = useAuth();
 
   if (loading) {
     return (
@@ -22,9 +21,9 @@ const Index = () => {
 
   return (
     <AppLayout>
-      {userRole === 'admin' ? <AdminDashboard /> : <EmployeeDashboard />}
+      <Requests />
     </AppLayout>
   );
 };
 
-export default Index;
+export default RequestsPage;
