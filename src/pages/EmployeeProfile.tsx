@@ -34,6 +34,8 @@ interface ProfileData {
   address_neighborhood: string | null;
   address_city: string | null;
   address_state: string | null;
+  sector: string | null;
+  position: string | null;
   work_schedule_id: string | null;
 }
 
@@ -199,6 +201,22 @@ const EmployeeProfile = () => {
                     ? format(parseISO(profileData.hire_date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })
                     : '---'}
                 </p>
+              </div>
+
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Briefcase className="h-4 w-4" />
+                  Setor/Departamento
+                </div>
+                <p className="font-medium">{profileData?.sector || '---'}</p>
+              </div>
+
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Briefcase className="h-4 w-4" />
+                  Cargo
+                </div>
+                <p className="font-medium">{profileData?.position || '---'}</p>
               </div>
             </div>
 

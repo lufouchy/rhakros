@@ -43,6 +43,8 @@ interface EmployeeForm {
   address_neighborhood: string;
   address_city: string;
   address_state: string;
+  sector: string;
+  position: string;
   work_schedule_id: string;
   password: string;
 }
@@ -75,6 +77,8 @@ const EmployeeRegistration = () => {
     address_neighborhood: '',
     address_city: '',
     address_state: '',
+    sector: '',
+    position: '',
     work_schedule_id: '',
     password: '',
   });
@@ -229,6 +233,8 @@ const EmployeeRegistration = () => {
             address_neighborhood: form.address_neighborhood || null,
             address_city: form.address_city || null,
             address_state: form.address_state || null,
+            sector: form.sector || null,
+            position: form.position || null,
             work_schedule_id: form.work_schedule_id || null,
           } as any)
           .eq('user_id', authData.user.id);
@@ -257,6 +263,8 @@ const EmployeeRegistration = () => {
         address_neighborhood: '',
         address_city: '',
         address_state: '',
+        sector: '',
+        position: '',
         work_schedule_id: '',
         password: '',
       });
@@ -452,6 +460,32 @@ const EmployeeRegistration = () => {
                   readOnly
                   className="bg-muted/50"
                   maxLength={2}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Professional Data */}
+          <div className="space-y-4 border-t pt-4">
+            <h3 className="font-medium text-sm text-muted-foreground">Dados Profissionais</h3>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="sector">Setor/Departamento</Label>
+                <Input
+                  id="sector"
+                  placeholder="Ex: Administrativo, TI, RH..."
+                  value={form.sector}
+                  onChange={(e) => setForm(prev => ({ ...prev, sector: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="position">Cargo</Label>
+                <Input
+                  id="position"
+                  placeholder="Ex: Analista, Gerente, Assistente..."
+                  value={form.position}
+                  onChange={(e) => setForm(prev => ({ ...prev, position: e.target.value }))}
                 />
               </div>
             </div>

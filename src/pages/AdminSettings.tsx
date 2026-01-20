@@ -3,9 +3,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import SidebarLayout from '@/components/layout/SidebarLayout';
 import LocationSettings from '@/components/admin/LocationSettings';
 import EmployeeRegistration from '@/components/admin/EmployeeRegistration';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import WorkScheduleManagement from '@/components/admin/WorkScheduleManagement';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Settings, UserPlus, MapPin, Clock, Loader2 } from 'lucide-react';
+import { Settings, MapPin, Clock, Loader2 } from 'lucide-react';
 
 const AdminSettings = () => {
   const { user, userRole, loading } = useAuth();
@@ -40,37 +40,24 @@ const AdminSettings = () => {
           <EmployeeRegistration />
         </div>
 
-        <Tabs defaultValue="location" className="space-y-6">
+        <Tabs defaultValue="schedules" className="space-y-6">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="location" className="flex items-center gap-2">
-              <MapPin className="h-4 w-4" />
-              Localização
-            </TabsTrigger>
             <TabsTrigger value="schedules" className="flex items-center gap-2">
               <Clock className="h-4 w-4" />
               Jornadas
             </TabsTrigger>
+            <TabsTrigger value="location" className="flex items-center gap-2">
+              <MapPin className="h-4 w-4" />
+              Localização
+            </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="schedules">
+            <WorkScheduleManagement />
+          </TabsContent>
 
           <TabsContent value="location">
             <LocationSettings />
-          </TabsContent>
-
-          <TabsContent value="schedules">
-            <Card className="border-0 shadow-md">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Clock className="h-5 w-5 text-primary" />
-                  Gerenciar Jornadas de Trabalho
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground text-sm">
-                  As jornadas de trabalho podem ser gerenciadas diretamente ao cadastrar um novo colaborador
-                  ou no painel de Gestão de Jornada.
-                </p>
-              </CardContent>
-            </Card>
           </TabsContent>
         </Tabs>
       </div>
