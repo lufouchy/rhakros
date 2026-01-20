@@ -31,6 +31,7 @@ interface WorkSchedule {
   end_time: string;
   break_start_time: string | null;
   break_end_time: string | null;
+  break_duration_minutes: number | null;
 }
 
 interface ScheduleForm {
@@ -39,6 +40,7 @@ interface ScheduleForm {
   end_time: string;
   break_start_time: string;
   break_end_time: string;
+  break_duration_minutes: string;
 }
 
 const WorkScheduleManagement = () => {
@@ -57,6 +59,7 @@ const WorkScheduleManagement = () => {
     end_time: '17:00',
     break_start_time: '',
     break_end_time: '',
+    break_duration_minutes: '60',
   });
 
   useEffect(() => {
@@ -89,6 +92,7 @@ const WorkScheduleManagement = () => {
       end_time: '17:00',
       break_start_time: '',
       break_end_time: '',
+      break_duration_minutes: '60',
     });
     setEditingSchedule(null);
   };
@@ -101,6 +105,7 @@ const WorkScheduleManagement = () => {
       end_time: schedule.end_time.slice(0, 5),
       break_start_time: schedule.break_start_time ? schedule.break_start_time.slice(0, 5) : '',
       break_end_time: schedule.break_end_time ? schedule.break_end_time.slice(0, 5) : '',
+      break_duration_minutes: schedule.break_duration_minutes?.toString() || '60',
     });
     setDialogOpen(true);
   };
@@ -129,6 +134,7 @@ const WorkScheduleManagement = () => {
         end_time: form.end_time,
         break_start_time: form.break_start_time || null,
         break_end_time: form.break_end_time || null,
+        break_duration_minutes: parseInt(form.break_duration_minutes) || null,
       };
 
       if (editingSchedule) {
@@ -263,7 +269,7 @@ const WorkScheduleManagement = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="break_start_time">Entrada Intervalo (opcional)</Label>
                   <Input
@@ -280,6 +286,17 @@ const WorkScheduleManagement = () => {
                     type="time"
                     value={form.break_end_time}
                     onChange={(e) => setForm(prev => ({ ...prev, break_end_time: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="break_duration">Intervalo (min)</Label>
+                  <Input
+                    id="break_duration"
+                    type="number"
+                    min="0"
+                    placeholder="60"
+                    value={form.break_duration_minutes}
+                    onChange={(e) => setForm(prev => ({ ...prev, break_duration_minutes: e.target.value }))}
                   />
                 </div>
               </div>
@@ -316,8 +333,9 @@ const WorkScheduleManagement = () => {
                   <TableHead>Jornada</TableHead>
                   <TableHead className="text-center">Entrada</TableHead>
                   <TableHead className="text-center">Saída</TableHead>
-                  <TableHead className="text-center">Entrada Intervalo</TableHead>
-                  <TableHead className="text-center">Saída Intervalo</TableHead>
+                  <TableHead className="text-center">Ent. Intervalo</TableHead>
+                  <TableHead className="text-center">Saí. Intervalo</TableHead>
+                  <TableHead className="text-center">Intervalo (min)</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
@@ -329,6 +347,7 @@ const WorkScheduleManagement = () => {
                     <TableCell className="text-center">{schedule.end_time.slice(0, 5)}</TableCell>
                     <TableCell className="text-center">{schedule.break_start_time ? schedule.break_start_time.slice(0, 5) : '-'}</TableCell>
                     <TableCell className="text-center">{schedule.break_end_time ? schedule.break_end_time.slice(0, 5) : '-'}</TableCell>
+                    <TableCell className="text-center">{schedule.break_duration_minutes || '-'}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
                         <Button
