@@ -1,26 +1,31 @@
 import { useAuth } from '@/contexts/AuthContext';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import AvatarUpload from './AvatarUpload';
 
 const EmployeeHero = () => {
-  const { profile } = useAuth();
+  const { user, profile, refreshProfile } = useAuth();
 
   const getInitials = (name?: string) => {
     if (!name) return 'U';
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
 
+  const handleAvatarUpdate = async (newUrl: string) => {
+    await refreshProfile();
+  };
+
   return (
     <div className="bg-gradient-to-r from-[#1e3a5f] to-[#2d4a6f] text-white rounded-2xl p-6 mb-6">
       <div className="flex items-center gap-6">
-        <Avatar className="h-24 w-24 border-4 border-white/20 shadow-xl">
-          <AvatarImage src="" />
-          <AvatarFallback className="bg-white/20 text-white text-2xl font-semibold">
-            {getInitials(profile?.full_name)}
-          </AvatarFallback>
-        </Avatar>
+        <AvatarUpload
+          userId={user?.id || ''}
+          avatarUrl={profile?.avatar_url || null}
+          fallbackText={getInitials(profile?.full_name)}
+          onUploadComplete={handleAvatarUpdate}
+          size="lg"
+        />
         
         <div className="flex-1">
           <h1 className="text-2xl font-bold">{profile?.full_name || 'Colaborador'}</h1>
