@@ -14,7 +14,7 @@ import {
   TrendingUp,
   TrendingDown
 } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, startOfDay, endOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 type TimeRecordType = 'entry' | 'lunch_out' | 'lunch_in' | 'exit';
@@ -57,25 +57,31 @@ const EmployeeDashboard = () => {
   }, [user]);
 
   const fetchTodayRecords = async () => {
-    const today = format(new Date(), 'yyyy-MM-dd');
+    if (!user?.id) return;
+
+    // Use local day boundaries converted to ISO to avoid timezone mismatches with timestamptz
+    const start = startOfDay(new Date()).toISOString();
+    const end = endOfDay(new Date()).toISOString();
+
     const { data, error } = await supabase
       .from('time_records')
       .select('*')
-      .eq('user_id', user?.id)
-      .gte('recorded_at', `${today}T00:00:00`)
-      .lte('recorded_at', `${today}T23:59:59`)
+      .eq('user_id', user.id)
+      .gte('recorded_at', start)
+      .lte('recorded_at', end)
       .order('recorded_at', { ascending: true });
 
     if (!error && data) {
       setTodayRecords(data as TimeRecord[]);
     }
   };
-
   const fetchHoursBalance = async () => {
+    if (!user?.id) return;
+
     const { data, error } = await supabase
       .from('hours_balance')
       .select('balance_minutes')
-      .eq('user_id', user?.id)
+      .eq('user_id', user.id)
       .single();
 
     if (!error && data) {
@@ -137,14 +143,20 @@ const EmployeeDashboard = () => {
       const timeStr = format(new Date(recordedAt), 'HH:mm');
       setLastRegisteredTime(timeStr);
       setShowSuccess(true);
-      
+
+      // Optimistic UI: update list immediately so "Próximo registro" muda na hora
+      setTodayRecords((prev) =>
+        [...prev, { id: crypto.randomUUID(), record_type: recordType, recorded_at: recordedAt }]
+          .sort((a, b) => new Date(a.recorded_at).getTime() - new Date(b.recorded_at).getTime()),
+      );
+
       toast({
         title: 'Ponto registrado!',
         description: `${recordTypeLabels[recordType].label} às ${timeStr}`,
       });
 
-      fetchTodayRecords();
-      
+      await fetchTodayRecords();
+
       // Hide success message after 3 seconds
       setTimeout(() => setShowSuccess(false), 3000);
     }
@@ -276,3 +288,4 @@ const EmployeeDashboard = () => {
 };
 
 export default EmployeeDashboard;
+
