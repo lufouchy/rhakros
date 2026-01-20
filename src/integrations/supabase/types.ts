@@ -271,26 +271,29 @@ export type Database = {
       }
       work_schedules: {
         Row: {
+          break_end_time: string | null
+          break_start_time: string | null
           created_at: string
           end_time: string
           id: string
-          lunch_duration_minutes: number
           name: string
           start_time: string
         }
         Insert: {
+          break_end_time?: string | null
+          break_start_time?: string | null
           created_at?: string
           end_time?: string
           id?: string
-          lunch_duration_minutes?: number
           name: string
           start_time?: string
         }
         Update: {
+          break_end_time?: string | null
+          break_start_time?: string | null
           created_at?: string
           end_time?: string
           id?: string
-          lunch_duration_minutes?: number
           name?: string
           start_time?: string
         }
