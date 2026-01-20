@@ -8,6 +8,7 @@ import TodayRecordsCard from '@/components/employee/TodayRecordsCard';
 import HoursBalanceCard from '@/components/employee/HoursBalanceCard';
 import TodayScheduleCard from '@/components/employee/TodayScheduleCard';
 import PunchButton from '@/components/employee/PunchButton';
+import { useLocationValidation } from '@/hooks/useLocationValidation';
 
 type TimeRecordType = 'entry' | 'lunch_out' | 'lunch_in' | 'exit';
 
@@ -27,6 +28,7 @@ const recordTypeLabels: Record<TimeRecordType, string> = {
 const EmployeeDashboard = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { validateLocation, isValidating } = useLocationValidation();
   const [todayRecords, setTodayRecords] = useState<TimeRecord[]>([]);
   const [hoursBalance, setHoursBalance] = useState(0);
   const [isRegistering, setIsRegistering] = useState(false);
@@ -88,19 +90,25 @@ const EmployeeDashboard = () => {
   const handlePunchClock = async () => {
     setIsRegistering(true);
     
-    let latitude = null;
-    let longitude = null;
+    // Validate location before allowing punch
+    const locationResult = await validateLocation();
     
-    if (navigator.geolocation) {
-      try {
-        const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 });
-        });
-        latitude = position.coords.latitude;
-        longitude = position.coords.longitude;
-      } catch (e) {
-        // Geolocation not available
-      }
+    if (!locationResult.isValid) {
+      toast({
+        variant: 'destructive',
+        title: 'Localização inválida',
+        description: locationResult.message,
+      });
+      setIsRegistering(false);
+      return;
+    }
+
+    // Show location validation message if available
+    if (locationResult.message && locationResult.latitude !== null) {
+      toast({
+        title: 'Localização verificada',
+        description: locationResult.message,
+      });
     }
 
     const recordType = getNextRecordType();
@@ -112,8 +120,8 @@ const EmployeeDashboard = () => {
         user_id: user?.id,
         record_type: recordType,
         recorded_at: recordedAt,
-        latitude,
-        longitude,
+        latitude: locationResult.latitude,
+        longitude: locationResult.longitude,
       });
 
     if (error) {
@@ -165,7 +173,7 @@ const EmployeeDashboard = () => {
 
       {/* Floating punch button */}
       <PunchButton
-        isRegistering={isRegistering}
+        isRegistering={isRegistering || isValidating}
         showSuccess={showSuccess}
         lastRegisteredTime={lastRegisteredTime}
         onClick={handlePunchClock}
