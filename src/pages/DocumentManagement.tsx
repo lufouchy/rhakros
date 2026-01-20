@@ -22,6 +22,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import {
   Loader2,
@@ -32,6 +39,11 @@ import {
   Clock,
   CheckCircle,
   Eye,
+  Download,
+  Calendar,
+  User,
+  Pen,
+  ExternalLink,
 } from 'lucide-react';
 import { format, differenceInDays, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -45,8 +57,10 @@ interface Document {
   document_type: string;
   title: string;
   reference_month: string;
-  status: DocumentStatus;
+  file_url: string | null;
+  signature_data: string | null;
   signed_at: string | null;
+  status: DocumentStatus;
   expires_at: string | null;
   created_at: string;
   userName?: string;
@@ -78,6 +92,8 @@ const DocumentManagement = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
+  const [showViewDialog, setShowViewDialog] = useState(false);
 
   useEffect(() => {
     fetchDocuments();
@@ -91,7 +107,6 @@ const DocumentManagement = () => {
       .order('created_at', { ascending: false });
 
     if (!error && data) {
-      // Fetch user profiles
       const userIds = [...new Set(data.map((d) => d.user_id))];
       const { data: profiles } = await supabase
         .from('profiles')
@@ -120,6 +135,33 @@ const DocumentManagement = () => {
     if (days < 0) return 'Vencido';
     if (days === 0) return 'Vence hoje';
     return `Vence em ${days} dias`;
+  };
+
+  const handleViewDocument = (doc: Document) => {
+    setSelectedDocument(doc);
+    setShowViewDialog(true);
+  };
+
+  const handleDownload = (doc: Document) => {
+    if (doc.file_url) {
+      window.open(doc.file_url, '_blank');
+      toast({
+        title: 'Download iniciado',
+        description: 'O documento está sendo baixado.',
+      });
+    } else {
+      toast({
+        variant: 'destructive',
+        title: 'Documento não disponível',
+        description: 'O arquivo PDF não está disponível para download.',
+      });
+    }
+  };
+
+  const handleOpenInNewTab = (doc: Document) => {
+    if (doc.file_url) {
+      window.open(doc.file_url, '_blank');
+    }
   };
 
   const filteredDocuments = documents.filter((doc) => {
@@ -179,7 +221,12 @@ const DocumentManagement = () => {
               <div>
                 <p className="text-sm text-muted-foreground">Documentos a vencer</p>
                 <p className="text-3xl font-bold text-foreground">{expiringCount}</p>
-                <button className="text-sm text-primary hover:underline">Ver detalhes</button>
+                <button 
+                  className="text-sm text-primary hover:underline"
+                  onClick={() => setStatusFilter('signed')}
+                >
+                  Ver detalhes
+                </button>
               </div>
             </CardContent>
           </Card>
@@ -192,7 +239,12 @@ const DocumentManagement = () => {
               <div>
                 <p className="text-sm text-muted-foreground">Documentos vencidos</p>
                 <p className="text-3xl font-bold text-foreground">{expiredCount}</p>
-                <button className="text-sm text-primary hover:underline">Ver detalhes</button>
+                <button 
+                  className="text-sm text-primary hover:underline"
+                  onClick={() => setStatusFilter('expired')}
+                >
+                  Ver detalhes
+                </button>
               </div>
             </CardContent>
           </Card>
@@ -205,7 +257,12 @@ const DocumentManagement = () => {
               <div>
                 <p className="text-sm text-muted-foreground">Aguardando assinatura</p>
                 <p className="text-3xl font-bold text-foreground">{pendingCount}</p>
-                <button className="text-sm text-primary hover:underline">Ver detalhes</button>
+                <button 
+                  className="text-sm text-primary hover:underline"
+                  onClick={() => setStatusFilter('pending_signature')}
+                >
+                  Ver detalhes
+                </button>
               </div>
             </CardContent>
           </Card>
@@ -238,6 +295,11 @@ const DocumentManagement = () => {
                   <SelectItem value="expired">Vencido</SelectItem>
                 </SelectContent>
               </Select>
+              {statusFilter !== 'all' && (
+                <Button variant="ghost" size="sm" onClick={() => setStatusFilter('all')}>
+                  Limpar filtro
+                </Button>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -312,10 +374,27 @@ const DocumentManagement = () => {
                           {format(parseISO(doc.reference_month), "MMMM 'de' yyyy", { locale: ptBR })}
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button variant="ghost" size="sm" className="gap-1.5">
-                            <Eye className="h-4 w-4" />
-                            Ver
-                          </Button>
+                          <div className="flex items-center justify-end gap-1">
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="gap-1.5"
+                              onClick={() => handleViewDocument(doc)}
+                            >
+                              <Eye className="h-4 w-4" />
+                              Ver
+                            </Button>
+                            {doc.file_url && (
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="gap-1.5"
+                                onClick={() => handleDownload(doc)}
+                              >
+                                <Download className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
                         </TableCell>
                       </TableRow>
                     );
@@ -325,6 +404,141 @@ const DocumentManagement = () => {
             )}
           </CardContent>
         </Card>
+
+        {/* View Document Dialog */}
+        <Dialog open={showViewDialog} onOpenChange={setShowViewDialog}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5 text-primary" />
+                Detalhes do Documento
+              </DialogTitle>
+              <DialogDescription>
+                Visualize os detalhes e baixe o documento assinado.
+              </DialogDescription>
+            </DialogHeader>
+
+            {selectedDocument && (
+              <div className="space-y-4 pt-2">
+                {/* Document Info */}
+                <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-3">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-10 w-10">
+                      <AvatarFallback className="bg-primary/10 text-primary">
+                        {selectedDocument.userName?.split(' ').map((n) => n[0]).join('').slice(0, 2)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="font-medium">{selectedDocument.userName}</p>
+                      <p className="text-sm text-muted-foreground">{selectedDocument.userEmail}</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                      <div>
+                        <p className="text-muted-foreground">Período</p>
+                        <p className="font-medium">
+                          {format(parseISO(selectedDocument.reference_month), "MMMM 'de' yyyy", { locale: ptBR })}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-4 w-4 text-muted-foreground" />
+                      <div>
+                        <p className="text-muted-foreground">Status</p>
+                        <Badge className={statusConfig[selectedDocument.status].className}>
+                          {statusConfig[selectedDocument.status].label}
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+
+                  {selectedDocument.signed_at && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Pen className="h-4 w-4 text-muted-foreground" />
+                      <div>
+                        <p className="text-muted-foreground">Assinado em</p>
+                        <p className="font-medium">
+                          {format(parseISO(selectedDocument.signed_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {selectedDocument.expires_at && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+                      <div>
+                        <p className="text-muted-foreground">Expira em</p>
+                        <p className="font-medium">
+                          {format(parseISO(selectedDocument.expires_at), "dd/MM/yyyy", { locale: ptBR })}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Signature Preview */}
+                {selectedDocument.signature_data && (
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium">Assinatura Digital</p>
+                    <div className="border border-border rounded-lg bg-background p-3">
+                      <img 
+                        src={selectedDocument.signature_data} 
+                        alt="Assinatura digital" 
+                        className="max-h-[100px] mx-auto"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* PDF Preview / Actions */}
+                {selectedDocument.file_url ? (
+                  <div className="space-y-3">
+                    <div className="rounded-lg border border-border bg-muted/30 p-4 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-destructive/10">
+                          <FileText className="h-5 w-5 text-destructive" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-sm">espelho-ponto-{format(parseISO(selectedDocument.reference_month), "yyyy-MM")}.pdf</p>
+                          <p className="text-xs text-muted-foreground">Documento PDF assinado</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <Button 
+                        variant="outline" 
+                        className="flex-1 gap-2"
+                        onClick={() => handleOpenInNewTab(selectedDocument)}
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                        Abrir em nova aba
+                      </Button>
+                      <Button 
+                        className="flex-1 gap-2"
+                        onClick={() => handleDownload(selectedDocument)}
+                      >
+                        <Download className="h-4 w-4" />
+                        Baixar PDF
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="rounded-lg border border-dashed border-border bg-muted/20 p-6 text-center">
+                    <FileText className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                    <p className="text-sm text-muted-foreground">
+                      Documento ainda não possui arquivo PDF anexado.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </AppLayout>
   );
