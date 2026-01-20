@@ -8,7 +8,8 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   userRole: UserRole;
-  profile: { full_name: string; email: string } | null;
+  profile: { full_name: string; email: string; avatar_url: string | null } | null;
+  refreshProfile: () => Promise<void>;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: Error | null }>;
@@ -33,14 +34,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [userRole, setUserRole] = useState<UserRole>(null);
-  const [profile, setProfile] = useState<{ full_name: string; email: string } | null>(null);
+  const [profile, setProfile] = useState<{ full_name: string; email: string; avatar_url: string | null } | null>(null);
   const [loading, setLoading] = useState(true);
 
   const fetchUserData = async (userId: string) => {
     // Fetch profile
     const { data: profileData } = await supabase
       .from('profiles')
-      .select('full_name, email')
+      .select('full_name, email, avatar_url')
       .eq('user_id', userId)
       .single();
 
@@ -148,6 +149,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     setUserRole(null);
   };
 
+  const refreshProfile = async () => {
+    if (user) {
+      await fetchUserData(user.id);
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -159,6 +166,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         signIn,
         signUp,
         signOut,
+        refreshProfile,
       }}
     >
       {children}
