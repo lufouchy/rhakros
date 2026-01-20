@@ -11,6 +11,7 @@ import TimesheetPage from "./pages/TimesheetPage";
 import DocumentManagement from "./pages/DocumentManagement";
 import VacationManagement from "./pages/VacationManagement";
 import EmployeeProfile from "./pages/EmployeeProfile";
+import EmployeeManagement from "./pages/EmployeeManagement";
 import AdminSettings from "./pages/AdminSettings";
 import NotFound from "./pages/NotFound";
 
@@ -31,6 +32,7 @@ const App = () => (
             <Route path="/documents" element={<DocumentManagement />} />
             <Route path="/vacations" element={<VacationManagement />} />
             <Route path="/profile" element={<EmployeeProfile />} />
+            <Route path="/employees" element={<EmployeeManagement />} />
             <Route path="/settings" element={<AdminSettings />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

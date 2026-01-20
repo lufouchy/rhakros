@@ -187,39 +187,86 @@ export type Database = {
       }
       profiles: {
         Row: {
+          address_cep: string | null
+          address_city: string | null
+          address_complement: string | null
+          address_neighborhood: string | null
+          address_number: string | null
+          address_state: string | null
+          address_street: string | null
           avatar_url: string | null
+          birth_date: string | null
+          cpf: string | null
           created_at: string
           email: string
           full_name: string
+          hire_date: string | null
           id: string
+          phone: string | null
           position: string | null
           sector: string | null
+          termination_date: string | null
           updated_at: string
           user_id: string
+          work_schedule_id: string | null
         }
         Insert: {
+          address_cep?: string | null
+          address_city?: string | null
+          address_complement?: string | null
+          address_neighborhood?: string | null
+          address_number?: string | null
+          address_state?: string | null
+          address_street?: string | null
           avatar_url?: string | null
+          birth_date?: string | null
+          cpf?: string | null
           created_at?: string
           email: string
           full_name: string
+          hire_date?: string | null
           id?: string
+          phone?: string | null
           position?: string | null
           sector?: string | null
+          termination_date?: string | null
           updated_at?: string
           user_id: string
+          work_schedule_id?: string | null
         }
         Update: {
+          address_cep?: string | null
+          address_city?: string | null
+          address_complement?: string | null
+          address_neighborhood?: string | null
+          address_number?: string | null
+          address_state?: string | null
+          address_street?: string | null
           avatar_url?: string | null
+          birth_date?: string | null
+          cpf?: string | null
           created_at?: string
           email?: string
           full_name?: string
+          hire_date?: string | null
           id?: string
+          phone?: string | null
           position?: string | null
           sector?: string | null
+          termination_date?: string | null
           updated_at?: string
           user_id?: string
+          work_schedule_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_work_schedule_id_fkey"
+            columns: ["work_schedule_id"]
+            isOneToOne: false
+            referencedRelation: "work_schedules"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       time_records: {
         Row: {
@@ -322,6 +369,7 @@ export type Database = {
       }
       work_schedules: {
         Row: {
+          break_duration_minutes: number | null
           break_end_time: string | null
           break_start_time: string | null
           created_at: string
@@ -331,6 +379,7 @@ export type Database = {
           start_time: string
         }
         Insert: {
+          break_duration_minutes?: number | null
           break_end_time?: string | null
           break_start_time?: string | null
           created_at?: string
@@ -340,6 +389,7 @@ export type Database = {
           start_time?: string
         }
         Update: {
+          break_duration_minutes?: number | null
           break_end_time?: string | null
           break_start_time?: string | null
           created_at?: string

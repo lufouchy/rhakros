@@ -40,7 +40,8 @@ const SidebarLayout = ({ children }: SidebarLayoutProps) => {
   const navItems = isAdmin
     ? [
         { icon: Home, label: 'Início', path: '/' },
-        { icon: Users, label: 'Gestão de Jornada', path: '/admin' },
+        { icon: Users, label: 'Cadastro de Colaborador', path: '/employees' },
+        { icon: Clock, label: 'Gestão de Jornada', path: '/admin' },
         { icon: FileText, label: 'Solicitações', path: '/requests' },
         { icon: Palmtree, label: 'Férias', path: '/vacations' },
         { icon: FolderOpen, label: 'Documentos', path: '/documents' },
