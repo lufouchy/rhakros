@@ -71,7 +71,7 @@ export const useLocationValidation = () => {
 
   const fetchLocationSettings = useCallback(async (): Promise<LocationSettings | null> => {
     const { data, error } = await supabase
-      .from('location_settings' as any)
+      .from('location_settings')
       .select('*')
       .single();
 
@@ -80,7 +80,7 @@ export const useLocationValidation = () => {
       return null;
     }
 
-    const settingsData = data as unknown as LocationSettings;
+    const settingsData = data as LocationSettings;
     setSettings(settingsData);
     return settingsData;
   }, []);

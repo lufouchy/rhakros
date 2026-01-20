@@ -134,6 +134,57 @@ export type Database = {
         }
         Relationships: []
       }
+      location_settings: {
+        Row: {
+          address_cep: string | null
+          address_city: string | null
+          address_complement: string | null
+          address_neighborhood: string | null
+          address_number: string | null
+          address_state: string | null
+          address_street: string | null
+          allowed_radius_meters: number | null
+          company_latitude: number | null
+          company_longitude: number | null
+          created_at: string
+          id: string
+          location_mode: string
+          updated_at: string
+        }
+        Insert: {
+          address_cep?: string | null
+          address_city?: string | null
+          address_complement?: string | null
+          address_neighborhood?: string | null
+          address_number?: string | null
+          address_state?: string | null
+          address_street?: string | null
+          allowed_radius_meters?: number | null
+          company_latitude?: number | null
+          company_longitude?: number | null
+          created_at?: string
+          id?: string
+          location_mode?: string
+          updated_at?: string
+        }
+        Update: {
+          address_cep?: string | null
+          address_city?: string | null
+          address_complement?: string | null
+          address_neighborhood?: string | null
+          address_number?: string | null
+          address_state?: string | null
+          address_street?: string | null
+          allowed_radius_meters?: number | null
+          company_latitude?: number | null
+          company_longitude?: number | null
+          created_at?: string
+          id?: string
+          location_mode?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null

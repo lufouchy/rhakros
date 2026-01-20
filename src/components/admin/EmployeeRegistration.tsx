@@ -27,7 +27,8 @@ interface WorkSchedule {
   name: string;
   start_time: string;
   end_time: string;
-  lunch_duration_minutes: number;
+  break_start_time: string | null;
+  break_end_time: string | null;
 }
 
 interface EmployeeForm {
@@ -53,7 +54,8 @@ interface NewScheduleForm {
   name: string;
   start_time: string;
   end_time: string;
-  lunch_duration_minutes: number;
+  break_start_time: string;
+  break_end_time: string;
 }
 
 const EmployeeRegistration = () => {
@@ -87,7 +89,8 @@ const EmployeeRegistration = () => {
     name: '',
     start_time: '08:00',
     end_time: '17:00',
-    lunch_duration_minutes: 60,
+    break_start_time: '',
+    break_end_time: '',
   });
 
   useEffect(() => {
@@ -165,7 +168,13 @@ const EmployeeRegistration = () => {
 
     const { data, error } = await supabase
       .from('work_schedules')
-      .insert(newSchedule)
+      .insert({
+        name: newSchedule.name,
+        start_time: newSchedule.start_time,
+        end_time: newSchedule.end_time,
+        break_start_time: newSchedule.break_start_time || null,
+        break_end_time: newSchedule.break_end_time || null,
+      })
       .select()
       .single();
 
@@ -187,7 +196,8 @@ const EmployeeRegistration = () => {
         name: '',
         start_time: '08:00',
         end_time: '17:00',
-        lunch_duration_minutes: 60,
+        break_start_time: '',
+        break_end_time: '',
       });
     }
   };
@@ -558,11 +568,19 @@ const EmployeeRegistration = () => {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>Almoço (min)</Label>
+                      <Label>Ent. Intervalo</Label>
                       <Input
-                        type="number"
-                        value={newSchedule.lunch_duration_minutes}
-                        onChange={(e) => setNewSchedule(prev => ({ ...prev, lunch_duration_minutes: parseInt(e.target.value) }))}
+                        type="time"
+                        value={newSchedule.break_start_time}
+                        onChange={(e) => setNewSchedule(prev => ({ ...prev, break_start_time: e.target.value }))}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Saí. Intervalo</Label>
+                      <Input
+                        type="time"
+                        value={newSchedule.break_end_time}
+                        onChange={(e) => setNewSchedule(prev => ({ ...prev, break_end_time: e.target.value }))}
                       />
                     </div>
                   </div>

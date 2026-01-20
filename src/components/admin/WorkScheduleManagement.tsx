@@ -29,14 +29,16 @@ interface WorkSchedule {
   name: string;
   start_time: string;
   end_time: string;
-  lunch_duration_minutes: number;
+  break_start_time: string | null;
+  break_end_time: string | null;
 }
 
 interface ScheduleForm {
   name: string;
   start_time: string;
   end_time: string;
-  lunch_duration_minutes: number;
+  break_start_time: string;
+  break_end_time: string;
 }
 
 const WorkScheduleManagement = () => {
@@ -53,7 +55,8 @@ const WorkScheduleManagement = () => {
     name: '',
     start_time: '08:00',
     end_time: '17:00',
-    lunch_duration_minutes: 60,
+    break_start_time: '',
+    break_end_time: '',
   });
 
   useEffect(() => {
@@ -84,7 +87,8 @@ const WorkScheduleManagement = () => {
       name: '',
       start_time: '08:00',
       end_time: '17:00',
-      lunch_duration_minutes: 60,
+      break_start_time: '',
+      break_end_time: '',
     });
     setEditingSchedule(null);
   };
@@ -95,7 +99,8 @@ const WorkScheduleManagement = () => {
       name: schedule.name,
       start_time: schedule.start_time.slice(0, 5),
       end_time: schedule.end_time.slice(0, 5),
-      lunch_duration_minutes: schedule.lunch_duration_minutes,
+      break_start_time: schedule.break_start_time ? schedule.break_start_time.slice(0, 5) : '',
+      break_end_time: schedule.break_end_time ? schedule.break_end_time.slice(0, 5) : '',
     });
     setDialogOpen(true);
   };
@@ -118,15 +123,18 @@ const WorkScheduleManagement = () => {
     setIsSaving(true);
 
     try {
+      const scheduleData = {
+        name: form.name,
+        start_time: form.start_time,
+        end_time: form.end_time,
+        break_start_time: form.break_start_time || null,
+        break_end_time: form.break_end_time || null,
+      };
+
       if (editingSchedule) {
         const { error } = await supabase
           .from('work_schedules')
-          .update({
-            name: form.name,
-            start_time: form.start_time,
-            end_time: form.end_time,
-            lunch_duration_minutes: form.lunch_duration_minutes,
-          })
+          .update(scheduleData)
           .eq('id', editingSchedule.id);
 
         if (error) throw error;
@@ -138,12 +146,7 @@ const WorkScheduleManagement = () => {
       } else {
         const { error } = await supabase
           .from('work_schedules')
-          .insert({
-            name: form.name,
-            start_time: form.start_time,
-            end_time: form.end_time,
-            lunch_duration_minutes: form.lunch_duration_minutes,
-          });
+          .insert(scheduleData);
 
         if (error) throw error;
 
@@ -260,19 +263,25 @@ const WorkScheduleManagement = () => {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="lunch_duration">Intervalo de Almoço (minutos)</Label>
-                <Input
-                  id="lunch_duration"
-                  type="number"
-                  min="0"
-                  max="180"
-                  value={form.lunch_duration_minutes}
-                  onChange={(e) => setForm(prev => ({ 
-                    ...prev, 
-                    lunch_duration_minutes: parseInt(e.target.value) || 0 
-                  }))}
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="break_start_time">Entrada Intervalo (opcional)</Label>
+                  <Input
+                    id="break_start_time"
+                    type="time"
+                    value={form.break_start_time}
+                    onChange={(e) => setForm(prev => ({ ...prev, break_start_time: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="break_end_time">Saída Intervalo (opcional)</Label>
+                  <Input
+                    id="break_end_time"
+                    type="time"
+                    value={form.break_end_time}
+                    onChange={(e) => setForm(prev => ({ ...prev, break_end_time: e.target.value }))}
+                  />
+                </div>
               </div>
             </div>
 
@@ -304,10 +313,11 @@ const WorkScheduleManagement = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Nome</TableHead>
+                  <TableHead>Jornada</TableHead>
                   <TableHead className="text-center">Entrada</TableHead>
                   <TableHead className="text-center">Saída</TableHead>
-                  <TableHead className="text-center">Almoço</TableHead>
+                  <TableHead className="text-center">Entrada Intervalo</TableHead>
+                  <TableHead className="text-center">Saída Intervalo</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
@@ -317,7 +327,8 @@ const WorkScheduleManagement = () => {
                     <TableCell className="font-medium">{schedule.name}</TableCell>
                     <TableCell className="text-center">{schedule.start_time.slice(0, 5)}</TableCell>
                     <TableCell className="text-center">{schedule.end_time.slice(0, 5)}</TableCell>
-                    <TableCell className="text-center">{schedule.lunch_duration_minutes} min</TableCell>
+                    <TableCell className="text-center">{schedule.break_start_time ? schedule.break_start_time.slice(0, 5) : '-'}</TableCell>
+                    <TableCell className="text-center">{schedule.break_end_time ? schedule.break_end_time.slice(0, 5) : '-'}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
                         <Button
