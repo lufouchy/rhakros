@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import {
   Table,
   TableBody,
@@ -29,6 +30,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import {
   Loader2,
@@ -41,9 +52,10 @@ import {
   Eye,
   Download,
   Calendar,
-  User,
   Pen,
   ExternalLink,
+  Trash2,
+  Bell,
 } from 'lucide-react';
 import { format, differenceInDays, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -94,6 +106,10 @@ const DocumentManagement = () => {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
   const [showViewDialog, setShowViewDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [documentToDelete, setDocumentToDelete] = useState<Document | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showExpiringAlert, setShowExpiringAlert] = useState(true);
 
   useEffect(() => {
     fetchDocuments();
@@ -164,6 +180,89 @@ const DocumentManagement = () => {
     }
   };
 
+  const handleDeleteClick = (doc: Document) => {
+    setDocumentToDelete(doc);
+    setShowDeleteDialog(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!documentToDelete) return;
+
+    setIsDeleting(true);
+    try {
+      // Delete from storage if file exists
+      if (documentToDelete.file_url) {
+        const fileName = `${documentToDelete.user_id}/${format(parseISO(documentToDelete.reference_month), "yyyy-MM")}-espelho-ponto.pdf`;
+        await supabase.storage.from('timesheet-documents').remove([fileName]);
+      }
+
+      // Delete from database
+      const { error } = await supabase
+        .from('documents')
+        .delete()
+        .eq('id', documentToDelete.id);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Documento excluído',
+        description: 'O documento foi removido com sucesso.',
+      });
+
+      fetchDocuments();
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Erro ao excluir',
+        description: error.message,
+      });
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteDialog(false);
+      setDocumentToDelete(null);
+    }
+  };
+
+  const handleDeleteAllExpired = async () => {
+    const expiredDocs = documents.filter((d) => d.status === 'expired');
+    if (expiredDocs.length === 0) return;
+
+    setIsDeleting(true);
+    try {
+      // Delete files from storage
+      const filesToDelete = expiredDocs
+        .filter((d) => d.file_url)
+        .map((d) => `${d.user_id}/${format(parseISO(d.reference_month), "yyyy-MM")}-espelho-ponto.pdf`);
+      
+      if (filesToDelete.length > 0) {
+        await supabase.storage.from('timesheet-documents').remove(filesToDelete);
+      }
+
+      // Delete from database
+      const { error } = await supabase
+        .from('documents')
+        .delete()
+        .in('id', expiredDocs.map((d) => d.id));
+
+      if (error) throw error;
+
+      toast({
+        title: 'Documentos excluídos',
+        description: `${expiredDocs.length} documento(s) expirado(s) foram removidos.`,
+      });
+
+      fetchDocuments();
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Erro ao excluir',
+        description: error.message,
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   const filteredDocuments = documents.filter((doc) => {
     const matchesSearch =
       doc.userName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -176,6 +275,15 @@ const DocumentManagement = () => {
   // Stats
   const pendingCount = documents.filter((d) => d.status === 'pending_signature').length;
   const expiredCount = documents.filter((d) => d.status === 'expired').length;
+  
+  // Documents expiring within 30 days
+  const expiringDocuments = documents.filter((d) => {
+    if (!d.expires_at || d.status !== 'signed') return false;
+    const days = differenceInDays(parseISO(d.expires_at), new Date());
+    return days > 0 && days <= 30;
+  });
+  
+  // Documents expiring within 60 days (for card)
   const expiringCount = documents.filter((d) => {
     if (!d.expires_at || d.status !== 'signed') return false;
     const days = differenceInDays(parseISO(d.expires_at), new Date());
@@ -197,6 +305,55 @@ const DocumentManagement = () => {
   return (
     <AppLayout>
       <div className="max-w-7xl mx-auto space-y-6 animate-fade-in">
+        {/* Expiring Alert Banner */}
+        {showExpiringAlert && expiringDocuments.length > 0 && (
+          <Alert className="border-warning/50 bg-warning/10">
+            <Bell className="h-4 w-4 text-warning" />
+            <AlertTitle className="text-warning">Documentos próximos ao vencimento</AlertTitle>
+            <AlertDescription className="flex items-center justify-between">
+              <span>
+                {expiringDocuments.length} documento(s) vencem nos próximos 30 dias. 
+                Colaboradores afetados: {[...new Set(expiringDocuments.map((d) => d.userName))].join(', ')}.
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowExpiringAlert(false)}
+                className="text-warning hover:text-warning"
+              >
+                Dispensar
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* Expired Documents Alert */}
+        {expiredCount > 0 && (
+          <Alert variant="destructive" className="border-destructive/50 bg-destructive/10">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle>Documentos expirados</AlertTitle>
+            <AlertDescription className="flex items-center justify-between">
+              <span>
+                Existem {expiredCount} documento(s) expirado(s) que podem ser removidos.
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 border-destructive/50 text-destructive hover:bg-destructive/10"
+                onClick={handleDeleteAllExpired}
+                disabled={isDeleting}
+              >
+                {isDeleting ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Trash2 className="h-4 w-4" />
+                )}
+                Excluir todos expirados
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
+
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
@@ -233,8 +390,8 @@ const DocumentManagement = () => {
 
           <Card className="border-0 shadow-md">
             <CardContent className="flex items-center gap-4 p-6">
-              <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-muted">
-                <FileText className="h-6 w-6 text-muted-foreground" />
+              <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-destructive/10">
+                <FileText className="h-6 w-6 text-destructive" />
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Documentos vencidos</p>
@@ -334,11 +491,14 @@ const DocumentManagement = () => {
                 </TableHeader>
                 <TableBody>
                   {filteredDocuments.map((doc) => {
-                    const StatusIcon = statusConfig[doc.status].icon;
                     const expirationInfo = getExpirationInfo(doc.expires_at, doc.status);
+                    const daysToExpire = doc.expires_at 
+                      ? differenceInDays(parseISO(doc.expires_at), new Date())
+                      : null;
+                    const isExpiringSoon = daysToExpire !== null && daysToExpire > 0 && daysToExpire <= 30;
 
                     return (
-                      <TableRow key={doc.id}>
+                      <TableRow key={doc.id} className={isExpiringSoon ? 'bg-warning/5' : ''}>
                         <TableCell>
                           <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
                             Espelho de ponto
@@ -350,7 +510,7 @@ const DocumentManagement = () => {
                               {statusConfig[doc.status].label}
                             </Badge>
                             {expirationInfo && (
-                              <p className="text-xs text-muted-foreground flex items-center gap-1">
+                              <p className={`text-xs flex items-center gap-1 ${isExpiringSoon ? 'text-warning font-medium' : 'text-muted-foreground'}`}>
                                 <Clock className="h-3 w-3" />
                                 {expirationInfo}
                               </p>
@@ -387,11 +547,20 @@ const DocumentManagement = () => {
                             {doc.file_url && (
                               <Button 
                                 variant="ghost" 
-                                size="sm" 
-                                className="gap-1.5"
+                                size="sm"
                                 onClick={() => handleDownload(doc)}
                               >
                                 <Download className="h-4 w-4" />
+                              </Button>
+                            )}
+                            {doc.status === 'expired' && (
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                onClick={() => handleDeleteClick(doc)}
+                              >
+                                <Trash2 className="h-4 w-4" />
                               </Button>
                             )}
                           </div>
@@ -420,7 +589,6 @@ const DocumentManagement = () => {
 
             {selectedDocument && (
               <div className="space-y-4 pt-2">
-                {/* Document Info */}
                 <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-3">
                   <div className="flex items-center gap-3">
                     <Avatar className="h-10 w-10">
@@ -480,7 +648,6 @@ const DocumentManagement = () => {
                   )}
                 </div>
 
-                {/* Signature Preview */}
                 {selectedDocument.signature_data && (
                   <div className="space-y-2">
                     <p className="text-sm font-medium">Assinatura Digital</p>
@@ -494,7 +661,6 @@ const DocumentManagement = () => {
                   </div>
                 )}
 
-                {/* PDF Preview / Actions */}
                 {selectedDocument.file_url ? (
                   <div className="space-y-3">
                     <div className="rounded-lg border border-border bg-muted/30 p-4 flex items-center justify-between">
@@ -539,6 +705,35 @@ const DocumentManagement = () => {
             )}
           </DialogContent>
         </Dialog>
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Excluir documento?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Esta ação não pode ser desfeita. O documento "{documentToDelete?.title}" será permanentemente removido do sistema.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleConfirmDelete}
+                disabled={isDeleting}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {isDeleting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Excluindo...
+                  </>
+                ) : (
+                  'Excluir'
+                )}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </AppLayout>
   );
