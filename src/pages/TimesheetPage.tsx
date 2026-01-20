@@ -5,13 +5,24 @@ import AppLayout from "@/components/layout/AppLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
+import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Loader2, CalendarDays, AlertTriangle, Clock } from "lucide-react";
-import { endOfDay, format, startOfDay, isWeekend, differenceInMinutes } from "date-fns";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Loader2, CalendarDays, AlertTriangle, Clock, FileDown, Pen, CheckCircle } from "lucide-react";
+import { endOfDay, format, startOfDay, isWeekend, differenceInMinutes, startOfMonth, endOfMonth, eachDayOfInterval } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
+import SignatureCanvas from "@/components/timesheet/SignatureCanvas";
+import { generateTimesheetPDF, downloadPDF } from "@/components/timesheet/TimesheetPDF";
 
 type TimeRecordType = "entry" | "lunch_out" | "lunch_in" | "exit";
 
@@ -29,10 +40,8 @@ const recordTypeLabel: Record<TimeRecordType, string> = {
 };
 
 const EXPECTED_SEQUENCE: TimeRecordType[] = ["entry", "lunch_out", "lunch_in", "exit"];
-
-// Standard work hours (8h) + 1h lunch = 9h total span, but 8h worked
-const STANDARD_WORK_MINUTES = 8 * 60; // 480 minutes
-const OVERTIME_THRESHOLD_MINUTES = 2 * 60; // 2 hours
+const STANDARD_WORK_MINUTES = 8 * 60;
+const OVERTIME_THRESHOLD_MINUTES = 2 * 60;
 
 interface DayAnalysis {
   isWeekendDay: boolean;
@@ -44,14 +53,10 @@ interface DayAnalysis {
 
 function analyzeDayRecords(date: Date, records: TimeRecord[]): DayAnalysis {
   const isWeekendDay = isWeekend(date);
-
-  // Check missing records
   const recordTypes = records.map((r) => r.record_type);
   const missingRecords = EXPECTED_SEQUENCE.filter((type) => !recordTypes.includes(type));
 
-  // Calculate worked time
   let workedMinutes = 0;
-
   const entry = records.find((r) => r.record_type === "entry");
   const lunchOut = records.find((r) => r.record_type === "lunch_out");
   const lunchIn = records.find((r) => r.record_type === "lunch_in");
@@ -83,10 +88,15 @@ function formatMinutesToHours(minutes: number): string {
 }
 
 const TimesheetPage = () => {
-  const { user, loading } = useAuth();
+  const { user, profile, loading } = useAuth();
+  const { toast } = useToast();
   const [date, setDate] = useState<Date>(new Date());
   const [records, setRecords] = useState<TimeRecord[]>([]);
+  const [monthRecords, setMonthRecords] = useState<TimeRecord[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [showSignDialog, setShowSignDialog] = useState(false);
+  const [signature, setSignature] = useState<string | null>(null);
+  const [isSigning, setIsSigning] = useState(false);
 
   const dayRange = useMemo(() => {
     const start = startOfDay(date).toISOString();
@@ -94,6 +104,13 @@ const TimesheetPage = () => {
     return { start, end };
   }, [date]);
 
+  const monthRange = useMemo(() => {
+    const start = startOfMonth(date).toISOString();
+    const end = endOfMonth(date).toISOString();
+    return { start, end };
+  }, [date]);
+
+  // Fetch daily records
   useEffect(() => {
     const run = async () => {
       if (!user?.id) return;
@@ -114,7 +131,117 @@ const TimesheetPage = () => {
     run();
   }, [user?.id, dayRange.start, dayRange.end]);
 
+  // Fetch monthly records for PDF
+  useEffect(() => {
+    const run = async () => {
+      if (!user?.id) return;
+
+      const { data, error } = await supabase
+        .from("time_records")
+        .select("id, record_type, recorded_at")
+        .eq("user_id", user.id)
+        .gte("recorded_at", monthRange.start)
+        .lte("recorded_at", monthRange.end)
+        .order("recorded_at", { ascending: true });
+
+      if (!error && data) setMonthRecords(data as TimeRecord[]);
+    };
+
+    run();
+  }, [user?.id, monthRange.start, monthRange.end]);
+
   const analysis = useMemo(() => analyzeDayRecords(date, records), [date, records]);
+
+  const handleDownloadPDF = () => {
+    const pdf = generateTimesheetPDF({
+      records: monthRecords,
+      month: date,
+      employeeName: profile?.full_name || "Colaborador",
+      signatureData: null,
+    });
+    downloadPDF(pdf, `espelho-ponto-${format(date, "yyyy-MM")}.pdf`);
+    toast({
+      title: "PDF gerado com sucesso!",
+      description: "O espelho de ponto foi baixado.",
+    });
+  };
+
+  const handleSignAndSave = async () => {
+    if (!signature) {
+      toast({
+        variant: "destructive",
+        title: "Assinatura obrigatória",
+        description: "Por favor, desenhe sua assinatura antes de salvar.",
+      });
+      return;
+    }
+
+    setIsSigning(true);
+
+    try {
+      // Generate signed PDF
+      const pdf = generateTimesheetPDF({
+        records: monthRecords,
+        month: date,
+        employeeName: profile?.full_name || "Colaborador",
+        signatureData: signature,
+      });
+
+      // Convert PDF to blob
+      const pdfBlob = pdf.output("blob");
+      const fileName = `${user?.id}/${format(date, "yyyy-MM")}-espelho-ponto.pdf`;
+
+      // Upload to storage
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from("timesheet-documents")
+        .upload(fileName, pdfBlob, {
+          contentType: "application/pdf",
+          upsert: true,
+        });
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from("timesheet-documents")
+        .getPublicUrl(fileName);
+
+      // Save document reference in database
+      const { error: dbError } = await supabase.from("documents").insert({
+        user_id: user?.id,
+        document_type: "timesheet",
+        title: `Espelho de Ponto - ${format(date, "MMMM yyyy", { locale: ptBR })}`,
+        reference_month: format(startOfMonth(date), "yyyy-MM-dd"),
+        file_url: urlData.publicUrl,
+        signature_data: signature,
+        signed_at: new Date().toISOString(),
+        status: "signed",
+        expires_at: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString(),
+      });
+
+      if (dbError) throw dbError;
+
+      toast({
+        title: "Documento assinado com sucesso!",
+        description: "O espelho de ponto foi salvo e arquivado.",
+      });
+
+      setShowSignDialog(false);
+      setSignature(null);
+
+      // Also download the signed PDF
+      downloadPDF(pdf, `espelho-ponto-assinado-${format(date, "yyyy-MM")}.pdf`);
+
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Erro ao salvar documento",
+        description: error.message,
+      });
+    } finally {
+      setIsSigning(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -134,10 +261,22 @@ const TimesheetPage = () => {
       <div className="max-w-5xl mx-auto space-y-6 animate-fade-in">
         <Card className="border-0 shadow-lg overflow-hidden">
           <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2">
-              <CalendarDays className="h-5 w-5 text-primary" />
-              Espelho do Ponto
-            </CardTitle>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <CardTitle className="flex items-center gap-2">
+                <CalendarDays className="h-5 w-5 text-primary" />
+                Espelho do Ponto
+              </CardTitle>
+              <div className="flex gap-2">
+                <Button variant="outline" className="gap-2" onClick={handleDownloadPDF}>
+                  <FileDown className="h-4 w-4" />
+                  Baixar PDF
+                </Button>
+                <Button className="gap-2" onClick={() => setShowSignDialog(true)}>
+                  <Pen className="h-4 w-4" />
+                  Assinar e Salvar
+                </Button>
+              </div>
+            </div>
           </CardHeader>
           <CardContent className="grid gap-6 md:grid-cols-[360px_1fr]">
             <div>
@@ -156,6 +295,9 @@ const TimesheetPage = () => {
                   }}
                 />
               </div>
+              <p className="text-xs text-muted-foreground mt-3 text-center">
+                Mês de referência: <strong>{format(date, "MMMM 'de' yyyy", { locale: ptBR })}</strong>
+              </p>
             </div>
 
             <div className="space-y-4">
@@ -271,6 +413,77 @@ const TimesheetPage = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Sign Dialog */}
+        <Dialog open={showSignDialog} onOpenChange={setShowSignDialog}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Pen className="h-5 w-5 text-primary" />
+                Assinar Espelho de Ponto
+              </DialogTitle>
+              <DialogDescription>
+                Assine digitalmente o espelho de ponto de{" "}
+                <strong>{format(date, "MMMM 'de' yyyy", { locale: ptBR })}</strong>.
+                O documento será salvo e arquivado automaticamente.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4 pt-2">
+              <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-2">
+                <div className="flex items-center gap-2 text-sm">
+                  <CalendarDays className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-muted-foreground">Período:</span>
+                  <span className="font-medium">{format(date, "MMMM 'de' yyyy", { locale: ptBR })}</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <Clock className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-muted-foreground">Registros:</span>
+                  <span className="font-medium">{monthRecords.length} marcações</span>
+                </div>
+              </div>
+
+              <SignatureCanvas onSignatureChange={setSignature} />
+
+              {signature && (
+                <div className="flex items-center gap-2 text-sm text-success">
+                  <CheckCircle className="h-4 w-4" />
+                  Assinatura capturada
+                </div>
+              )}
+
+              <div className="flex gap-2 pt-2">
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => {
+                    setShowSignDialog(false);
+                    setSignature(null);
+                  }}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  className="flex-1 gap-2"
+                  onClick={handleSignAndSave}
+                  disabled={isSigning || !signature}
+                >
+                  {isSigning ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Salvando...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle className="h-4 w-4" />
+                      Assinar e Salvar
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </AppLayout>
   );
