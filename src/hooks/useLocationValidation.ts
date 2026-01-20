@@ -20,6 +20,9 @@ interface LocationValidationResult {
   latitude: number | null;
   longitude: number | null;
   distanceMeters?: number;
+  companyLatitude?: number | null;
+  companyLongitude?: number | null;
+  allowedRadius?: number | null;
 }
 
 // Calculate distance between two coordinates using Haversine formula
@@ -157,6 +160,9 @@ export const useLocationValidation = () => {
           message: 'Localização registrada.',
           latitude: userLat,
           longitude: userLon,
+          companyLatitude: null,
+          companyLongitude: null,
+          allowedRadius: null,
         };
       }
 
@@ -215,6 +221,9 @@ export const useLocationValidation = () => {
             latitude: userLat,
             longitude: userLon,
             distanceMeters: distance,
+            companyLatitude: companyCoords.lat,
+            companyLongitude: companyCoords.lon,
+            allowedRadius: EXACT_TOLERANCE_METERS,
           };
         } else {
           return {
@@ -223,6 +232,9 @@ export const useLocationValidation = () => {
             latitude: userLat,
             longitude: userLon,
             distanceMeters: distance,
+            companyLatitude: companyCoords.lat,
+            companyLongitude: companyCoords.lon,
+            allowedRadius: EXACT_TOLERANCE_METERS,
           };
         }
       }
@@ -236,6 +248,9 @@ export const useLocationValidation = () => {
             latitude: userLat,
             longitude: userLon,
             distanceMeters: distance,
+            companyLatitude: companyCoords.lat,
+            companyLongitude: companyCoords.lon,
+            allowedRadius,
           };
         } else {
           return {
@@ -244,6 +259,9 @@ export const useLocationValidation = () => {
             latitude: userLat,
             longitude: userLon,
             distanceMeters: distance,
+            companyLatitude: companyCoords.lat,
+            companyLongitude: companyCoords.lon,
+            allowedRadius,
           };
         }
       }

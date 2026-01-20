@@ -8,6 +8,7 @@ import TodayRecordsCard from '@/components/employee/TodayRecordsCard';
 import HoursBalanceCard from '@/components/employee/HoursBalanceCard';
 import TodayScheduleCard from '@/components/employee/TodayScheduleCard';
 import PunchButton from '@/components/employee/PunchButton';
+import LocationMapDialog from '@/components/employee/LocationMapDialog';
 import { useLocationValidation } from '@/hooks/useLocationValidation';
 
 type TimeRecordType = 'entry' | 'lunch_out' | 'lunch_in' | 'exit';
@@ -34,6 +35,18 @@ const EmployeeDashboard = () => {
   const [isRegistering, setIsRegistering] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [lastRegisteredTime, setLastRegisteredTime] = useState<string | null>(null);
+  const [showMapDialog, setShowMapDialog] = useState(false);
+  const [mapData, setMapData] = useState<{
+    userLocation: { lat: number; lng: number } | null;
+    companyLocation: { lat: number; lng: number } | null;
+    allowedRadius: number | null;
+    distanceMeters?: number;
+    isValid?: boolean;
+  }>({
+    userLocation: null,
+    companyLocation: null,
+    allowedRadius: null,
+  });
 
   useEffect(() => {
     if (user) {
@@ -92,6 +105,20 @@ const EmployeeDashboard = () => {
     
     // Validate location before allowing punch
     const locationResult = await validateLocation();
+    
+    // Update map data if we have location info
+    if (locationResult.latitude !== null && locationResult.longitude !== null) {
+      setMapData({
+        userLocation: { lat: locationResult.latitude, lng: locationResult.longitude },
+        companyLocation: locationResult.companyLatitude && locationResult.companyLongitude 
+          ? { lat: locationResult.companyLatitude, lng: locationResult.companyLongitude }
+          : null,
+        allowedRadius: locationResult.allowedRadius || null,
+        distanceMeters: locationResult.distanceMeters,
+        isValid: locationResult.isValid,
+      });
+      setShowMapDialog(true);
+    }
     
     if (!locationResult.isValid) {
       toast({
@@ -177,6 +204,17 @@ const EmployeeDashboard = () => {
         showSuccess={showSuccess}
         lastRegisteredTime={lastRegisteredTime}
         onClick={handlePunchClock}
+      />
+
+      {/* Location map dialog */}
+      <LocationMapDialog
+        open={showMapDialog}
+        onOpenChange={setShowMapDialog}
+        userLocation={mapData.userLocation}
+        companyLocation={mapData.companyLocation}
+        allowedRadius={mapData.allowedRadius}
+        distanceMeters={mapData.distanceMeters}
+        isValid={mapData.isValid}
       />
     </div>
   );
