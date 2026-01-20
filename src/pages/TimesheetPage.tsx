@@ -98,6 +98,14 @@ const TimesheetPage = () => {
   const [signature, setSignature] = useState<string | null>(null);
   const [isSigning, setIsSigning] = useState(false);
 
+  // Check if current month can be signed (only after last day of month)
+  const canSignMonth = useMemo(() => {
+    const selectedMonth = startOfMonth(date);
+    const lastDayOfSelectedMonth = endOfMonth(selectedMonth);
+    const today = new Date();
+    return today > lastDayOfSelectedMonth;
+  }, [date]);
+
   const dayRange = useMemo(() => {
     const start = startOfDay(date).toISOString();
     const end = endOfDay(date).toISOString();
@@ -271,7 +279,12 @@ const TimesheetPage = () => {
                   <FileDown className="h-4 w-4" />
                   Baixar PDF
                 </Button>
-                <Button className="gap-2" onClick={() => setShowSignDialog(true)}>
+                <Button 
+                  className="gap-2" 
+                  onClick={() => setShowSignDialog(true)}
+                  disabled={!canSignMonth}
+                  title={!canSignMonth ? 'Só é possível assinar após o último dia do mês' : ''}
+                >
                   <Pen className="h-4 w-4" />
                   Assinar e Salvar
                 </Button>
@@ -323,6 +336,17 @@ const TimesheetPage = () => {
                   </span>
                 )}
               </div>
+
+              {/* Signature availability info */}
+              {!canSignMonth && (
+                <Alert className="border-primary/50 bg-primary/10">
+                  <Clock className="h-4 w-4 text-primary" />
+                  <AlertTitle className="text-primary">Assinatura disponível após o mês</AlertTitle>
+                  <AlertDescription>
+                    O espelho de ponto só pode ser assinado após o último dia do mês de referência.
+                  </AlertDescription>
+                </Alert>
+              )}
 
               {/* Alerts */}
               {showMissingAlert && (
