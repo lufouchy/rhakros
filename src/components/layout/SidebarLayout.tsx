@@ -15,6 +15,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Menu,
+  Settings,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -43,11 +44,13 @@ const SidebarLayout = ({ children }: SidebarLayoutProps) => {
         { icon: FileText, label: 'Solicitações', path: '/requests' },
         { icon: Palmtree, label: 'Férias', path: '/vacations' },
         { icon: FolderOpen, label: 'Documentos', path: '/documents' },
+        { icon: Settings, label: 'Configurações', path: '/settings' },
       ]
     : [
         { icon: Home, label: 'Início', path: '/' },
         { icon: CalendarDays, label: 'Espelho do Ponto', path: '/timesheet' },
         { icon: FileText, label: 'Minhas Solicitações', path: '/requests' },
+        { icon: Users, label: 'Meu Perfil', path: '/profile' },
       ];
 
   const handleLogout = async () => {

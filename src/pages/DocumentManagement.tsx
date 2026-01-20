@@ -57,11 +57,11 @@ import {
   Trash2,
   Bell,
 } from 'lucide-react';
-import { format, differenceInDays, parseISO } from 'date-fns';
+import { format, differenceInDays, parseISO, endOfMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
-type DocumentStatus = 'pending_signature' | 'signed' | 'expired';
+type DocumentStatus = 'pending_signature' | 'signed' | 'expired' | 'late';
 
 interface Document {
   id: string;
@@ -81,7 +81,7 @@ interface Document {
 
 const statusConfig: Record<DocumentStatus, { label: string; className: string; icon: typeof Clock }> = {
   pending_signature: {
-    label: 'Aguardando assinatura',
+    label: 'Pendente de Assinatura',
     className: 'bg-warning/10 text-warning border-warning/20',
     icon: Clock,
   },
@@ -93,6 +93,11 @@ const statusConfig: Record<DocumentStatus, { label: string; className: string; i
   expired: {
     label: 'Vencido',
     className: 'bg-muted text-muted-foreground border-muted',
+    icon: AlertTriangle,
+  },
+  late: {
+    label: 'Em Atraso',
+    className: 'bg-destructive/10 text-destructive border-destructive/20',
     icon: AlertTriangle,
   },
 };
@@ -133,14 +138,32 @@ const DocumentManagement = () => {
         profiles?.map((p) => [p.user_id, { name: p.full_name, email: p.email }]) || []
       );
 
-      setDocuments(
-        data.map((d) => ({
+      // Calculate document status based on signature and time
+      const now = new Date();
+      const documentsWithStatus = data.map((d) => {
+        let calculatedStatus: DocumentStatus = d.status as DocumentStatus;
+        
+        // Check if document is pending and past the 5-day grace period
+        if (d.status === 'pending_signature') {
+          const referenceMonth = parseISO(d.reference_month);
+          const lastDayOfMonth = endOfMonth(referenceMonth);
+          const gracePeriodEnd = new Date(lastDayOfMonth);
+          gracePeriodEnd.setDate(gracePeriodEnd.getDate() + 5);
+          
+          if (now > gracePeriodEnd) {
+            calculatedStatus = 'late';
+          }
+        }
+        
+        return {
           ...d,
-          status: d.status as DocumentStatus,
+          status: calculatedStatus,
           userName: profileMap.get(d.user_id)?.name || 'Usuário',
           userEmail: profileMap.get(d.user_id)?.email || '',
-        }))
-      );
+        };
+      });
+
+      setDocuments(documentsWithStatus);
     }
     setIsLoading(false);
   };
@@ -158,13 +181,42 @@ const DocumentManagement = () => {
     setShowViewDialog(true);
   };
 
-  const handleDownload = (doc: Document) => {
+  const handleDownload = async (doc: Document) => {
     if (doc.file_url) {
-      window.open(doc.file_url, '_blank');
-      toast({
-        title: 'Download iniciado',
-        description: 'O documento está sendo baixado.',
-      });
+      try {
+        // Extract the file path from the URL
+        const urlParts = doc.file_url.split('/timesheet-documents/');
+        if (urlParts.length > 1) {
+          const filePath = urlParts[1];
+          
+          // Get a fresh download URL
+          const { data } = supabase.storage
+            .from('timesheet-documents')
+            .getPublicUrl(filePath);
+          
+          // Create a link and trigger download
+          const link = document.createElement('a');
+          link.href = data.publicUrl;
+          link.download = `espelho-ponto-${format(parseISO(doc.reference_month), "yyyy-MM")}.pdf`;
+          link.target = '_blank';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          
+          toast({
+            title: 'Download iniciado',
+            description: 'O documento está sendo baixado.',
+          });
+        } else {
+          throw new Error('URL inválida');
+        }
+      } catch (error) {
+        toast({
+          variant: 'destructive',
+          title: 'Erro ao baixar',
+          description: 'Não foi possível baixar o documento.',
+        });
+      }
     } else {
       toast({
         variant: 'destructive',
@@ -176,7 +228,17 @@ const DocumentManagement = () => {
 
   const handleOpenInNewTab = (doc: Document) => {
     if (doc.file_url) {
-      window.open(doc.file_url, '_blank');
+      // Extract the file path and get fresh URL
+      const urlParts = doc.file_url.split('/timesheet-documents/');
+      if (urlParts.length > 1) {
+        const filePath = urlParts[1];
+        const { data } = supabase.storage
+          .from('timesheet-documents')
+          .getPublicUrl(filePath);
+        window.open(data.publicUrl, '_blank');
+      } else {
+        window.open(doc.file_url, '_blank');
+      }
     }
   };
 
