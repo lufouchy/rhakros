@@ -9,7 +9,9 @@ import {
   LogOut, 
   Menu,
   X,
-  CalendarDays
+  CalendarDays,
+  FolderOpen,
+  Palmtree,
 } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
@@ -30,6 +32,8 @@ const AppLayout = ({ children }: AppLayoutProps) => {
     ? [
         { icon: Users, label: 'Gestão de Jornada', path: '/' },
         { icon: FileText, label: 'Solicitações', path: '/requests' },
+        { icon: Palmtree, label: 'Férias', path: '/vacations' },
+        { icon: FolderOpen, label: 'Documentos', path: '/documents' },
       ]
     : [
         { icon: Clock, label: 'Registrar Ponto', path: '/' },

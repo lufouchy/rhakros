@@ -16,7 +16,11 @@ export type Database = {
     Tables: {
       adjustment_requests: {
         Row: {
+          absence_dates: string[] | null
+          absence_reason: string | null
+          absence_type: Database["public"]["Enums"]["absence_type"] | null
           created_at: string
+          end_time: string | null
           id: string
           reason: string
           record_type: Database["public"]["Enums"]["time_record_type"]
@@ -24,11 +28,16 @@ export type Database = {
           requested_time: string
           reviewed_at: string | null
           reviewed_by: string | null
+          start_time: string | null
           status: Database["public"]["Enums"]["adjustment_status"]
           user_id: string
         }
         Insert: {
+          absence_dates?: string[] | null
+          absence_reason?: string | null
+          absence_type?: Database["public"]["Enums"]["absence_type"] | null
           created_at?: string
+          end_time?: string | null
           id?: string
           reason: string
           record_type: Database["public"]["Enums"]["time_record_type"]
@@ -36,11 +45,16 @@ export type Database = {
           requested_time: string
           reviewed_at?: string | null
           reviewed_by?: string | null
+          start_time?: string | null
           status?: Database["public"]["Enums"]["adjustment_status"]
           user_id: string
         }
         Update: {
+          absence_dates?: string[] | null
+          absence_reason?: string | null
+          absence_type?: Database["public"]["Enums"]["absence_type"] | null
           created_at?: string
+          end_time?: string | null
           id?: string
           reason?: string
           record_type?: Database["public"]["Enums"]["time_record_type"]
@@ -48,7 +62,53 @@ export type Database = {
           requested_time?: string
           reviewed_at?: string | null
           reviewed_by?: string | null
+          start_time?: string | null
           status?: Database["public"]["Enums"]["adjustment_status"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      documents: {
+        Row: {
+          created_at: string
+          document_type: string
+          expires_at: string | null
+          file_url: string | null
+          id: string
+          reference_month: string
+          signature_data: string | null
+          signed_at: string | null
+          status: Database["public"]["Enums"]["document_status"]
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          document_type?: string
+          expires_at?: string | null
+          file_url?: string | null
+          id?: string
+          reference_month: string
+          signature_data?: string | null
+          signed_at?: string | null
+          status?: Database["public"]["Enums"]["document_status"]
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          document_type?: string
+          expires_at?: string | null
+          file_url?: string | null
+          id?: string
+          reference_month?: string
+          signature_data?: string | null
+          signed_at?: string | null
+          status?: Database["public"]["Enums"]["document_status"]
+          title?: string
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
@@ -149,6 +209,57 @@ export type Database = {
         }
         Relationships: []
       }
+      vacation_requests: {
+        Row: {
+          created_at: string
+          created_by: string
+          days_count: number
+          end_date: string
+          id: string
+          is_admin_created: boolean
+          reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          start_date: string
+          status: Database["public"]["Enums"]["adjustment_status"]
+          updated_at: string
+          user_id: string
+          vacation_type: Database["public"]["Enums"]["vacation_type"]
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          days_count: number
+          end_date: string
+          id?: string
+          is_admin_created?: boolean
+          reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          start_date: string
+          status?: Database["public"]["Enums"]["adjustment_status"]
+          updated_at?: string
+          user_id: string
+          vacation_type?: Database["public"]["Enums"]["vacation_type"]
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          days_count?: number
+          end_date?: string
+          id?: string
+          is_admin_created?: boolean
+          reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          start_date?: string
+          status?: Database["public"]["Enums"]["adjustment_status"]
+          updated_at?: string
+          user_id?: string
+          vacation_type?: Database["public"]["Enums"]["vacation_type"]
+        }
+        Relationships: []
+      }
       work_schedules: {
         Row: {
           created_at: string
@@ -190,9 +301,16 @@ export type Database = {
       }
     }
     Enums: {
+      absence_type:
+        | "vacation"
+        | "medical_consultation"
+        | "medical_leave"
+        | "justified_absence"
       adjustment_status: "pending" | "approved" | "rejected"
       app_role: "admin" | "employee"
+      document_status: "pending_signature" | "signed" | "expired"
       time_record_type: "entry" | "lunch_out" | "lunch_in" | "exit"
+      vacation_type: "individual" | "collective"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -320,9 +438,17 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      absence_type: [
+        "vacation",
+        "medical_consultation",
+        "medical_leave",
+        "justified_absence",
+      ],
       adjustment_status: ["pending", "approved", "rejected"],
       app_role: ["admin", "employee"],
+      document_status: ["pending_signature", "signed", "expired"],
       time_record_type: ["entry", "lunch_out", "lunch_in", "exit"],
+      vacation_type: ["individual", "collective"],
     },
   },
 } as const
