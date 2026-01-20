@@ -8,7 +8,8 @@ import {
   FileText, 
   LogOut, 
   Menu,
-  X
+  X,
+  CalendarDays
 } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
@@ -32,6 +33,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
       ]
     : [
         { icon: Clock, label: 'Registrar Ponto', path: '/' },
+        { icon: CalendarDays, label: 'Espelho do Ponto', path: '/timesheet' },
         { icon: FileText, label: 'Minhas Solicitações', path: '/requests' },
       ];
 
