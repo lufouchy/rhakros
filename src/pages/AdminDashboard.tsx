@@ -57,7 +57,8 @@ interface WorkSchedule {
   name: string;
   start_time: string;
   end_time: string;
-  lunch_duration_minutes: number;
+  break_start_time: string | null;
+  break_end_time: string | null;
 }
 
 interface EmployeeStatus {
@@ -79,7 +80,8 @@ const AdminDashboard = () => {
     name: '',
     start_time: '08:00',
     end_time: '17:00',
-    lunch_duration_minutes: 60,
+    break_start_time: '',
+    break_end_time: '',
   });
   const [loading, setLoading] = useState(true);
 
@@ -190,7 +192,13 @@ const AdminDashboard = () => {
   const handleCreateSchedule = async () => {
     const { error } = await supabase
       .from('work_schedules')
-      .insert(newSchedule);
+      .insert({
+        name: newSchedule.name,
+        start_time: newSchedule.start_time,
+        end_time: newSchedule.end_time,
+        break_start_time: newSchedule.break_start_time || null,
+        break_end_time: newSchedule.break_end_time || null,
+      });
 
     if (error) {
       toast({
@@ -208,7 +216,8 @@ const AdminDashboard = () => {
         name: '',
         start_time: '08:00',
         end_time: '17:00',
-        lunch_duration_minutes: 60,
+        break_start_time: '',
+        break_end_time: '',
       });
       fetchSchedules();
     }
@@ -345,13 +354,23 @@ const AdminDashboard = () => {
                     />
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <Label>Duração do Almoço (minutos)</Label>
-                  <Input
-                    type="number"
-                    value={newSchedule.lunch_duration_minutes}
-                    onChange={(e) => setNewSchedule({ ...newSchedule, lunch_duration_minutes: parseInt(e.target.value) })}
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Ent. Intervalo</Label>
+                    <Input
+                      type="time"
+                      value={newSchedule.break_start_time}
+                      onChange={(e) => setNewSchedule({ ...newSchedule, break_start_time: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Saí. Intervalo</Label>
+                    <Input
+                      type="time"
+                      value={newSchedule.break_end_time}
+                      onChange={(e) => setNewSchedule({ ...newSchedule, break_end_time: e.target.value })}
+                    />
+                  </div>
                 </div>
                 <Button onClick={handleCreateSchedule} className="w-full">
                   Criar Regra

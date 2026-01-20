@@ -44,7 +44,8 @@ interface WorkSchedule {
   name: string;
   start_time: string;
   end_time: string;
-  lunch_duration_minutes: number;
+  break_start_time: string | null;
+  break_end_time: string | null;
 }
 
 const EmployeeProfile = () => {
@@ -247,18 +248,22 @@ const EmployeeProfile = () => {
                   <span className="font-medium">{workSchedule.name}</span>
                   <Badge variant="outline">Ativa</Badge>
                 </div>
-                <div className="grid grid-cols-3 gap-4 text-center">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
                   <div className="p-3 rounded-lg bg-muted/30">
                     <p className="text-sm text-muted-foreground">Entrada</p>
-                    <p className="text-lg font-semibold">{workSchedule.start_time}</p>
+                    <p className="text-lg font-semibold">{workSchedule.start_time?.slice(0, 5) || '--:--'}</p>
                   </div>
                   <div className="p-3 rounded-lg bg-muted/30">
-                    <p className="text-sm text-muted-foreground">Almoço</p>
-                    <p className="text-lg font-semibold">{workSchedule.lunch_duration_minutes} min</p>
+                    <p className="text-sm text-muted-foreground">Ent. Intervalo</p>
+                    <p className="text-lg font-semibold">{workSchedule.break_start_time?.slice(0, 5) || '--:--'}</p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-muted/30">
+                    <p className="text-sm text-muted-foreground">Saí. Intervalo</p>
+                    <p className="text-lg font-semibold">{workSchedule.break_end_time?.slice(0, 5) || '--:--'}</p>
                   </div>
                   <div className="p-3 rounded-lg bg-muted/30">
                     <p className="text-sm text-muted-foreground">Saída</p>
-                    <p className="text-lg font-semibold">{workSchedule.end_time}</p>
+                    <p className="text-lg font-semibold">{workSchedule.end_time?.slice(0, 5) || '--:--'}</p>
                   </div>
                 </div>
               </div>

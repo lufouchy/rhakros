@@ -8,9 +8,11 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
 import { MapPin, Loader2, Search } from 'lucide-react';
 
+type LocationMode = 'disabled' | 'log_only' | 'require_exact' | 'require_radius';
+
 interface LocationSettingsData {
   id: string;
-  location_mode: 'disabled' | 'log_only' | 'require_exact' | 'require_radius';
+  location_mode: LocationMode;
   address_cep: string | null;
   address_street: string | null;
   address_number: string | null;
@@ -33,15 +35,27 @@ const LocationSettings = () => {
   }, []);
 
   const fetchSettings = async () => {
-    const { data } = await supabase
-      .from('location_settings' as any)
+    setIsLoading(true);
+    const { data, error } = await supabase
+      .from('location_settings')
       .select('*')
       .single();
 
-    if (data) {
-      setSettings(data as unknown as LocationSettingsData);
+    if (error) {
+      console.error('Error fetching location settings:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Erro ao carregar configurações',
+        description: error.message,
+      });
+    } else if (data) {
+      setSettings(data as LocationSettingsData);
     }
     setIsLoading(false);
+  };
+
+  const handleModeChange = (value: string) => {
+    setSettings(prev => prev ? { ...prev, location_mode: value as LocationMode } : null);
   };
 
   const searchCep = async () => {
@@ -99,7 +113,7 @@ const LocationSettings = () => {
 
     setIsSaving(true);
     const { error } = await supabase
-      .from('location_settings' as any)
+      .from('location_settings')
       .update({
         location_mode: settings.location_mode,
         address_cep: settings.address_cep,
@@ -110,7 +124,7 @@ const LocationSettings = () => {
         address_city: settings.address_city,
         address_state: settings.address_state,
         allowed_radius_meters: settings.allowed_radius_meters,
-      } as any)
+      })
       .eq('id', settings.id);
 
     if (error) {
@@ -149,7 +163,7 @@ const LocationSettings = () => {
           <Label className="text-base font-medium">Modo de Localização</Label>
           <RadioGroup
             value={settings?.location_mode || 'disabled'}
-            onValueChange={(value) => setSettings(prev => prev ? { ...prev, location_mode: value as any } : null)}
+            onValueChange={handleModeChange}
             className="space-y-3"
           >
             <div className="flex items-start space-x-3 p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors">
