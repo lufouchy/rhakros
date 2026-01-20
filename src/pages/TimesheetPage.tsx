@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import AppLayout from "@/components/layout/AppLayout";
+import SidebarLayout from "@/components/layout/SidebarLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
@@ -257,8 +257,8 @@ const TimesheetPage = () => {
   const showOvertimeAlert = !isLoading && analysis.hasExcessiveOvertime;
 
   return (
-    <AppLayout>
-      <div className="max-w-5xl mx-auto space-y-6 animate-fade-in">
+    <SidebarLayout>
+      <div className="max-w-5xl mx-auto space-y-6 animate-fade-in p-6">
         <Card className="border-0 shadow-lg overflow-hidden">
           <CardHeader className="pb-3">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -485,7 +485,7 @@ const TimesheetPage = () => {
           </DialogContent>
         </Dialog>
       </div>
-    </AppLayout>
+    </SidebarLayout>
   );
 };
 

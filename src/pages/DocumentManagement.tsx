@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import AppLayout from '@/components/layout/AppLayout';
+import SidebarLayout from '@/components/layout/SidebarLayout';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -303,8 +303,8 @@ const DocumentManagement = () => {
   }
 
   return (
-    <AppLayout>
-      <div className="max-w-7xl mx-auto space-y-6 animate-fade-in">
+    <SidebarLayout>
+      <div className="max-w-7xl mx-auto space-y-6 animate-fade-in p-6">
         {/* Expiring Alert Banner */}
         {showExpiringAlert && expiringDocuments.length > 0 && (
           <Alert className="border-warning/50 bg-warning/10">
@@ -735,7 +735,7 @@ const DocumentManagement = () => {
           </AlertDialogContent>
         </AlertDialog>
       </div>
-    </AppLayout>
+    </SidebarLayout>
   );
 };
 

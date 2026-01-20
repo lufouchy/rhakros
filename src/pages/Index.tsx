@@ -1,6 +1,6 @@
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import AppLayout from '@/components/layout/AppLayout';
+import SidebarLayout from '@/components/layout/SidebarLayout';
 import EmployeeDashboard from './EmployeeDashboard';
 import AdminDashboard from './AdminDashboard';
 import { Loader2 } from 'lucide-react';
@@ -21,9 +21,9 @@ const Index = () => {
   }
 
   return (
-    <AppLayout>
+    <SidebarLayout>
       {userRole === 'admin' ? <AdminDashboard /> : <EmployeeDashboard />}
-    </AppLayout>
+    </SidebarLayout>
   );
 };
 

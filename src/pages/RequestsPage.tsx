@@ -1,6 +1,6 @@
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import AppLayout from '@/components/layout/AppLayout';
+import SidebarLayout from '@/components/layout/SidebarLayout';
 import Requests from './Requests';
 import { Loader2 } from 'lucide-react';
 
@@ -20,9 +20,11 @@ const RequestsPage = () => {
   }
 
   return (
-    <AppLayout>
-      <Requests />
-    </AppLayout>
+    <SidebarLayout>
+      <div className="p-6">
+        <Requests />
+      </div>
+    </SidebarLayout>
   );
 };
 
