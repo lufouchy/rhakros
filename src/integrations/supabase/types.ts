@@ -205,6 +205,8 @@ export type Database = {
           phone: string | null
           position: string | null
           sector: string | null
+          specification: string | null
+          status: string | null
           termination_date: string | null
           updated_at: string
           user_id: string
@@ -229,6 +231,8 @@ export type Database = {
           phone?: string | null
           position?: string | null
           sector?: string | null
+          specification?: string | null
+          status?: string | null
           termination_date?: string | null
           updated_at?: string
           user_id: string
@@ -253,6 +257,8 @@ export type Database = {
           phone?: string | null
           position?: string | null
           sector?: string | null
+          specification?: string | null
+          status?: string | null
           termination_date?: string | null
           updated_at?: string
           user_id?: string
