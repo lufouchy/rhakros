@@ -42,7 +42,8 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { UserPlus, Loader2, Search, Plus, Users, Pencil, Trash2, Filter, X, History } from 'lucide-react';
+import { UserPlus, Loader2, Search, Plus, Users, Pencil, Trash2, Filter, X, History, FileDown, FileSpreadsheet } from 'lucide-react';
+import { exportToPDF, exportToExcel } from '@/utils/employeeExport';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { StatusHistoryDialog } from '@/components/admin/StatusHistoryDialog';
@@ -1184,6 +1185,37 @@ const EmployeeManagement = () => {
                   Limpar
                 </Button>
               )}
+
+              <div className="flex gap-2 ml-auto">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => exportToPDF({
+                    employees: filteredEmployees,
+                    schedules,
+                    filters: { searchTerm, filterSector, filterStatus }
+                  })}
+                  className="gap-2"
+                  disabled={filteredEmployees.length === 0}
+                >
+                  <FileDown className="h-4 w-4" />
+                  PDF
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => exportToExcel({
+                    employees: filteredEmployees,
+                    schedules,
+                    filters: { searchTerm, filterSector, filterStatus }
+                  })}
+                  className="gap-2"
+                  disabled={filteredEmployees.length === 0}
+                >
+                  <FileSpreadsheet className="h-4 w-4" />
+                  Excel
+                </Button>
+              </div>
             </div>
 
             <div className="mt-3 text-sm text-muted-foreground">
