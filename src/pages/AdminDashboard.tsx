@@ -28,7 +28,8 @@ import {
   Settings, 
   AlertTriangle,
   ChevronRight,
-  Plus
+  Plus,
+  Bell
 } from 'lucide-react';
 import { format, isWeekend, startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -87,6 +88,48 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     fetchData();
+
+    // Subscribe to realtime status changes
+    const channel = supabase
+      .channel('status-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'status_history',
+        },
+        async (payload) => {
+          // Fetch the employee name for the notification
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('full_name')
+            .eq('user_id', payload.new.user_id)
+            .maybeSingle();
+
+          const employeeName = profile?.full_name || 'Colaborador';
+          const newStatus = payload.new.new_status || 'atualizado';
+          const newSpec = payload.new.new_specification;
+
+          toast({
+            title: (
+              <div className="flex items-center gap-2">
+                <Bell className="h-4 w-4 text-primary" />
+                Mudança de Status
+              </div>
+            ) as unknown as string,
+            description: `${employeeName} teve seu status alterado para "${newStatus}"${newSpec ? ` (${newSpec})` : ''}.`,
+          });
+
+          // Refresh employee list
+          fetchEmployees();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const fetchData = async () => {
