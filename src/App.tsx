@@ -13,6 +13,7 @@ import VacationManagement from "./pages/VacationManagement";
 import EmployeeProfile from "./pages/EmployeeProfile";
 import EmployeeManagement from "./pages/EmployeeManagement";
 import AdminSettings from "./pages/AdminSettings";
+import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -33,6 +34,7 @@ const App = () => (
             <Route path="/vacations" element={<VacationManagement />} />
             <Route path="/profile" element={<EmployeeProfile />} />
             <Route path="/employees" element={<EmployeeManagement />} />
+            <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/settings" element={<AdminSettings />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
