@@ -494,22 +494,12 @@ const EmployeeManagement = () => {
     setIsLoading(true);
 
     try {
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: form.email,
-        password: form.password,
-        options: {
-          data: {
-            full_name: form.full_name,
-          },
-        },
-      });
-
-      if (authError) throw authError;
-
-      if (authData.user) {
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .update({
+      const { data, error } = await supabase.functions.invoke('create-employee', {
+        body: {
+          email: form.email,
+          password: form.password,
+          full_name: form.full_name,
+          profileData: {
             cpf: form.cpf.replace(/\D/g, '') || null,
             birth_date: form.birth_date || null,
             hire_date: form.hire_date || null,
@@ -527,13 +517,12 @@ const EmployeeManagement = () => {
             work_schedule_id: form.work_schedule_id || null,
             status: form.status || 'ativo',
             specification: form.specification || 'normal',
-          })
-          .eq('user_id', authData.user.id);
+          },
+        },
+      });
 
-        if (profileError) {
-          console.error('Error updating profile:', profileError);
-        }
-      }
+      if (error) throw new Error(error.message);
+      if (data?.error) throw new Error(data.error);
 
       toast({
         title: 'Colaborador cadastrado!',
