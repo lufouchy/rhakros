@@ -72,6 +72,7 @@ interface EmployeeStatus {
 }
 
 import WorkingNowDialog from '@/components/admin/WorkingNowDialog';
+import AlertsDialog from '@/components/admin/AlertsDialog';
 
 const AdminDashboard = () => {
   const { toast } = useToast();
@@ -80,6 +81,7 @@ const AdminDashboard = () => {
   const [selectedEmployee, setSelectedEmployee] = useState<EmployeeStatus | null>(null);
   const [showScheduleDialog, setShowScheduleDialog] = useState(false);
   const [showWorkingNowDialog, setShowWorkingNowDialog] = useState(false);
+  const [showAlertsDialog, setShowAlertsDialog] = useState(false);
   const [newSchedule, setNewSchedule] = useState({
     name: '',
     start_time: '08:00',
@@ -339,18 +341,22 @@ const AdminDashboard = () => {
           </CardContent>
         </Card>
 
-        <Card className="border-0 shadow-md">
+        <Card 
+          className="border-0 shadow-md cursor-pointer hover:shadow-lg transition-shadow"
+          onClick={() => setShowAlertsDialog(true)}
+        >
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
               <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-warning/10">
                 <AlertTriangle className="h-6 w-6 text-warning" />
               </div>
-              <div>
+              <div className="flex-1">
                 <p className="text-sm text-muted-foreground">Alertas</p>
                 <p className="text-2xl font-bold">
                   {employees.filter(e => e.hasAlert).length}
                 </p>
               </div>
+              <ChevronRight className="h-5 w-5 text-muted-foreground" />
             </div>
           </CardContent>
         </Card>
@@ -569,6 +575,12 @@ const AdminDashboard = () => {
       <WorkingNowDialog 
         open={showWorkingNowDialog} 
         onOpenChange={setShowWorkingNowDialog} 
+      />
+
+      {/* Alerts Dialog */}
+      <AlertsDialog 
+        open={showAlertsDialog} 
+        onOpenChange={setShowAlertsDialog} 
       />
     </div>
   );
