@@ -32,6 +32,7 @@ interface WorkSchedule {
   break_start_time: string | null;
   break_end_time: string | null;
   break_duration_minutes: number | null;
+  employee_count?: number;
 }
 
 interface ScheduleForm {
@@ -68,20 +69,43 @@ const WorkScheduleManagement = () => {
 
   const fetchSchedules = async () => {
     setIsLoading(true);
-    const { data, error } = await supabase
+    
+    // Fetch schedules
+    const { data: schedulesData, error: schedulesError } = await supabase
       .from('work_schedules')
       .select('*')
       .order('name');
 
-    if (error) {
+    if (schedulesError) {
       toast({
         variant: 'destructive',
         title: 'Erro ao carregar jornadas',
-        description: error.message,
+        description: schedulesError.message,
       });
-    } else {
-      setSchedules(data || []);
+      setIsLoading(false);
+      return;
     }
+
+    // Fetch employee counts per schedule
+    const { data: profilesData } = await supabase
+      .from('profiles')
+      .select('work_schedule_id');
+
+    // Count employees per schedule
+    const countMap: Record<string, number> = {};
+    profilesData?.forEach(profile => {
+      if (profile.work_schedule_id) {
+        countMap[profile.work_schedule_id] = (countMap[profile.work_schedule_id] || 0) + 1;
+      }
+    });
+
+    // Merge counts into schedules
+    const schedulesWithCounts = (schedulesData || []).map(schedule => ({
+      ...schedule,
+      employee_count: countMap[schedule.id] || 0,
+    }));
+
+    setSchedules(schedulesWithCounts);
     setIsLoading(false);
   };
 
@@ -331,6 +355,7 @@ const WorkScheduleManagement = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead>Jornada</TableHead>
+                  <TableHead className="text-center">Colaboradores</TableHead>
                   <TableHead className="text-center">Entrada</TableHead>
                   <TableHead className="text-center">Saída</TableHead>
                   <TableHead className="text-center">Ent. Intervalo</TableHead>
@@ -343,6 +368,13 @@ const WorkScheduleManagement = () => {
                 {schedules.map((schedule) => (
                   <TableRow key={schedule.id}>
                     <TableCell className="font-medium">{schedule.name}</TableCell>
+                    <TableCell className="text-center">
+                      <span className={`inline-flex items-center justify-center min-w-[24px] h-6 px-2 rounded-full text-xs font-medium ${
+                        schedule.employee_count ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
+                      }`}>
+                        {schedule.employee_count || 0}
+                      </span>
+                    </TableCell>
                     <TableCell className="text-center">{schedule.start_time.slice(0, 5)}</TableCell>
                     <TableCell className="text-center">{schedule.end_time.slice(0, 5)}</TableCell>
                     <TableCell className="text-center">{schedule.break_start_time ? schedule.break_start_time.slice(0, 5) : '-'}</TableCell>
