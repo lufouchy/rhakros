@@ -29,7 +29,8 @@ import {
   AlertTriangle,
   ChevronRight,
   Plus,
-  Bell
+  Bell,
+  FileText
 } from 'lucide-react';
 import { format, isWeekend, startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -73,6 +74,7 @@ interface EmployeeStatus {
 
 import WorkingNowDialog from '@/components/admin/WorkingNowDialog';
 import AlertsDialog from '@/components/admin/AlertsDialog';
+import PendingRequestsDialog from '@/components/admin/PendingRequestsDialog';
 
 const AdminDashboard = () => {
   const { toast } = useToast();
@@ -82,6 +84,8 @@ const AdminDashboard = () => {
   const [showScheduleDialog, setShowScheduleDialog] = useState(false);
   const [showWorkingNowDialog, setShowWorkingNowDialog] = useState(false);
   const [showAlertsDialog, setShowAlertsDialog] = useState(false);
+  const [showPendingRequestsDialog, setShowPendingRequestsDialog] = useState(false);
+  const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
   const [newSchedule, setNewSchedule] = useState({
     name: '',
     start_time: '08:00',
@@ -142,8 +146,17 @@ const AdminDashboard = () => {
     await Promise.all([
       fetchEmployees(),
       fetchSchedules(),
+      fetchPendingRequestsCount(),
     ]);
     setLoading(false);
+  };
+
+  const fetchPendingRequestsCount = async () => {
+    const [{ count: vacationCount }, { count: adjustmentCount }] = await Promise.all([
+      supabase.from('vacation_requests').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
+      supabase.from('adjustment_requests').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
+    ]);
+    setPendingRequestsCount((vacationCount || 0) + (adjustmentCount || 0));
   };
 
   const fetchSchedules = async () => {
@@ -306,7 +319,7 @@ const AdminDashboard = () => {
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="border-0 shadow-md">
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
@@ -355,6 +368,24 @@ const AdminDashboard = () => {
                 <p className="text-2xl font-bold">
                   {employees.filter(e => e.hasAlert).length}
                 </p>
+              </div>
+              <ChevronRight className="h-5 w-5 text-muted-foreground" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card 
+          className="border-0 shadow-md cursor-pointer hover:shadow-lg transition-shadow"
+          onClick={() => setShowPendingRequestsDialog(true)}
+        >
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10">
+                <FileText className="h-6 w-6 text-primary" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm text-muted-foreground">Solicitações Pendentes</p>
+                <p className="text-2xl font-bold">{pendingRequestsCount}</p>
               </div>
               <ChevronRight className="h-5 w-5 text-muted-foreground" />
             </div>
@@ -498,6 +529,12 @@ const AdminDashboard = () => {
       <AlertsDialog 
         open={showAlertsDialog} 
         onOpenChange={setShowAlertsDialog} 
+      />
+
+      {/* Pending Requests Dialog */}
+      <PendingRequestsDialog 
+        open={showPendingRequestsDialog} 
+        onOpenChange={setShowPendingRequestsDialog} 
       />
     </div>
   );
