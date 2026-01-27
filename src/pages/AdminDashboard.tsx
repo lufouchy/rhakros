@@ -40,6 +40,8 @@ interface Profile {
   user_id: string;
   full_name: string;
   email: string;
+  status: string | null;
+  specification: string | null;
 }
 
 interface TimeRecord {
@@ -65,7 +67,7 @@ interface WorkSchedule {
 
 interface EmployeeStatus {
   profile: Profile;
-  status: 'working' | 'absent' | 'break';
+  punchStatus: 'working' | 'break' | 'not_started';
   todayMinutes: number;
   balance: number;
   hasAlert: boolean;
@@ -220,14 +222,14 @@ const AdminDashboard = () => {
         }
       }
 
-      // Determine status
-      let status: 'working' | 'absent' | 'break' = 'absent';
+      // Determine punch status (situação de ponto hoje)
+      let punchStatus: 'working' | 'break' | 'not_started' = 'not_started';
       if (userRecords.length > 0) {
         const lastRecord = userRecords[userRecords.length - 1];
         if (lastRecord.record_type === 'entry' || lastRecord.record_type === 'lunch_in') {
-          status = 'working';
+          punchStatus = 'working';
         } else if (lastRecord.record_type === 'lunch_out') {
-          status = 'break';
+          punchStatus = 'break';
         }
       }
 
@@ -239,7 +241,7 @@ const AdminDashboard = () => {
 
       return {
         profile,
-        status,
+        punchStatus,
         todayMinutes,
         balance: userBalance?.balance_minutes || 0,
         hasAlert,
@@ -346,7 +348,7 @@ const AdminDashboard = () => {
               <div className="flex-1">
                 <p className="text-sm text-muted-foreground">Trabalhando Agora</p>
                 <p className="text-2xl font-bold">
-                  {employees.filter(e => e.status === 'working').length}
+                  {employees.filter(e => e.punchStatus === 'working').length}
                 </p>
               </div>
               <ChevronRight className="h-5 w-5 text-muted-foreground" />
@@ -425,15 +427,24 @@ const AdminDashboard = () => {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <span className={`status-badge ${
-                      employee.status === 'working' ? 'status-working' :
-                      employee.status === 'break' ? 'status-warning' :
-                      'status-absent'
-                    }`}>
-                      {employee.status === 'working' ? 'Trabalhando' :
-                       employee.status === 'break' ? 'Intervalo' :
-                       'Ausente'}
-                    </span>
+                    <div className="flex flex-col gap-1">
+                      <Badge 
+                        variant={
+                          employee.profile.status === 'ativo' ? 'default' :
+                          employee.profile.status === 'afastado' ? 'secondary' :
+                          employee.profile.status === 'suspenso' ? 'outline' :
+                          'destructive'
+                        }
+                        className="w-fit capitalize"
+                      >
+                        {employee.profile.status || 'ativo'}
+                      </Badge>
+                      {employee.profile.specification && employee.profile.specification !== 'normal' && (
+                        <span className="text-xs text-muted-foreground capitalize">
+                          {employee.profile.specification}
+                        </span>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell className="text-right tabular-nums">
                     {formatMinutes(employee.todayMinutes)}
