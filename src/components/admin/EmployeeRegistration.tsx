@@ -21,6 +21,7 @@ import {
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { UserPlus, Loader2, Search, Plus } from 'lucide-react';
+import { validateCPF, formatCPF } from '@/utils/cpfValidation';
 
 interface WorkSchedule {
   id: string;
@@ -202,12 +203,27 @@ const EmployeeRegistration = () => {
     }
   };
 
+  const handleCPFChange = (value: string) => {
+    const formatted = formatCPF(value);
+    setForm(prev => ({ ...prev, cpf: formatted }));
+  };
+
   const handleSubmit = async () => {
     if (!form.full_name || !form.email || !form.password) {
       toast({
         variant: 'destructive',
         title: 'Campos obrigatórios',
         description: 'Preencha nome, e-mail e senha.',
+      });
+      return;
+    }
+
+    // Validate CPF if provided
+    if (form.cpf && !validateCPF(form.cpf)) {
+      toast({
+        variant: 'destructive',
+        title: 'CPF inválido',
+        description: 'O CPF informado não é válido. Verifique os dígitos.',
       });
       return;
     }
@@ -327,7 +343,7 @@ const EmployeeRegistration = () => {
                   id="cpf"
                   placeholder="000.000.000-00"
                   value={form.cpf}
-                  onChange={(e) => setForm(prev => ({ ...prev, cpf: e.target.value }))}
+                  onChange={(e) => handleCPFChange(e.target.value)}
                   maxLength={14}
                 />
               </div>
