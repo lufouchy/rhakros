@@ -42,9 +42,10 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { UserPlus, Loader2, Search, Plus, Users, Pencil, Trash2, Filter, X } from 'lucide-react';
+import { UserPlus, Loader2, Search, Plus, Users, Pencil, Trash2, Filter, X, History } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { StatusHistoryDialog } from '@/components/admin/StatusHistoryDialog';
 
 // Status and Specification options
 const STATUS_OPTIONS = ['ativo', 'suspenso', 'afastado', 'desligado'] as const;
@@ -164,6 +165,7 @@ const EmployeeManagement = () => {
   const [open, setOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [schedules, setSchedules] = useState<WorkSchedule[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -624,6 +626,11 @@ const EmployeeManagement = () => {
   const handleDeleteClick = (employee: Employee) => {
     setSelectedEmployee(employee);
     setDeleteDialogOpen(true);
+  };
+
+  const handleHistoryClick = (employee: Employee) => {
+    setSelectedEmployee(employee);
+    setHistoryDialogOpen(true);
   };
 
   const handleDelete = async () => {
@@ -1212,6 +1219,7 @@ const EmployeeManagement = () => {
                       <TableHead>Jornada</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Especificação</TableHead>
+                      <TableHead className="text-center">Histórico</TableHead>
                       <TableHead className="text-center">Editar</TableHead>
                       <TableHead className="text-center">Excluir</TableHead>
                     </TableRow>
@@ -1233,6 +1241,16 @@ const EmployeeManagement = () => {
                           <span className="text-sm text-muted-foreground">
                             {(employee.specification || 'normal').charAt(0).toUpperCase() + (employee.specification || 'normal').slice(1)}
                           </span>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleHistoryClick(employee)}
+                            title="Ver histórico de status"
+                          >
+                            <History className="h-4 w-4" />
+                          </Button>
                         </TableCell>
                         <TableCell className="text-center">
                           <Button
@@ -1317,6 +1335,16 @@ const EmployeeManagement = () => {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        {/* Status History Dialog */}
+        {selectedEmployee && (
+          <StatusHistoryDialog
+            open={historyDialogOpen}
+            onOpenChange={setHistoryDialogOpen}
+            userId={selectedEmployee.user_id}
+            employeeName={selectedEmployee.full_name}
+          />
+        )}
       </div>
     </SidebarLayout>
   );

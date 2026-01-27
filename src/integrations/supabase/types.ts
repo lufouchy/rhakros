@@ -274,6 +274,42 @@ export type Database = {
           },
         ]
       }
+      status_history: {
+        Row: {
+          changed_at: string
+          changed_by: string | null
+          id: string
+          new_specification: string | null
+          new_status: string | null
+          previous_specification: string | null
+          previous_status: string | null
+          reason: string | null
+          user_id: string
+        }
+        Insert: {
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          new_specification?: string | null
+          new_status?: string | null
+          previous_specification?: string | null
+          previous_status?: string | null
+          reason?: string | null
+          user_id: string
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          new_specification?: string | null
+          new_status?: string | null
+          previous_specification?: string | null
+          previous_status?: string | null
+          reason?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       time_records: {
         Row: {
           created_at: string
