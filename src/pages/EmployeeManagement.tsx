@@ -258,16 +258,108 @@ const EmployeeManagement = () => {
 
   const fetchEmployees = async () => {
     setIsLoadingEmployees(true);
-    const { data, error } = await supabase
+    
+    // Fetch profiles
+    const { data: profilesData, error: profilesError } = await supabase
       .from('profiles')
       .select('*')
       .order('full_name');
     
-    if (data) {
-      setEmployees(data as Employee[]);
-      setFilteredEmployees(data as Employee[]);
+    if (profilesData) {
+      // Update statuses based on active vacations/leaves
+      const updatedEmployees = await Promise.all(
+        profilesData.map(async (employee) => {
+          const calculatedStatus = await calculateEmployeeStatus(employee.user_id);
+          return {
+            ...employee,
+            status: calculatedStatus.status,
+            specification: calculatedStatus.specification,
+          };
+        })
+      );
+      
+      setEmployees(updatedEmployees as Employee[]);
+      setFilteredEmployees(updatedEmployees as Employee[]);
     }
     setIsLoadingEmployees(false);
+  };
+
+  // Calculate employee status based on active vacations and medical leaves
+  const calculateEmployeeStatus = async (userId: string): Promise<{ status: string; specification: string }> => {
+    const today = new Date().toISOString().split('T')[0];
+    
+    // Check for active approved vacations
+    const { data: vacationData } = await supabase
+      .from('vacation_requests')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('status', 'approved')
+      .lte('start_date', today)
+      .gte('end_date', today)
+      .limit(1);
+    
+    if (vacationData && vacationData.length > 0) {
+      return { status: 'ativo', specification: 'férias' };
+    }
+    
+    // Check for active approved medical leaves
+    const { data: adjustmentData } = await supabase
+      .from('adjustment_requests')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('status', 'approved')
+      .in('absence_type', ['medical_leave', 'justified_absence']);
+    
+    if (adjustmentData && adjustmentData.length > 0) {
+      // Check if any of the absence_dates include today
+      const hasActiveLeave = adjustmentData.some(adj => {
+        if (adj.absence_dates && Array.isArray(adj.absence_dates)) {
+          return adj.absence_dates.includes(today);
+        }
+        return false;
+      });
+      
+      if (hasActiveLeave) {
+        const activeLeave = adjustmentData.find(adj => 
+          adj.absence_dates?.includes(today)
+        );
+        
+        if (activeLeave?.absence_type === 'medical_leave') {
+          return { status: 'afastado', specification: 'licença médica - atestado' };
+        }
+        return { status: 'afastado', specification: 'folga' };
+      }
+    }
+    
+    // Check profile's stored status (for manually set statuses like 'desligado')
+    const { data: profileData } = await supabase
+      .from('profiles')
+      .select('status, specification, termination_date')
+      .eq('user_id', userId)
+      .maybeSingle();
+    
+    if (profileData) {
+      // If employee has termination date, they are 'desligado'
+      if (profileData.termination_date) {
+        return { 
+          status: 'desligado', 
+          specification: profileData.specification || 'sem justa causa' 
+        };
+      }
+      
+      // Return stored status if it's not a leave-related status
+      // (leave statuses are calculated dynamically above)
+      const leaveSpecs = ['férias', 'licença médica - atestado', 'folga', 'licença médica - INSS', 'licença maternidade', 'licença paternidade'];
+      if (profileData.status && !leaveSpecs.includes(profileData.specification || '')) {
+        return { 
+          status: profileData.status, 
+          specification: profileData.specification || 'normal' 
+        };
+      }
+    }
+    
+    // Default status
+    return { status: 'ativo', specification: 'normal' };
   };
 
   const searchCep = async (isEdit = false) => {
