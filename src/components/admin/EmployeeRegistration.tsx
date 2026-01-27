@@ -215,24 +215,14 @@ const EmployeeRegistration = () => {
     setIsLoading(true);
 
     try {
-      // Create user via auth
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: form.email,
-        password: form.password,
-        options: {
-          data: {
-            full_name: form.full_name,
-          },
-        },
-      });
-
-      if (authError) throw authError;
-
-      if (authData.user) {
-        // Update profile with additional data
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .update({
+      const { data: sessionData } = await supabase.auth.getSession();
+      
+      const response = await supabase.functions.invoke('create-employee', {
+        body: {
+          email: form.email,
+          password: form.password,
+          full_name: form.full_name,
+          profileData: {
             cpf: form.cpf || null,
             birth_date: form.birth_date || null,
             hire_date: form.hire_date || null,
@@ -246,12 +236,16 @@ const EmployeeRegistration = () => {
             sector: form.sector || null,
             position: form.position || null,
             work_schedule_id: form.work_schedule_id || null,
-          } as any)
-          .eq('user_id', authData.user.id);
+          },
+        },
+      });
 
-        if (profileError) {
-          console.error('Error updating profile:', profileError);
-        }
+      if (response.error) {
+        throw new Error(response.error.message || 'Erro ao cadastrar colaborador');
+      }
+
+      if (response.data?.error) {
+        throw new Error(response.data.error);
       }
 
       toast({
@@ -278,6 +272,9 @@ const EmployeeRegistration = () => {
         work_schedule_id: '',
         password: '',
       });
+
+      // Dispatch event to refresh employee list
+      window.dispatchEvent(new CustomEvent('employee-created'));
     } catch (error: any) {
       toast({
         variant: 'destructive',
