@@ -42,11 +42,12 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { UserPlus, Loader2, Search, Plus, Users, Pencil, Trash2, Filter, X, History, FileDown, FileSpreadsheet } from 'lucide-react';
+import { UserPlus, Loader2, Search, Plus, Users, Pencil, Trash2, Filter, X, History, FileDown, FileSpreadsheet, FileText } from 'lucide-react';
 import { exportToPDF, exportToExcel } from '@/utils/employeeExport';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { StatusHistoryDialog } from '@/components/admin/StatusHistoryDialog';
+import EmployeeTimesheetExport from '@/components/admin/EmployeeTimesheetExport';
 
 // Status and Specification options
 const STATUS_OPTIONS = ['ativo', 'suspenso', 'afastado', 'desligado'] as const;
@@ -1251,6 +1252,7 @@ const EmployeeManagement = () => {
                       <TableHead>Jornada</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Especificação</TableHead>
+                      <TableHead className="text-center">Ponto</TableHead>
                       <TableHead className="text-center">Histórico</TableHead>
                       <TableHead className="text-center">Editar</TableHead>
                       <TableHead className="text-center">Excluir</TableHead>
@@ -1273,6 +1275,13 @@ const EmployeeManagement = () => {
                           <span className="text-sm text-muted-foreground">
                             {(employee.specification || 'normal').charAt(0).toUpperCase() + (employee.specification || 'normal').slice(1)}
                           </span>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <EmployeeTimesheetExport
+                            employeeId={employee.id}
+                            employeeName={employee.full_name}
+                            userId={employee.user_id}
+                          />
                         </TableCell>
                         <TableCell className="text-center">
                           <Button
