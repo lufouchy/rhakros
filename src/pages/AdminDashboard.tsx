@@ -71,12 +71,15 @@ interface EmployeeStatus {
   todayRecords: TimeRecord[];
 }
 
+import WorkingNowDialog from '@/components/admin/WorkingNowDialog';
+
 const AdminDashboard = () => {
   const { toast } = useToast();
   const [employees, setEmployees] = useState<EmployeeStatus[]>([]);
   const [schedules, setSchedules] = useState<WorkSchedule[]>([]);
   const [selectedEmployee, setSelectedEmployee] = useState<EmployeeStatus | null>(null);
   const [showScheduleDialog, setShowScheduleDialog] = useState(false);
+  const [showWorkingNowDialog, setShowWorkingNowDialog] = useState(false);
   const [newSchedule, setNewSchedule] = useState({
     name: '',
     start_time: '08:00',
@@ -316,18 +319,22 @@ const AdminDashboard = () => {
           </CardContent>
         </Card>
 
-        <Card className="border-0 shadow-md">
+        <Card 
+          className="border-0 shadow-md cursor-pointer hover:shadow-lg transition-shadow"
+          onClick={() => setShowWorkingNowDialog(true)}
+        >
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
               <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-success/10">
                 <Clock className="h-6 w-6 text-success" />
               </div>
-              <div>
+              <div className="flex-1">
                 <p className="text-sm text-muted-foreground">Trabalhando Agora</p>
                 <p className="text-2xl font-bold">
                   {employees.filter(e => e.status === 'working').length}
                 </p>
               </div>
+              <ChevronRight className="h-5 w-5 text-muted-foreground" />
             </div>
           </CardContent>
         </Card>
@@ -557,6 +564,12 @@ const AdminDashboard = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Working Now Dialog */}
+      <WorkingNowDialog 
+        open={showWorkingNowDialog} 
+        onOpenChange={setShowWorkingNowDialog} 
+      />
     </div>
   );
 };
