@@ -30,6 +30,16 @@ interface WorkSchedule {
   end_time: string;
   break_start_time: string | null;
   break_end_time: string | null;
+  schedule_type: string;
+  monday_hours: number | null;
+  tuesday_hours: number | null;
+  wednesday_hours: number | null;
+  thursday_hours: number | null;
+  friday_hours: number | null;
+  saturday_hours: number | null;
+  sunday_hours: number | null;
+  shift_work_hours: number | null;
+  shift_rest_hours: number | null;
 }
 
 interface EmployeeForm {
@@ -528,12 +538,29 @@ const EmployeeRegistration = () => {
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione uma jornada" />
                   </SelectTrigger>
-                  <SelectContent>
-                    {schedules.map((schedule) => (
-                      <SelectItem key={schedule.id} value={schedule.id}>
-                        {schedule.name} ({schedule.start_time} - {schedule.end_time})
-                      </SelectItem>
-                    ))}
+                  <SelectContent className="bg-popover">
+                    {schedules.map((schedule) => {
+                      const getScheduleInfo = () => {
+                        if (schedule.schedule_type === 'shift') {
+                          return `Escala ${schedule.shift_work_hours}x${schedule.shift_rest_hours}`;
+                        }
+                        const total = (schedule.monday_hours || 0) + (schedule.tuesday_hours || 0) +
+                          (schedule.wednesday_hours || 0) + (schedule.thursday_hours || 0) +
+                          (schedule.friday_hours || 0) + (schedule.saturday_hours || 0) +
+                          (schedule.sunday_hours || 0);
+                        return `${total}h/sem`;
+                      };
+                      return (
+                        <SelectItem key={schedule.id} value={schedule.id}>
+                          <span className="flex items-center gap-2">
+                            {schedule.name}
+                            <span className="text-muted-foreground text-xs">
+                              ({getScheduleInfo()} • {schedule.start_time?.slice(0, 5)}-{schedule.end_time?.slice(0, 5)})
+                            </span>
+                          </span>
+                        </SelectItem>
+                      );
+                    })}
                   </SelectContent>
                 </Select>
               </div>
@@ -543,11 +570,66 @@ const EmployeeRegistration = () => {
                   variant="outline"
                   size="icon"
                   onClick={() => setShowNewSchedule(!showNewSchedule)}
+                  title="Criar nova jornada"
                 >
                   <Plus className="h-4 w-4" />
                 </Button>
               </div>
             </div>
+
+            {/* Show selected schedule details */}
+            {form.work_schedule_id && (() => {
+              const selected = schedules.find(s => s.id === form.work_schedule_id);
+              if (!selected) return null;
+              
+              const isShift = selected.schedule_type === 'shift';
+              const weeklyTotal = !isShift ? (
+                (selected.monday_hours || 0) + (selected.tuesday_hours || 0) +
+                (selected.wednesday_hours || 0) + (selected.thursday_hours || 0) +
+                (selected.friday_hours || 0) + (selected.saturday_hours || 0) +
+                (selected.sunday_hours || 0)
+              ) : 0;
+
+              return (
+                <div className="rounded-lg bg-muted/50 p-3 text-sm space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Tipo:</span>
+                    <span className="font-medium">{isShift ? 'Escala de Revezamento' : 'Jornada Semanal Fixa'}</span>
+                  </div>
+                  {isShift ? (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Padrão:</span>
+                      <span className="font-medium">{selected.shift_work_hours}h trabalho / {selected.shift_rest_hours}h folga</span>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Carga Semanal:</span>
+                        <span className="font-medium">{weeklyTotal}h</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Dias:</span>
+                        <span className="font-medium text-xs">
+                          {[
+                            selected.monday_hours && selected.monday_hours > 0 ? `Seg(${selected.monday_hours}h)` : null,
+                            selected.tuesday_hours && selected.tuesday_hours > 0 ? `Ter(${selected.tuesday_hours}h)` : null,
+                            selected.wednesday_hours && selected.wednesday_hours > 0 ? `Qua(${selected.wednesday_hours}h)` : null,
+                            selected.thursday_hours && selected.thursday_hours > 0 ? `Qui(${selected.thursday_hours}h)` : null,
+                            selected.friday_hours && selected.friday_hours > 0 ? `Sex(${selected.friday_hours}h)` : null,
+                            selected.saturday_hours && selected.saturday_hours > 0 ? `Sáb(${selected.saturday_hours}h)` : null,
+                            selected.sunday_hours && selected.sunday_hours > 0 ? `Dom(${selected.sunday_hours}h)` : null,
+                          ].filter(Boolean).join(', ')}
+                        </span>
+                      </div>
+                    </>
+                  )}
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Horário:</span>
+                    <span className="font-medium">{selected.start_time?.slice(0, 5)} às {selected.end_time?.slice(0, 5)}</span>
+                  </div>
+                </div>
+              );
+            })()}
 
             {showNewSchedule && (
               <Card className="border-dashed">
