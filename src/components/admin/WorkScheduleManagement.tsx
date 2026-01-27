@@ -4,6 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Dialog,
   DialogContent,
@@ -22,7 +24,8 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
-import { Clock, Plus, Pencil, Trash2, Loader2 } from 'lucide-react';
+import { Clock, Plus, Pencil, Trash2, Loader2, Calendar, RotateCcw } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 interface WorkSchedule {
   id: string;
@@ -32,17 +35,47 @@ interface WorkSchedule {
   break_start_time: string | null;
   break_end_time: string | null;
   break_duration_minutes: number | null;
+  schedule_type: string;
+  monday_hours: number | null;
+  tuesday_hours: number | null;
+  wednesday_hours: number | null;
+  thursday_hours: number | null;
+  friday_hours: number | null;
+  saturday_hours: number | null;
+  sunday_hours: number | null;
+  shift_work_hours: number | null;
+  shift_rest_hours: number | null;
   employee_count?: number;
 }
 
 interface ScheduleForm {
   name: string;
+  schedule_type: 'weekly' | 'shift';
   start_time: string;
   end_time: string;
   break_start_time: string;
   break_end_time: string;
   break_duration_minutes: string;
+  monday_hours: string;
+  tuesday_hours: string;
+  wednesday_hours: string;
+  thursday_hours: string;
+  friday_hours: string;
+  saturday_hours: string;
+  sunday_hours: string;
+  shift_work_hours: string;
+  shift_rest_hours: string;
 }
+
+const DAYS_OF_WEEK = [
+  { key: 'monday_hours', label: 'Seg', fullLabel: 'Segunda' },
+  { key: 'tuesday_hours', label: 'Ter', fullLabel: 'Terça' },
+  { key: 'wednesday_hours', label: 'Qua', fullLabel: 'Quarta' },
+  { key: 'thursday_hours', label: 'Qui', fullLabel: 'Quinta' },
+  { key: 'friday_hours', label: 'Sex', fullLabel: 'Sexta' },
+  { key: 'saturday_hours', label: 'Sáb', fullLabel: 'Sábado' },
+  { key: 'sunday_hours', label: 'Dom', fullLabel: 'Domingo' },
+] as const;
 
 const WorkScheduleManagement = () => {
   const { toast } = useToast();
@@ -54,14 +87,26 @@ const WorkScheduleManagement = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [scheduleToDelete, setScheduleToDelete] = useState<WorkSchedule | null>(null);
 
-  const [form, setForm] = useState<ScheduleForm>({
+  const defaultForm: ScheduleForm = {
     name: '',
+    schedule_type: 'weekly',
     start_time: '08:00',
     end_time: '17:00',
     break_start_time: '',
     break_end_time: '',
     break_duration_minutes: '60',
-  });
+    monday_hours: '8',
+    tuesday_hours: '8',
+    wednesday_hours: '8',
+    thursday_hours: '8',
+    friday_hours: '8',
+    saturday_hours: '0',
+    sunday_hours: '0',
+    shift_work_hours: '12',
+    shift_rest_hours: '36',
+  };
+
+  const [form, setForm] = useState<ScheduleForm>(defaultForm);
 
   useEffect(() => {
     fetchSchedules();
@@ -70,7 +115,6 @@ const WorkScheduleManagement = () => {
   const fetchSchedules = async () => {
     setIsLoading(true);
     
-    // Fetch schedules
     const { data: schedulesData, error: schedulesError } = await supabase
       .from('work_schedules')
       .select('*')
@@ -86,12 +130,10 @@ const WorkScheduleManagement = () => {
       return;
     }
 
-    // Fetch employee counts per schedule
     const { data: profilesData } = await supabase
       .from('profiles')
       .select('work_schedule_id');
 
-    // Count employees per schedule
     const countMap: Record<string, number> = {};
     profilesData?.forEach(profile => {
       if (profile.work_schedule_id) {
@@ -99,7 +141,6 @@ const WorkScheduleManagement = () => {
       }
     });
 
-    // Merge counts into schedules
     const schedulesWithCounts = (schedulesData || []).map(schedule => ({
       ...schedule,
       employee_count: countMap[schedule.id] || 0,
@@ -110,14 +151,7 @@ const WorkScheduleManagement = () => {
   };
 
   const resetForm = () => {
-    setForm({
-      name: '',
-      start_time: '08:00',
-      end_time: '17:00',
-      break_start_time: '',
-      break_end_time: '',
-      break_duration_minutes: '60',
-    });
+    setForm(defaultForm);
     setEditingSchedule(null);
   };
 
@@ -125,11 +159,21 @@ const WorkScheduleManagement = () => {
     setEditingSchedule(schedule);
     setForm({
       name: schedule.name,
-      start_time: schedule.start_time.slice(0, 5),
-      end_time: schedule.end_time.slice(0, 5),
+      schedule_type: (schedule.schedule_type as 'weekly' | 'shift') || 'weekly',
+      start_time: schedule.start_time?.slice(0, 5) || '08:00',
+      end_time: schedule.end_time?.slice(0, 5) || '17:00',
       break_start_time: schedule.break_start_time ? schedule.break_start_time.slice(0, 5) : '',
       break_end_time: schedule.break_end_time ? schedule.break_end_time.slice(0, 5) : '',
       break_duration_minutes: schedule.break_duration_minutes?.toString() || '60',
+      monday_hours: schedule.monday_hours?.toString() || '8',
+      tuesday_hours: schedule.tuesday_hours?.toString() || '8',
+      wednesday_hours: schedule.wednesday_hours?.toString() || '8',
+      thursday_hours: schedule.thursday_hours?.toString() || '8',
+      friday_hours: schedule.friday_hours?.toString() || '8',
+      saturday_hours: schedule.saturday_hours?.toString() || '0',
+      sunday_hours: schedule.sunday_hours?.toString() || '0',
+      shift_work_hours: schedule.shift_work_hours?.toString() || '12',
+      shift_rest_hours: schedule.shift_rest_hours?.toString() || '36',
     });
     setDialogOpen(true);
   };
@@ -152,14 +196,37 @@ const WorkScheduleManagement = () => {
     setIsSaving(true);
 
     try {
-      const scheduleData = {
+      const scheduleData: any = {
         name: form.name,
+        schedule_type: form.schedule_type,
         start_time: form.start_time,
         end_time: form.end_time,
         break_start_time: form.break_start_time || null,
         break_end_time: form.break_end_time || null,
         break_duration_minutes: parseInt(form.break_duration_minutes) || null,
       };
+
+      if (form.schedule_type === 'weekly') {
+        scheduleData.monday_hours = parseFloat(form.monday_hours) || 0;
+        scheduleData.tuesday_hours = parseFloat(form.tuesday_hours) || 0;
+        scheduleData.wednesday_hours = parseFloat(form.wednesday_hours) || 0;
+        scheduleData.thursday_hours = parseFloat(form.thursday_hours) || 0;
+        scheduleData.friday_hours = parseFloat(form.friday_hours) || 0;
+        scheduleData.saturday_hours = parseFloat(form.saturday_hours) || 0;
+        scheduleData.sunday_hours = parseFloat(form.sunday_hours) || 0;
+        scheduleData.shift_work_hours = null;
+        scheduleData.shift_rest_hours = null;
+      } else {
+        scheduleData.shift_work_hours = parseInt(form.shift_work_hours) || 12;
+        scheduleData.shift_rest_hours = parseInt(form.shift_rest_hours) || 36;
+        scheduleData.monday_hours = null;
+        scheduleData.tuesday_hours = null;
+        scheduleData.wednesday_hours = null;
+        scheduleData.thursday_hours = null;
+        scheduleData.friday_hours = null;
+        scheduleData.saturday_hours = null;
+        scheduleData.sunday_hours = null;
+      }
 
       if (editingSchedule) {
         const { error } = await supabase
@@ -232,6 +299,47 @@ const WorkScheduleManagement = () => {
     }
   };
 
+  const calculateWeeklyHours = (schedule: WorkSchedule) => {
+    if (schedule.schedule_type === 'shift') {
+      return `${schedule.shift_work_hours}x${schedule.shift_rest_hours}`;
+    }
+    const total = (schedule.monday_hours || 0) +
+      (schedule.tuesday_hours || 0) +
+      (schedule.wednesday_hours || 0) +
+      (schedule.thursday_hours || 0) +
+      (schedule.friday_hours || 0) +
+      (schedule.saturday_hours || 0) +
+      (schedule.sunday_hours || 0);
+    return `${total}h/sem`;
+  };
+
+  const getScheduleDescription = (schedule: WorkSchedule) => {
+    if (schedule.schedule_type === 'shift') {
+      return `Escala ${schedule.shift_work_hours}x${schedule.shift_rest_hours}`;
+    }
+    
+    const workingDays: string[] = [];
+    if (schedule.monday_hours && schedule.monday_hours > 0) workingDays.push('Seg');
+    if (schedule.tuesday_hours && schedule.tuesday_hours > 0) workingDays.push('Ter');
+    if (schedule.wednesday_hours && schedule.wednesday_hours > 0) workingDays.push('Qua');
+    if (schedule.thursday_hours && schedule.thursday_hours > 0) workingDays.push('Qui');
+    if (schedule.friday_hours && schedule.friday_hours > 0) workingDays.push('Sex');
+    if (schedule.saturday_hours && schedule.saturday_hours > 0) workingDays.push('Sáb');
+    if (schedule.sunday_hours && schedule.sunday_hours > 0) workingDays.push('Dom');
+    
+    if (workingDays.length === 0) return 'Sem dias configurados';
+    
+    // Check if it's a range
+    const allSame = [schedule.monday_hours, schedule.tuesday_hours, schedule.wednesday_hours, 
+      schedule.thursday_hours, schedule.friday_hours].every(h => h === schedule.monday_hours);
+    
+    if (workingDays.length === 5 && allSame && !schedule.saturday_hours && !schedule.sunday_hours) {
+      return `Seg-Sex ${schedule.monday_hours}h`;
+    }
+    
+    return workingDays.join(', ');
+  };
+
   return (
     <Card className="border-0 shadow-md">
       <CardHeader className="flex flex-row items-center justify-between">
@@ -249,7 +357,7 @@ const WorkScheduleManagement = () => {
               Nova Jornada
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-w-xl">
             <DialogHeader>
               <DialogTitle>
                 {editingSchedule ? 'Editar Jornada' : 'Nova Jornada'}
@@ -266,62 +374,161 @@ const WorkScheduleManagement = () => {
                 <Label htmlFor="schedule_name">Nome da Jornada *</Label>
                 <Input
                   id="schedule_name"
-                  placeholder="Ex: Normal, Madrugada, Geral..."
+                  placeholder="Ex: Comercial, Noturno, 12x36..."
                   value={form.name}
                   onChange={(e) => setForm(prev => ({ ...prev, name: e.target.value }))}
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="start_time">Hora de Entrada</Label>
-                  <Input
-                    id="start_time"
-                    type="time"
-                    value={form.start_time}
-                    onChange={(e) => setForm(prev => ({ ...prev, start_time: e.target.value }))}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="end_time">Hora de Saída</Label>
-                  <Input
-                    id="end_time"
-                    type="time"
-                    value={form.end_time}
-                    onChange={(e) => setForm(prev => ({ ...prev, end_time: e.target.value }))}
-                  />
-                </div>
+              <div className="space-y-3">
+                <Label>Tipo de Jornada</Label>
+                <RadioGroup
+                  value={form.schedule_type}
+                  onValueChange={(value: 'weekly' | 'shift') => setForm(prev => ({ ...prev, schedule_type: value }))}
+                  className="grid grid-cols-2 gap-4"
+                >
+                  <div className="flex items-center space-x-2 border rounded-lg p-3 cursor-pointer hover:bg-muted/50">
+                    <RadioGroupItem value="weekly" id="weekly" />
+                    <Label htmlFor="weekly" className="flex items-center gap-2 cursor-pointer flex-1">
+                      <Calendar className="h-4 w-4 text-primary" />
+                      <div>
+                        <p className="font-medium">Semanal Fixa</p>
+                        <p className="text-xs text-muted-foreground">Dias e horas fixos por semana</p>
+                      </div>
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2 border rounded-lg p-3 cursor-pointer hover:bg-muted/50">
+                    <RadioGroupItem value="shift" id="shift" />
+                    <Label htmlFor="shift" className="flex items-center gap-2 cursor-pointer flex-1">
+                      <RotateCcw className="h-4 w-4 text-primary" />
+                      <div>
+                        <p className="font-medium">Escala</p>
+                        <p className="text-xs text-muted-foreground">Ex: 12x36, 12x24, 24x48</p>
+                      </div>
+                    </Label>
+                  </div>
+                </RadioGroup>
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
+              {form.schedule_type === 'weekly' ? (
+                <>
+                  <div className="space-y-2">
+                    <Label>Carga Horária por Dia</Label>
+                    <div className="grid grid-cols-7 gap-2">
+                      {DAYS_OF_WEEK.map(day => (
+                        <div key={day.key} className="text-center">
+                          <Label className="text-xs text-muted-foreground">{day.label}</Label>
+                          <Input
+                            type="number"
+                            min="0"
+                            max="24"
+                            step="0.5"
+                            className="text-center mt-1"
+                            value={form[day.key as keyof ScheduleForm]}
+                            onChange={(e) => setForm(prev => ({ ...prev, [day.key]: e.target.value }))}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Use 0 para dias de folga. Total: {
+                        (parseFloat(form.monday_hours) || 0) +
+                        (parseFloat(form.tuesday_hours) || 0) +
+                        (parseFloat(form.wednesday_hours) || 0) +
+                        (parseFloat(form.thursday_hours) || 0) +
+                        (parseFloat(form.friday_hours) || 0) +
+                        (parseFloat(form.saturday_hours) || 0) +
+                        (parseFloat(form.sunday_hours) || 0)
+                      }h/semana
+                    </p>
+                  </div>
+                </>
+              ) : (
                 <div className="space-y-2">
-                  <Label htmlFor="break_start_time">Entrada Intervalo (opcional)</Label>
-                  <Input
-                    id="break_start_time"
-                    type="time"
-                    value={form.break_start_time}
-                    onChange={(e) => setForm(prev => ({ ...prev, break_start_time: e.target.value }))}
-                  />
+                  <Label>Configuração da Escala</Label>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="shift_work" className="text-sm text-muted-foreground">Horas de Trabalho</Label>
+                      <Input
+                        id="shift_work"
+                        type="number"
+                        min="1"
+                        max="24"
+                        value={form.shift_work_hours}
+                        onChange={(e) => setForm(prev => ({ ...prev, shift_work_hours: e.target.value }))}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="shift_rest" className="text-sm text-muted-foreground">Horas de Folga</Label>
+                      <Input
+                        id="shift_rest"
+                        type="number"
+                        min="1"
+                        max="72"
+                        value={form.shift_rest_hours}
+                        onChange={(e) => setForm(prev => ({ ...prev, shift_rest_hours: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Escala: {form.shift_work_hours}x{form.shift_rest_hours} (trabalha {form.shift_work_hours}h, folga {form.shift_rest_hours}h)
+                  </p>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="break_end_time">Saída Intervalo (opcional)</Label>
-                  <Input
-                    id="break_end_time"
-                    type="time"
-                    value={form.break_end_time}
-                    onChange={(e) => setForm(prev => ({ ...prev, break_end_time: e.target.value }))}
-                  />
+              )}
+
+              <div className="border-t pt-4 space-y-4">
+                <Label className="text-sm font-medium">Horários Padrão</Label>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="start_time" className="text-sm text-muted-foreground">Hora de Entrada</Label>
+                    <Input
+                      id="start_time"
+                      type="time"
+                      value={form.start_time}
+                      onChange={(e) => setForm(prev => ({ ...prev, start_time: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="end_time" className="text-sm text-muted-foreground">Hora de Saída</Label>
+                    <Input
+                      id="end_time"
+                      type="time"
+                      value={form.end_time}
+                      onChange={(e) => setForm(prev => ({ ...prev, end_time: e.target.value }))}
+                    />
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="break_duration">Intervalo (min)</Label>
-                  <Input
-                    id="break_duration"
-                    type="number"
-                    min="0"
-                    placeholder="60"
-                    value={form.break_duration_minutes}
-                    onChange={(e) => setForm(prev => ({ ...prev, break_duration_minutes: e.target.value }))}
-                  />
+
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="break_start_time" className="text-sm text-muted-foreground">Início Intervalo</Label>
+                    <Input
+                      id="break_start_time"
+                      type="time"
+                      value={form.break_start_time}
+                      onChange={(e) => setForm(prev => ({ ...prev, break_start_time: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="break_end_time" className="text-sm text-muted-foreground">Fim Intervalo</Label>
+                    <Input
+                      id="break_end_time"
+                      type="time"
+                      value={form.break_end_time}
+                      onChange={(e) => setForm(prev => ({ ...prev, break_end_time: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="break_duration" className="text-sm text-muted-foreground">Duração (min)</Label>
+                    <Input
+                      id="break_duration"
+                      type="number"
+                      min="0"
+                      placeholder="60"
+                      value={form.break_duration_minutes}
+                      onChange={(e) => setForm(prev => ({ ...prev, break_duration_minutes: e.target.value }))}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -355,12 +562,10 @@ const WorkScheduleManagement = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead>Jornada</TableHead>
+                  <TableHead>Tipo</TableHead>
+                  <TableHead className="text-center">Carga</TableHead>
                   <TableHead className="text-center">Colaboradores</TableHead>
-                  <TableHead className="text-center">Entrada</TableHead>
-                  <TableHead className="text-center">Saída</TableHead>
-                  <TableHead className="text-center">Ent. Intervalo</TableHead>
-                  <TableHead className="text-center">Saí. Intervalo</TableHead>
-                  <TableHead className="text-center">Intervalo (min)</TableHead>
+                  <TableHead className="text-center">Horário</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
@@ -368,6 +573,21 @@ const WorkScheduleManagement = () => {
                 {schedules.map((schedule) => (
                   <TableRow key={schedule.id}>
                     <TableCell className="font-medium">{schedule.name}</TableCell>
+                    <TableCell>
+                      <Badge variant={schedule.schedule_type === 'shift' ? 'secondary' : 'outline'} className="gap-1">
+                        {schedule.schedule_type === 'shift' ? (
+                          <><RotateCcw className="h-3 w-3" /> Escala</>
+                        ) : (
+                          <><Calendar className="h-3 w-3" /> Semanal</>
+                        )}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <div className="flex flex-col items-center">
+                        <span className="font-medium">{calculateWeeklyHours(schedule)}</span>
+                        <span className="text-xs text-muted-foreground">{getScheduleDescription(schedule)}</span>
+                      </div>
+                    </TableCell>
                     <TableCell className="text-center">
                       <span className={`inline-flex items-center justify-center min-w-[24px] h-6 px-2 rounded-full text-xs font-medium ${
                         schedule.employee_count ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
@@ -375,11 +595,9 @@ const WorkScheduleManagement = () => {
                         {schedule.employee_count || 0}
                       </span>
                     </TableCell>
-                    <TableCell className="text-center">{schedule.start_time.slice(0, 5)}</TableCell>
-                    <TableCell className="text-center">{schedule.end_time.slice(0, 5)}</TableCell>
-                    <TableCell className="text-center">{schedule.break_start_time ? schedule.break_start_time.slice(0, 5) : '-'}</TableCell>
-                    <TableCell className="text-center">{schedule.break_end_time ? schedule.break_end_time.slice(0, 5) : '-'}</TableCell>
-                    <TableCell className="text-center">{schedule.break_duration_minutes || '-'}</TableCell>
+                    <TableCell className="text-center text-sm">
+                      {schedule.start_time?.slice(0, 5)} - {schedule.end_time?.slice(0, 5)}
+                    </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
                         <Button

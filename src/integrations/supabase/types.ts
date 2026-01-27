@@ -416,9 +416,19 @@ export type Database = {
           break_start_time: string | null
           created_at: string
           end_time: string
+          friday_hours: number | null
           id: string
+          monday_hours: number | null
           name: string
+          saturday_hours: number | null
+          schedule_type: string
+          shift_rest_hours: number | null
+          shift_work_hours: number | null
           start_time: string
+          sunday_hours: number | null
+          thursday_hours: number | null
+          tuesday_hours: number | null
+          wednesday_hours: number | null
         }
         Insert: {
           break_duration_minutes?: number | null
@@ -426,9 +436,19 @@ export type Database = {
           break_start_time?: string | null
           created_at?: string
           end_time?: string
+          friday_hours?: number | null
           id?: string
+          monday_hours?: number | null
           name: string
+          saturday_hours?: number | null
+          schedule_type?: string
+          shift_rest_hours?: number | null
+          shift_work_hours?: number | null
           start_time?: string
+          sunday_hours?: number | null
+          thursday_hours?: number | null
+          tuesday_hours?: number | null
+          wednesday_hours?: number | null
         }
         Update: {
           break_duration_minutes?: number | null
@@ -436,9 +456,19 @@ export type Database = {
           break_start_time?: string | null
           created_at?: string
           end_time?: string
+          friday_hours?: number | null
           id?: string
+          monday_hours?: number | null
           name?: string
+          saturday_hours?: number | null
+          schedule_type?: string
+          shift_rest_hours?: number | null
+          shift_work_hours?: number | null
           start_time?: string
+          sunday_hours?: number | null
+          thursday_hours?: number | null
+          tuesday_hours?: number | null
+          wednesday_hours?: number | null
         }
         Relationships: []
       }
