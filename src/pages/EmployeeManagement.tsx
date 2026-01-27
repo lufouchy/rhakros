@@ -219,6 +219,17 @@ const EmployeeManagement = () => {
   useEffect(() => {
     fetchSchedules();
     fetchEmployees();
+    
+    // Listen for employee creation event to refresh list
+    const handleEmployeeCreated = () => {
+      fetchEmployees();
+    };
+    
+    window.addEventListener('employee-created', handleEmployeeCreated);
+    
+    return () => {
+      window.removeEventListener('employee-created', handleEmployeeCreated);
+    };
   }, []);
 
   // Filter employees when search/filter changes
