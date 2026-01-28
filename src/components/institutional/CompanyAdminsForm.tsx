@@ -174,8 +174,8 @@ const CompanyAdminsForm = ({ companyId }: CompanyAdminsFormProps) => {
         setAdmins(updatedAdmins);
         
         toast({
-          title: 'Responsável atualizado',
-          description: 'Os dados do responsável foram atualizados com sucesso',
+          title: 'Administrador atualizado',
+          description: 'Os dados do administrador foram atualizados com sucesso',
         });
       } else {
         // Create user in auth system via edge function would be ideal
@@ -191,8 +191,8 @@ const CompanyAdminsForm = ({ companyId }: CompanyAdminsFormProps) => {
         setAdmins([...admins, { ...currentAdmin, id: data.id }]);
         
         toast({
-          title: 'Responsável cadastrado',
-          description: 'O responsável legal foi adicionado com sucesso. As credenciais de acesso serão enviadas por e-mail.',
+          title: 'Administrador cadastrado',
+          description: 'O administrador foi adicionado com sucesso. As credenciais de acesso serão enviadas por e-mail.',
         });
       }
 
@@ -234,8 +234,8 @@ const CompanyAdminsForm = ({ companyId }: CompanyAdminsFormProps) => {
 
       setAdmins(admins.filter((_, i) => i !== adminToDelete));
       toast({
-        title: 'Responsável excluído',
-        description: 'O responsável foi removido com sucesso',
+        title: 'Administrador excluído',
+        description: 'O administrador foi removido com sucesso',
       });
     } catch (error: any) {
       console.error('Error deleting admin:', error);
@@ -260,7 +260,7 @@ const CompanyAdminsForm = ({ companyId }: CompanyAdminsFormProps) => {
       <Alert>
         <AlertCircle className="h-4 w-4" />
         <AlertDescription>
-          Você pode cadastrar até {MAX_ADMINS} responsáveis legais (Super Admins) para o sistema.
+          Você pode cadastrar até {MAX_ADMINS} administradores do sistema.
           Estes usuários terão acesso completo a todas as funcionalidades administrativas.
         </AlertDescription>
       </Alert>
@@ -269,9 +269,9 @@ const CompanyAdminsForm = ({ companyId }: CompanyAdminsFormProps) => {
       {admins.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Responsáveis Cadastrados</CardTitle>
+            <CardTitle>Administradores Cadastrados</CardTitle>
             <CardDescription>
-              {admins.length} de {MAX_ADMINS} responsável(eis) registrado(s)
+              {admins.length} de {MAX_ADMINS} administrador(es) registrado(s)
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -317,10 +317,10 @@ const CompanyAdminsForm = ({ companyId }: CompanyAdminsFormProps) => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <UserCheck className="h-5 w-5" />
-              {editingIndex !== null ? 'Editar Responsável' : 'Novo Responsável Legal'}
+              {editingIndex !== null ? 'Editar Administrador' : 'Novo Administrador do Sistema'}
             </CardTitle>
             <CardDescription>
-              Preencha os dados do responsável legal / administrador do sistema
+              Preencha os dados do administrador do sistema
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -450,11 +450,11 @@ const CompanyAdminsForm = ({ companyId }: CompanyAdminsFormProps) => {
                     Salvando...
                   </>
                 ) : editingIndex !== null ? (
-                  'Atualizar Responsável'
+                  'Atualizar Administrador'
                 ) : (
                   <>
                     <Plus className="h-4 w-4 mr-2" />
-                    Cadastrar Responsável
+                    Cadastrar Administrador
                   </>
                 )}
               </Button>
@@ -468,7 +468,7 @@ const CompanyAdminsForm = ({ companyId }: CompanyAdminsFormProps) => {
           <CardContent className="py-8 text-center">
             <UserCheck className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
             <p className="text-muted-foreground">
-              Limite máximo de {MAX_ADMINS} responsáveis atingido.
+              Limite máximo de {MAX_ADMINS} administradores atingido.
               Para adicionar um novo, remova um existente.
             </p>
           </CardContent>
@@ -478,9 +478,9 @@ const CompanyAdminsForm = ({ companyId }: CompanyAdminsFormProps) => {
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Excluir responsável?</AlertDialogTitle>
+            <AlertDialogTitle>Excluir administrador?</AlertDialogTitle>
             <AlertDialogDescription>
-              Esta ação não pode ser desfeita. O responsável será permanentemente removido
+              Esta ação não pode ser desfeita. O administrador será permanentemente removido
               e perderá acesso ao sistema.
             </AlertDialogDescription>
           </AlertDialogHeader>

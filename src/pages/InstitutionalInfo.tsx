@@ -80,7 +80,7 @@ const InstitutionalInfo = () => {
               Filiais
             </TabsTrigger>
             <TabsTrigger value="admins" disabled={!companyId}>
-              Responsáveis Legais
+              Administradores
             </TabsTrigger>
           </TabsList>
 
