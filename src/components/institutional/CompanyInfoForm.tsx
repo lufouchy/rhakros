@@ -24,11 +24,11 @@ const businessSectors = [
   { value: 'financeiro', label: 'Financeiro' },
   { value: 'industria', label: 'Indústria' },
   { value: 'logistica', label: 'Logística' },
-  { value: 'outro', label: 'Outro' },
   { value: 'saude', label: 'Saúde' },
   { value: 'servicos', label: 'Serviços' },
   { value: 'tecnologia', label: 'Tecnologia' },
   { value: 'varejo', label: 'Varejo' },
+  { value: 'outro', label: 'Outro' },
 ];
 
 interface CompanyForm {
