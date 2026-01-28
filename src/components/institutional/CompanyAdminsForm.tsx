@@ -35,11 +35,13 @@ interface Admin {
 }
 
 const positions = [
-  { value: 'rh', label: 'RH' },
+  { value: 'coordenador', label: 'Coordenador' },
+  { value: 'diretor', label: 'Diretor' },
   { value: 'dono', label: 'Dono/Proprietário' },
   { value: 'gerente', label: 'Gerente' },
-  { value: 'diretor', label: 'Diretor' },
-  { value: 'coordenador', label: 'Coordenador' },
+  { value: 'rh', label: 'RH' },
+  { value: 'socio', label: 'Sócio' },
+  { value: 'outro', label: 'Outro' },
 ];
 
 const emptyAdmin: Admin = {

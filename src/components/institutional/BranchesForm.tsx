@@ -103,7 +103,9 @@ const BranchesForm = ({ companyId, hasBranches }: BranchesFormProps) => {
     fetchBranches();
   }, [companyId]);
 
-  const handleCNPJChange = (value: string) => {
+  const [fetchingCnpj, setFetchingCnpj] = useState(false);
+
+  const handleCNPJChange = async (value: string) => {
     const formatted = formatCNPJ(value);
     setCurrentBranch({ ...currentBranch, cnpj: formatted });
     
@@ -113,6 +115,29 @@ const BranchesForm = ({ companyId, hasBranches }: BranchesFormProps) => {
         setCnpjError('CNPJ inválido');
       } else {
         setCnpjError('');
+        // Buscar dados do CNPJ na BrasilAPI
+        setFetchingCnpj(true);
+        try {
+          const response = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cleanCNPJ}`);
+          if (response.ok) {
+            const data = await response.json();
+            setCurrentBranch(prev => ({
+              ...prev,
+              cnpj: formatted,
+              address_cep: data.cep?.replace(/\D/g, '') || prev.address_cep,
+              address_street: data.logradouro || prev.address_street,
+              address_number: data.numero || prev.address_number,
+              address_neighborhood: data.bairro || prev.address_neighborhood,
+              address_city: data.municipio || prev.address_city,
+              address_state: data.uf || prev.address_state,
+              phone: data.ddd_telefone_1 ? formatPhone(data.ddd_telefone_1) : prev.phone,
+            }));
+          }
+        } catch (error) {
+          console.error('Error fetching CNPJ data:', error);
+        } finally {
+          setFetchingCnpj(false);
+        }
       }
     } else {
       setCnpjError('');
@@ -262,19 +287,6 @@ const BranchesForm = ({ companyId, hasBranches }: BranchesFormProps) => {
     }
   };
 
-  if (!hasBranches) {
-    return (
-      <Card>
-        <CardContent className="py-12 text-center">
-          <Building2 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-          <p className="text-muted-foreground">
-            Você indicou que não possui filiais. Para cadastrar filiais, 
-            volte à aba "Dados da Empresa" e selecione "Sim" na pergunta sobre filiais.
-          </p>
-        </CardContent>
-      </Card>
-    );
-  }
 
   return (
     <div className="space-y-6">
@@ -341,13 +353,18 @@ const BranchesForm = ({ companyId, hasBranches }: BranchesFormProps) => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="branch_cnpj">CNPJ da Filial *</Label>
-              <Input
-                id="branch_cnpj"
-                value={currentBranch.cnpj}
-                onChange={(e) => handleCNPJChange(e.target.value)}
-                placeholder="00.000.000/0000-00"
-                maxLength={18}
-              />
+              <div className="relative">
+                <Input
+                  id="branch_cnpj"
+                  value={currentBranch.cnpj}
+                  onChange={(e) => handleCNPJChange(e.target.value)}
+                  placeholder="00.000.000/0000-00"
+                  maxLength={18}
+                />
+                {fetchingCnpj && (
+                  <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin" />
+                )}
+              </div>
               {cnpjError && (
                 <p className="text-sm text-destructive">{cnpjError}</p>
               )}
