@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import {
   Dialog,
   DialogContent,
@@ -20,7 +21,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { UserPlus, Loader2, Search, Plus } from 'lucide-react';
+import { UserPlus, Loader2, Search, Plus, MapPin } from 'lucide-react';
 import { validateCPF, formatCPF } from '@/utils/cpfValidation';
 
 interface WorkSchedule {
@@ -42,6 +43,8 @@ interface WorkSchedule {
   shift_rest_hours: number | null;
 }
 
+type LocationMode = 'disabled' | 'log_only' | 'require_exact' | 'require_radius';
+
 interface EmployeeForm {
   full_name: string;
   email: string;
@@ -59,6 +62,16 @@ interface EmployeeForm {
   position: string;
   work_schedule_id: string;
   password: string;
+  // Location settings
+  location_mode: LocationMode;
+  work_address_cep: string;
+  work_address_street: string;
+  work_address_number: string;
+  work_address_complement: string;
+  work_address_neighborhood: string;
+  work_address_city: string;
+  work_address_state: string;
+  allowed_radius_meters: number;
 }
 
 interface NewScheduleForm {
@@ -75,6 +88,7 @@ const EmployeeRegistration = () => {
   const [schedules, setSchedules] = useState<WorkSchedule[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSearchingCep, setIsSearchingCep] = useState(false);
+  const [isSearchingWorkCep, setIsSearchingWorkCep] = useState(false);
   const [showNewSchedule, setShowNewSchedule] = useState(false);
   
   const [form, setForm] = useState<EmployeeForm>({
@@ -94,6 +108,16 @@ const EmployeeRegistration = () => {
     position: '',
     work_schedule_id: '',
     password: '',
+    // Location settings
+    location_mode: 'disabled',
+    work_address_cep: '',
+    work_address_street: '',
+    work_address_number: '',
+    work_address_complement: '',
+    work_address_neighborhood: '',
+    work_address_city: '',
+    work_address_state: '',
+    allowed_radius_meters: 100,
   });
 
   const [newSchedule, setNewSchedule] = useState<NewScheduleForm>({
@@ -164,6 +188,54 @@ const EmployeeRegistration = () => {
       });
     } finally {
       setIsSearchingCep(false);
+    }
+  };
+
+  const searchWorkCep = async () => {
+    const cep = form.work_address_cep.replace(/\D/g, '');
+    if (cep.length !== 8) {
+      toast({
+        variant: 'destructive',
+        title: 'CEP inválido',
+        description: 'O CEP deve conter 8 dígitos.',
+      });
+      return;
+    }
+
+    setIsSearchingWorkCep(true);
+    try {
+      const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+      const data = await response.json();
+
+      if (data.erro) {
+        toast({
+          variant: 'destructive',
+          title: 'CEP não encontrado',
+          description: 'Verifique o CEP informado.',
+        });
+        return;
+      }
+
+      setForm(prev => ({
+        ...prev,
+        work_address_street: data.logradouro || '',
+        work_address_neighborhood: data.bairro || '',
+        work_address_city: data.localidade || '',
+        work_address_state: data.uf || '',
+      }));
+
+      toast({
+        title: 'Endereço de trabalho encontrado!',
+        description: 'Preencha o número e complemento.',
+      });
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Erro ao buscar CEP',
+        description: 'Não foi possível buscar o endereço.',
+      });
+    } finally {
+      setIsSearchingWorkCep(false);
     }
   };
 
@@ -262,6 +334,16 @@ const EmployeeRegistration = () => {
             sector: form.sector || null,
             position: form.position || null,
             work_schedule_id: form.work_schedule_id || null,
+            // Location settings
+            location_mode: form.location_mode,
+            work_address_cep: form.work_address_cep || null,
+            work_address_street: form.work_address_street || null,
+            work_address_number: form.work_address_number || null,
+            work_address_complement: form.work_address_complement || null,
+            work_address_neighborhood: form.work_address_neighborhood || null,
+            work_address_city: form.work_address_city || null,
+            work_address_state: form.work_address_state || null,
+            allowed_radius_meters: form.allowed_radius_meters,
           },
         },
       });
@@ -297,6 +379,15 @@ const EmployeeRegistration = () => {
         position: '',
         work_schedule_id: '',
         password: '',
+        location_mode: 'disabled',
+        work_address_cep: '',
+        work_address_street: '',
+        work_address_number: '',
+        work_address_complement: '',
+        work_address_neighborhood: '',
+        work_address_city: '',
+        work_address_state: '',
+        allowed_radius_meters: 100,
       });
 
       // Dispatch event to refresh employee list
@@ -684,6 +775,178 @@ const EmployeeRegistration = () => {
                   </Button>
                 </CardContent>
               </Card>
+            )}
+          </div>
+
+          {/* Location Settings */}
+          <div className="space-y-4 border-t pt-4">
+            <h3 className="font-medium text-sm text-muted-foreground flex items-center gap-2">
+              <MapPin className="h-4 w-4" />
+              Configurações de Localização
+            </h3>
+            
+            <div className="space-y-3">
+              <Label className="text-sm font-medium">Modo de Localização para Ponto</Label>
+              <RadioGroup
+                value={form.location_mode}
+                onValueChange={(value) => setForm(prev => ({ ...prev, location_mode: value as LocationMode }))}
+                className="space-y-2"
+              >
+                <div className="flex items-start space-x-3 p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors">
+                  <RadioGroupItem value="disabled" id="loc_disabled" className="mt-0.5" />
+                  <div>
+                    <Label htmlFor="loc_disabled" className="font-medium cursor-pointer text-sm">Desativado</Label>
+                    <p className="text-xs text-muted-foreground">
+                      Não exigir localização (ideal para trabalho remoto)
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start space-x-3 p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors">
+                  <RadioGroupItem value="log_only" id="loc_log_only" className="mt-0.5" />
+                  <div>
+                    <Label htmlFor="loc_log_only" className="font-medium cursor-pointer text-sm">Registrar sem bloquear</Label>
+                    <p className="text-xs text-muted-foreground">
+                      Registrar localização, mas permitir ponto de qualquer local
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start space-x-3 p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors">
+                  <RadioGroupItem value="require_exact" id="loc_require_exact" className="mt-0.5" />
+                  <div>
+                    <Label htmlFor="loc_require_exact" className="font-medium cursor-pointer text-sm">Endereço exato</Label>
+                    <p className="text-xs text-muted-foreground">
+                      Exigir presença no endereço cadastrado (margem de 50m)
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start space-x-3 p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors">
+                  <RadioGroupItem value="require_radius" id="loc_require_radius" className="mt-0.5" />
+                  <div>
+                    <Label htmlFor="loc_require_radius" className="font-medium cursor-pointer text-sm">Raio de distância</Label>
+                    <p className="text-xs text-muted-foreground">
+                      Permitir registro dentro de um raio do endereço
+                    </p>
+                  </div>
+                </div>
+              </RadioGroup>
+            </div>
+
+            {(form.location_mode === 'require_exact' || form.location_mode === 'require_radius' || form.location_mode === 'log_only') && (
+              <div className="space-y-4 pt-2">
+                <Label className="text-sm font-medium">Endereço de Trabalho</Label>
+                
+                <div className="flex gap-2">
+                  <div className="flex-1 space-y-2">
+                    <Label htmlFor="work_cep" className="text-xs">CEP</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        id="work_cep"
+                        placeholder="00000-000"
+                        value={form.work_address_cep}
+                        onChange={(e) => setForm(prev => ({ ...prev, work_address_cep: e.target.value }))}
+                        maxLength={9}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={searchWorkCep}
+                        disabled={isSearchingWorkCep}
+                      >
+                        {isSearchingWorkCep ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Search className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="work_street" className="text-xs">Rua</Label>
+                  <Input
+                    id="work_street"
+                    placeholder="Nome da rua"
+                    value={form.work_address_street}
+                    readOnly
+                    className="bg-muted/50"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="work_number" className="text-xs">Número</Label>
+                    <Input
+                      id="work_number"
+                      placeholder="123"
+                      value={form.work_address_number}
+                      onChange={(e) => setForm(prev => ({ ...prev, work_address_number: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="work_complement" className="text-xs">Complemento</Label>
+                    <Input
+                      id="work_complement"
+                      placeholder="Sala 101"
+                      value={form.work_address_complement}
+                      onChange={(e) => setForm(prev => ({ ...prev, work_address_complement: e.target.value }))}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="work_neighborhood" className="text-xs">Bairro</Label>
+                    <Input
+                      id="work_neighborhood"
+                      value={form.work_address_neighborhood}
+                      readOnly
+                      className="bg-muted/50"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="work_city" className="text-xs">Cidade</Label>
+                    <Input
+                      id="work_city"
+                      value={form.work_address_city}
+                      readOnly
+                      className="bg-muted/50"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="work_state" className="text-xs">Estado</Label>
+                    <Input
+                      id="work_state"
+                      value={form.work_address_state}
+                      readOnly
+                      className="bg-muted/50"
+                      maxLength={2}
+                    />
+                  </div>
+                </div>
+
+                {form.location_mode === 'require_radius' && (
+                  <div className="space-y-2">
+                    <Label htmlFor="radius" className="text-xs">Raio permitido (metros)</Label>
+                    <Input
+                      id="radius"
+                      type="number"
+                      placeholder="100"
+                      value={form.allowed_radius_meters}
+                      onChange={(e) => setForm(prev => ({ ...prev, allowed_radius_meters: parseInt(e.target.value) || 100 }))}
+                      min={10}
+                      max={5000}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Distância máxima do endereço (10 a 5000 metros)
+                    </p>
+                  </div>
+                )}
+              </div>
             )}
           </div>
 

@@ -1,11 +1,9 @@
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import SidebarLayout from '@/components/layout/SidebarLayout';
-import LocationSettings from '@/components/admin/LocationSettings';
 import EmployeeRegistration from '@/components/admin/EmployeeRegistration';
 import WorkScheduleManagement from '@/components/admin/WorkScheduleManagement';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Settings, MapPin, Clock, Loader2 } from 'lucide-react';
+import { Settings, Clock, Loader2 } from 'lucide-react';
 
 const AdminSettings = () => {
   const { user, userRole, loading } = useAuth();
@@ -34,32 +32,19 @@ const AdminSettings = () => {
               Configurações
             </h1>
             <p className="text-muted-foreground">
-              Gerencie as configurações do sistema e colaboradores
+              Gerencie as jornadas de trabalho e colaboradores
             </p>
           </div>
           <EmployeeRegistration />
         </div>
 
-        <Tabs defaultValue="schedules" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="schedules" className="flex items-center gap-2">
-              <Clock className="h-4 w-4" />
-              Jornadas
-            </TabsTrigger>
-            <TabsTrigger value="location" className="flex items-center gap-2">
-              <MapPin className="h-4 w-4" />
-              Localização
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="schedules">
-            <WorkScheduleManagement />
-          </TabsContent>
-
-          <TabsContent value="location">
-            <LocationSettings />
-          </TabsContent>
-        </Tabs>
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 text-lg font-medium">
+            <Clock className="h-5 w-5 text-primary" />
+            Jornadas de Trabalho
+          </div>
+          <WorkScheduleManagement />
+        </div>
       </div>
     </SidebarLayout>
   );

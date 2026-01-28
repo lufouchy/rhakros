@@ -194,6 +194,7 @@ export type Database = {
           address_number: string | null
           address_state: string | null
           address_street: string | null
+          allowed_radius_meters: number | null
           avatar_url: string | null
           birth_date: string | null
           cpf: string | null
@@ -202,6 +203,7 @@ export type Database = {
           full_name: string
           hire_date: string | null
           id: string
+          location_mode: string
           phone: string | null
           position: string | null
           sector: string | null
@@ -210,6 +212,15 @@ export type Database = {
           termination_date: string | null
           updated_at: string
           user_id: string
+          work_address_cep: string | null
+          work_address_city: string | null
+          work_address_complement: string | null
+          work_address_neighborhood: string | null
+          work_address_number: string | null
+          work_address_state: string | null
+          work_address_street: string | null
+          work_latitude: number | null
+          work_longitude: number | null
           work_schedule_id: string | null
         }
         Insert: {
@@ -220,6 +231,7 @@ export type Database = {
           address_number?: string | null
           address_state?: string | null
           address_street?: string | null
+          allowed_radius_meters?: number | null
           avatar_url?: string | null
           birth_date?: string | null
           cpf?: string | null
@@ -228,6 +240,7 @@ export type Database = {
           full_name: string
           hire_date?: string | null
           id?: string
+          location_mode?: string
           phone?: string | null
           position?: string | null
           sector?: string | null
@@ -236,6 +249,15 @@ export type Database = {
           termination_date?: string | null
           updated_at?: string
           user_id: string
+          work_address_cep?: string | null
+          work_address_city?: string | null
+          work_address_complement?: string | null
+          work_address_neighborhood?: string | null
+          work_address_number?: string | null
+          work_address_state?: string | null
+          work_address_street?: string | null
+          work_latitude?: number | null
+          work_longitude?: number | null
           work_schedule_id?: string | null
         }
         Update: {
@@ -246,6 +268,7 @@ export type Database = {
           address_number?: string | null
           address_state?: string | null
           address_street?: string | null
+          allowed_radius_meters?: number | null
           avatar_url?: string | null
           birth_date?: string | null
           cpf?: string | null
@@ -254,6 +277,7 @@ export type Database = {
           full_name?: string
           hire_date?: string | null
           id?: string
+          location_mode?: string
           phone?: string | null
           position?: string | null
           sector?: string | null
@@ -262,6 +286,15 @@ export type Database = {
           termination_date?: string | null
           updated_at?: string
           user_id?: string
+          work_address_cep?: string | null
+          work_address_city?: string | null
+          work_address_complement?: string | null
+          work_address_neighborhood?: string | null
+          work_address_number?: string | null
+          work_address_state?: string | null
+          work_address_street?: string | null
+          work_latitude?: number | null
+          work_longitude?: number | null
           work_schedule_id?: string | null
         }
         Relationships: [
