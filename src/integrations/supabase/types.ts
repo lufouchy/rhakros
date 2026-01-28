@@ -68,6 +68,184 @@ export type Database = {
         }
         Relationships: []
       }
+      company_admins: {
+        Row: {
+          company_id: string
+          cpf: string
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          position: Database["public"]["Enums"]["admin_position"]
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          company_id: string
+          cpf: string
+          created_at?: string
+          email: string
+          full_name: string
+          id?: string
+          position: Database["public"]["Enums"]["admin_position"]
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          company_id?: string
+          cpf?: string
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          position?: Database["public"]["Enums"]["admin_position"]
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_admins_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company_info"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      company_branches: {
+        Row: {
+          address_cep: string | null
+          address_city: string | null
+          address_complement: string | null
+          address_neighborhood: string | null
+          address_number: string | null
+          address_state: string | null
+          address_street: string | null
+          cnpj: string
+          company_id: string
+          created_at: string
+          financial_email: string | null
+          id: string
+          phone: string | null
+          updated_at: string
+          whatsapp: string | null
+        }
+        Insert: {
+          address_cep?: string | null
+          address_city?: string | null
+          address_complement?: string | null
+          address_neighborhood?: string | null
+          address_number?: string | null
+          address_state?: string | null
+          address_street?: string | null
+          cnpj: string
+          company_id: string
+          created_at?: string
+          financial_email?: string | null
+          id?: string
+          phone?: string | null
+          updated_at?: string
+          whatsapp?: string | null
+        }
+        Update: {
+          address_cep?: string | null
+          address_city?: string | null
+          address_complement?: string | null
+          address_neighborhood?: string | null
+          address_number?: string | null
+          address_state?: string | null
+          address_street?: string | null
+          cnpj?: string
+          company_id?: string
+          created_at?: string
+          financial_email?: string | null
+          id?: string
+          phone?: string | null
+          updated_at?: string
+          whatsapp?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_branches_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company_info"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      company_info: {
+        Row: {
+          address_cep: string | null
+          address_city: string | null
+          address_complement: string | null
+          address_neighborhood: string | null
+          address_number: string | null
+          address_state: string | null
+          address_street: string | null
+          business_sector: Database["public"]["Enums"]["business_sector"]
+          cnpj: string
+          created_at: string
+          financial_email: string | null
+          has_branches: boolean
+          id: string
+          inscricao_estadual: string | null
+          inscricao_municipal: string | null
+          logo_url: string | null
+          nome_fantasia: string
+          phone: string | null
+          razao_social: string
+          updated_at: string
+          whatsapp: string | null
+        }
+        Insert: {
+          address_cep?: string | null
+          address_city?: string | null
+          address_complement?: string | null
+          address_neighborhood?: string | null
+          address_number?: string | null
+          address_state?: string | null
+          address_street?: string | null
+          business_sector?: Database["public"]["Enums"]["business_sector"]
+          cnpj: string
+          created_at?: string
+          financial_email?: string | null
+          has_branches?: boolean
+          id?: string
+          inscricao_estadual?: string | null
+          inscricao_municipal?: string | null
+          logo_url?: string | null
+          nome_fantasia: string
+          phone?: string | null
+          razao_social: string
+          updated_at?: string
+          whatsapp?: string | null
+        }
+        Update: {
+          address_cep?: string | null
+          address_city?: string | null
+          address_complement?: string | null
+          address_neighborhood?: string | null
+          address_number?: string | null
+          address_state?: string | null
+          address_street?: string | null
+          business_sector?: Database["public"]["Enums"]["business_sector"]
+          cnpj?: string
+          created_at?: string
+          financial_email?: string | null
+          has_branches?: boolean
+          id?: string
+          inscricao_estadual?: string | null
+          inscricao_municipal?: string | null
+          logo_url?: string | null
+          nome_fantasia?: string
+          phone?: string | null
+          razao_social?: string
+          updated_at?: string
+          whatsapp?: string | null
+        }
+        Relationships: []
+      }
       documents: {
         Row: {
           created_at: string
@@ -529,7 +707,21 @@ export type Database = {
         | "medical_leave"
         | "justified_absence"
       adjustment_status: "pending" | "approved" | "rejected"
+      admin_position: "rh" | "dono" | "gerente" | "diretor" | "coordenador"
       app_role: "admin" | "employee"
+      business_sector:
+        | "tecnologia"
+        | "varejo"
+        | "industria"
+        | "servicos"
+        | "saude"
+        | "educacao"
+        | "financeiro"
+        | "construcao"
+        | "agronegocio"
+        | "logistica"
+        | "alimentacao"
+        | "outro"
       document_status: "pending_signature" | "signed" | "expired"
       time_record_type: "entry" | "lunch_out" | "lunch_in" | "exit"
       vacation_type: "individual" | "collective"
@@ -667,7 +859,22 @@ export const Constants = {
         "justified_absence",
       ],
       adjustment_status: ["pending", "approved", "rejected"],
+      admin_position: ["rh", "dono", "gerente", "diretor", "coordenador"],
       app_role: ["admin", "employee"],
+      business_sector: [
+        "tecnologia",
+        "varejo",
+        "industria",
+        "servicos",
+        "saude",
+        "educacao",
+        "financeiro",
+        "construcao",
+        "agronegocio",
+        "logistica",
+        "alimentacao",
+        "outro",
+      ],
       document_status: ["pending_signature", "signed", "expired"],
       time_record_type: ["entry", "lunch_out", "lunch_in", "exit"],
       vacation_type: ["individual", "collective"],
