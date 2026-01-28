@@ -3,15 +3,15 @@ import { supabase } from '@/integrations/supabase/client';
 
 interface LocationSettings {
   location_mode: 'disabled' | 'log_only' | 'require_exact' | 'require_radius';
-  address_cep: string | null;
-  address_street: string | null;
-  address_number: string | null;
-  address_neighborhood: string | null;
-  address_city: string | null;
-  address_state: string | null;
+  work_address_cep: string | null;
+  work_address_street: string | null;
+  work_address_number: string | null;
+  work_address_neighborhood: string | null;
+  work_address_city: string | null;
+  work_address_state: string | null;
   allowed_radius_meters: number | null;
-  company_latitude: number | null;
-  company_longitude: number | null;
+  work_latitude: number | null;
+  work_longitude: number | null;
 }
 
 interface LocationValidationResult {
@@ -70,17 +70,37 @@ export const useLocationValidation = () => {
   const [settings, setSettings] = useState<LocationSettings | null>(null);
 
   const fetchLocationSettings = useCallback(async (): Promise<LocationSettings | null> => {
-    const { data, error } = await supabase
-      .from('location_settings')
-      .select('*')
-      .single();
-
-    if (error || !data) {
-      console.error('Error fetching location settings:', error);
+    // Get current user
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      console.error('No authenticated user');
       return null;
     }
 
-    const settingsData = data as LocationSettings;
+    // Fetch location settings from the user's profile
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('location_mode, work_address_cep, work_address_street, work_address_number, work_address_neighborhood, work_address_city, work_address_state, allowed_radius_meters, work_latitude, work_longitude')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (error || !data) {
+      console.error('Error fetching location settings from profile:', error);
+      return null;
+    }
+
+    const settingsData: LocationSettings = {
+      location_mode: (data.location_mode as LocationSettings['location_mode']) || 'disabled',
+      work_address_cep: data.work_address_cep,
+      work_address_street: data.work_address_street,
+      work_address_number: data.work_address_number,
+      work_address_neighborhood: data.work_address_neighborhood,
+      work_address_city: data.work_address_city,
+      work_address_state: data.work_address_state,
+      allowed_radius_meters: data.allowed_radius_meters,
+      work_latitude: data.work_latitude,
+      work_longitude: data.work_longitude,
+    };
     setSettings(settingsData);
     return settingsData;
   }, []);
@@ -166,41 +186,41 @@ export const useLocationValidation = () => {
         };
       }
 
-      // Get company address coordinates
-      let companyCoords: { lat: number; lon: number } | null = null;
+      // Get work address coordinates
+      let workCoords: { lat: number; lon: number } | null = null;
 
       // Check if we have stored coordinates
-      if (locationSettings.company_latitude && locationSettings.company_longitude) {
-        companyCoords = {
-          lat: locationSettings.company_latitude,
-          lon: locationSettings.company_longitude,
+      if (locationSettings.work_latitude && locationSettings.work_longitude) {
+        workCoords = {
+          lat: Number(locationSettings.work_latitude),
+          lon: Number(locationSettings.work_longitude),
         };
       } else {
-        // Geocode the company address
+        // Geocode the work address
         const fullAddress = [
-          locationSettings.address_street,
-          locationSettings.address_number,
-          locationSettings.address_neighborhood,
-          locationSettings.address_city,
-          locationSettings.address_state,
+          locationSettings.work_address_street,
+          locationSettings.work_address_number,
+          locationSettings.work_address_neighborhood,
+          locationSettings.work_address_city,
+          locationSettings.work_address_state,
           'Brasil',
         ].filter(Boolean).join(', ');
 
         if (!fullAddress || fullAddress === 'Brasil') {
           return {
             isValid: false,
-            message: 'Endereço da empresa não configurado. Contate o administrador.',
+            message: 'Endereço de trabalho não configurado. Contate o administrador.',
             latitude: userLat,
             longitude: userLon,
           };
         }
 
-        companyCoords = await geocodeAddress(fullAddress);
+        workCoords = await geocodeAddress(fullAddress);
 
-        if (!companyCoords) {
+        if (!workCoords) {
           return {
             isValid: false,
-            message: 'Não foi possível localizar o endereço da empresa. Contate o administrador.',
+            message: 'Não foi possível localizar o endereço de trabalho. Contate o administrador.',
             latitude: userLat,
             longitude: userLon,
           };
@@ -208,7 +228,7 @@ export const useLocationValidation = () => {
       }
 
       // Calculate distance
-      const distance = calculateDistance(userLat, userLon, companyCoords.lat, companyCoords.lon);
+      const distance = calculateDistance(userLat, userLon, workCoords.lat, workCoords.lon);
 
       // Validate based on mode
       if (locationSettings.location_mode === 'require_exact') {
@@ -221,19 +241,19 @@ export const useLocationValidation = () => {
             latitude: userLat,
             longitude: userLon,
             distanceMeters: distance,
-            companyLatitude: companyCoords.lat,
-            companyLongitude: companyCoords.lon,
+            companyLatitude: workCoords.lat,
+            companyLongitude: workCoords.lon,
             allowedRadius: EXACT_TOLERANCE_METERS,
           };
         } else {
           return {
             isValid: false,
-            message: `Você está a ${Math.round(distance)}m do endereço da empresa. Distância máxima permitida: ${EXACT_TOLERANCE_METERS}m.`,
+            message: `Você está a ${Math.round(distance)}m do endereço de trabalho. Distância máxima permitida: ${EXACT_TOLERANCE_METERS}m.`,
             latitude: userLat,
             longitude: userLon,
             distanceMeters: distance,
-            companyLatitude: companyCoords.lat,
-            companyLongitude: companyCoords.lon,
+            companyLatitude: workCoords.lat,
+            companyLongitude: workCoords.lon,
             allowedRadius: EXACT_TOLERANCE_METERS,
           };
         }
@@ -248,19 +268,19 @@ export const useLocationValidation = () => {
             latitude: userLat,
             longitude: userLon,
             distanceMeters: distance,
-            companyLatitude: companyCoords.lat,
-            companyLongitude: companyCoords.lon,
+            companyLatitude: workCoords.lat,
+            companyLongitude: workCoords.lon,
             allowedRadius,
           };
         } else {
           return {
             isValid: false,
-            message: `Você está a ${Math.round(distance)}m do endereço da empresa. Distância máxima permitida: ${allowedRadius}m.`,
+            message: `Você está a ${Math.round(distance)}m do endereço de trabalho. Distância máxima permitida: ${allowedRadius}m.`,
             latitude: userLat,
             longitude: userLon,
             distanceMeters: distance,
-            companyLatitude: companyCoords.lat,
-            companyLongitude: companyCoords.lon,
+            companyLatitude: workCoords.lat,
+            companyLongitude: workCoords.lon,
             allowedRadius,
           };
         }
