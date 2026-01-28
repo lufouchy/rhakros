@@ -17,18 +17,18 @@ interface CompanyInfoFormProps {
 }
 
 const businessSectors = [
-  { value: 'tecnologia', label: 'Tecnologia' },
-  { value: 'varejo', label: 'Varejo' },
-  { value: 'industria', label: 'Indústria' },
-  { value: 'servicos', label: 'Serviços' },
-  { value: 'saude', label: 'Saúde' },
+  { value: 'agronegocio', label: 'Agronegócio' },
+  { value: 'alimentacao', label: 'Alimentação' },
+  { value: 'construcao', label: 'Construção' },
   { value: 'educacao', label: 'Educação' },
   { value: 'financeiro', label: 'Financeiro' },
-  { value: 'construcao', label: 'Construção' },
-  { value: 'agronegocio', label: 'Agronegócio' },
+  { value: 'industria', label: 'Indústria' },
   { value: 'logistica', label: 'Logística' },
-  { value: 'alimentacao', label: 'Alimentação' },
   { value: 'outro', label: 'Outro' },
+  { value: 'saude', label: 'Saúde' },
+  { value: 'servicos', label: 'Serviços' },
+  { value: 'tecnologia', label: 'Tecnologia' },
+  { value: 'varejo', label: 'Varejo' },
 ];
 
 interface CompanyForm {
