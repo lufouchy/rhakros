@@ -8,7 +8,7 @@ import TodayRecordsCard from '@/components/employee/TodayRecordsCard';
 import HoursBalanceCard from '@/components/employee/HoursBalanceCard';
 import TodayScheduleCard from '@/components/employee/TodayScheduleCard';
 import PunchButton from '@/components/employee/PunchButton';
-import LocationMapDialog from '@/components/employee/LocationMapDialog';
+import LocationInfoDialog from '@/components/employee/LocationInfoDialog';
 import { useLocationValidation } from '@/hooks/useLocationValidation';
 
 type TimeRecordType = 'entry' | 'lunch_out' | 'lunch_in' | 'exit';
@@ -207,7 +207,7 @@ const EmployeeDashboard = () => {
       />
 
       {/* Location map dialog */}
-      <LocationMapDialog
+      <LocationInfoDialog
         open={showMapDialog}
         onOpenChange={setShowMapDialog}
         userLocation={mapData.userLocation}
