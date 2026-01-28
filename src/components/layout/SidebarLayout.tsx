@@ -16,6 +16,7 @@ import {
   ChevronRight,
   Menu,
   Settings,
+  Building2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -40,6 +41,7 @@ const SidebarLayout = ({ children }: SidebarLayoutProps) => {
   const navItems = isAdmin
     ? [
         { icon: Home, label: 'Início', path: '/' },
+        { icon: Building2, label: 'Informações Institucionais', path: '/institutional' },
         { icon: Users, label: 'Cadastro de Colaborador', path: '/employees' },
         { icon: Clock, label: 'Gestão de Jornada', path: '/schedules' },
         { icon: FileText, label: 'Solicitações', path: '/requests' },
