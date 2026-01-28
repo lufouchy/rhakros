@@ -126,7 +126,9 @@ const CompanyInfoForm = ({ companyId, onSave }: CompanyInfoFormProps) => {
     fetchCompanyData();
   }, [companyId]);
 
-  const handleCNPJChange = (value: string) => {
+  const [fetchingCnpj, setFetchingCnpj] = useState(false);
+
+  const handleCNPJChange = async (value: string) => {
     const formatted = formatCNPJ(value);
     setForm({ ...form, cnpj: formatted });
     
@@ -136,7 +138,43 @@ const CompanyInfoForm = ({ companyId, onSave }: CompanyInfoFormProps) => {
         setCnpjError('CNPJ inválido');
       } else {
         setCnpjError('');
-        // TODO: Integrate with Receita Federal API when available
+        // Fetch company data from BrasilAPI
+        setFetchingCnpj(true);
+        try {
+          const response = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cleanCNPJ}`);
+          if (response.ok) {
+            const data = await response.json();
+            setForm(prev => ({
+              ...prev,
+              cnpj: formatted,
+              razao_social: data.razao_social || '',
+              nome_fantasia: data.nome_fantasia || data.razao_social || '',
+              address_cep: data.cep ? data.cep.replace(/\D/g, '').replace(/(\d{5})(\d{3})/, '$1-$2') : '',
+              address_street: data.logradouro || '',
+              address_number: data.numero || '',
+              address_complement: data.complemento || '',
+              address_neighborhood: data.bairro || '',
+              address_city: data.municipio || '',
+              address_state: data.uf || '',
+              phone: data.ddd_telefone_1 ? formatPhone(data.ddd_telefone_1) : '',
+            }));
+            toast({
+              title: 'Dados carregados',
+              description: 'Informações da empresa foram preenchidas automaticamente',
+            });
+          } else if (response.status === 404) {
+            toast({
+              title: 'CNPJ não encontrado',
+              description: 'O CNPJ informado não foi encontrado na Receita Federal',
+              variant: 'destructive',
+            });
+          }
+        } catch (error) {
+          console.error('Error fetching CNPJ data:', error);
+          // Silently fail - user can fill manually
+        } finally {
+          setFetchingCnpj(false);
+        }
       }
     } else {
       setCnpjError('');
@@ -346,14 +384,19 @@ const CompanyInfoForm = ({ companyId, onSave }: CompanyInfoFormProps) => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="cnpj">CNPJ *</Label>
-              <Input
-                id="cnpj"
-                value={form.cnpj}
-                onChange={(e) => handleCNPJChange(e.target.value)}
-                placeholder="00.000.000/0000-00"
-                maxLength={18}
-                required
-              />
+              <div className="relative">
+                <Input
+                  id="cnpj"
+                  value={form.cnpj}
+                  onChange={(e) => handleCNPJChange(e.target.value)}
+                  placeholder="00.000.000/0000-00"
+                  maxLength={18}
+                  required
+                />
+                {fetchingCnpj && (
+                  <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin" />
+                )}
+              </div>
               {cnpjError && (
                 <p className="text-sm text-destructive">{cnpjError}</p>
               )}
