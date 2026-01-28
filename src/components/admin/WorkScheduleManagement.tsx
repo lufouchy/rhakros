@@ -270,6 +270,18 @@ const WorkScheduleManagement = () => {
   const handleDelete = async () => {
     if (!scheduleToDelete) return;
 
+    // Verificar se há colaboradores vinculados
+    if (scheduleToDelete.employee_count && scheduleToDelete.employee_count > 0) {
+      toast({
+        variant: 'destructive',
+        title: 'Não é possível excluir',
+        description: `Esta jornada possui ${scheduleToDelete.employee_count} colaborador(es) vinculado(s). Remova ou altere a jornada dos colaboradores antes de excluir.`,
+      });
+      setDeleteDialogOpen(false);
+      setScheduleToDelete(null);
+      return;
+    }
+
     setIsSaving(true);
 
     try {
