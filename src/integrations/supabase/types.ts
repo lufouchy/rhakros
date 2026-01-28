@@ -707,7 +707,14 @@ export type Database = {
         | "medical_leave"
         | "justified_absence"
       adjustment_status: "pending" | "approved" | "rejected"
-      admin_position: "rh" | "dono" | "gerente" | "diretor" | "coordenador"
+      admin_position:
+        | "rh"
+        | "dono"
+        | "gerente"
+        | "diretor"
+        | "coordenador"
+        | "socio"
+        | "outro"
       app_role: "admin" | "employee"
       business_sector:
         | "tecnologia"
@@ -859,7 +866,15 @@ export const Constants = {
         "justified_absence",
       ],
       adjustment_status: ["pending", "approved", "rejected"],
-      admin_position: ["rh", "dono", "gerente", "diretor", "coordenador"],
+      admin_position: [
+        "rh",
+        "dono",
+        "gerente",
+        "diretor",
+        "coordenador",
+        "socio",
+        "outro",
+      ],
       app_role: ["admin", "employee"],
       business_sector: [
         "tecnologia",
