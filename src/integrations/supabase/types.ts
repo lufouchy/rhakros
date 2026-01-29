@@ -291,6 +291,42 @@ export type Database = {
         }
         Relationships: []
       }
+      holidays: {
+        Row: {
+          city_name: string | null
+          created_at: string
+          date: string
+          id: string
+          is_custom: boolean
+          name: string
+          state_code: string | null
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          city_name?: string | null
+          created_at?: string
+          date: string
+          id?: string
+          is_custom?: boolean
+          name: string
+          state_code?: string | null
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          city_name?: string | null
+          created_at?: string
+          date?: string
+          id?: string
+          is_custom?: boolean
+          name?: string
+          state_code?: string | null
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       hours_balance: {
         Row: {
           balance_minutes: number
