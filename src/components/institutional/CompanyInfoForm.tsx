@@ -592,28 +592,6 @@ const CompanyInfoForm = ({ companyId, onSave }: CompanyInfoFormProps) => {
             </div>
           </div>
 
-          {/* Branches question */}
-          <div className="pt-4 border-t space-y-3">
-            <Label>Cadastrar filiais?</Label>
-            <RadioGroup
-              value={form.has_branches ? 'yes' : 'no'}
-              onValueChange={(value) => setForm({ ...form, has_branches: value === 'yes' })}
-              className="flex gap-4"
-            >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="yes" id="branches-yes" />
-                <Label htmlFor="branches-yes" className="font-normal cursor-pointer">
-                  Sim
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="no" id="branches-no" />
-                <Label htmlFor="branches-no" className="font-normal cursor-pointer">
-                  Não
-                </Label>
-              </div>
-            </RadioGroup>
-          </div>
         </CardContent>
       </Card>
 
