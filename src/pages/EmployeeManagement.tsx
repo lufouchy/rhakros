@@ -1205,11 +1205,13 @@ const EmployeeManagement = () => {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => exportToExcel({
-                    employees: filteredEmployees,
-                    schedules,
-                    filters: { searchTerm, filterSector, filterStatus }
-                  })}
+                  onClick={async () => {
+                    await exportToExcel({
+                      employees: filteredEmployees,
+                      schedules,
+                      filters: { searchTerm, filterSector, filterStatus }
+                    });
+                  }}
                   className="gap-2"
                   disabled={filteredEmployees.length === 0}
                 >
