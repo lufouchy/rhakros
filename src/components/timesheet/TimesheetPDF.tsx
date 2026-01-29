@@ -9,11 +9,18 @@ interface TimeRecord {
   recorded_at: string;
 }
 
+interface CompanyInfo {
+  logo_url: string | null;
+  cnpj: string;
+  nome_fantasia: string;
+}
+
 interface GeneratePDFParams {
   records: TimeRecord[];
   month: Date;
   employeeName: string;
   signatureData?: string | null;
+  companyInfo?: CompanyInfo | null;
 }
 
 const recordTypeLabel: Record<string, string> = {
@@ -23,22 +30,64 @@ const recordTypeLabel: Record<string, string> = {
   exit: 'Saída',
 };
 
-export const generateTimesheetPDF = ({ records, month, employeeName, signatureData }: GeneratePDFParams): jsPDF => {
+const formatCNPJ = (cnpj: string): string => {
+  const clean = cnpj.replace(/\D/g, '');
+  if (clean.length !== 14) return cnpj;
+  return clean.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+};
+
+export const generateTimesheetPDF = async ({ records, month, employeeName, signatureData, companyInfo }: GeneratePDFParams): Promise<jsPDF> => {
   const doc = new jsPDF();
   const startDate = startOfMonth(month);
   const endDate = endOfMonth(month);
   const days = eachDayOfInterval({ start: startDate, end: endDate });
 
-  // Header
-  doc.setFontSize(18);
-  doc.setFont('helvetica', 'bold');
-  doc.text('ESPELHO DE PONTO', 105, 20, { align: 'center' });
+  let headerY = 14;
 
-  doc.setFontSize(12);
+  // Company Header
+  if (companyInfo) {
+    // Logo on the left
+    if (companyInfo.logo_url) {
+      try {
+        const logoImage = await loadImage(companyInfo.logo_url);
+        doc.addImage(logoImage, 'PNG', 14, headerY, 25, 25);
+      } catch (error) {
+        console.error('Error loading company logo:', error);
+      }
+    }
+
+    // Company info on the right of the logo
+    const textX = companyInfo.logo_url ? 45 : 14;
+    
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text(companyInfo.nome_fantasia.toUpperCase(), textX, headerY + 8);
+    
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`CNPJ: ${formatCNPJ(companyInfo.cnpj)}`, textX, headerY + 16);
+
+    // Separator line
+    headerY += 32;
+    doc.setDrawColor(200);
+    doc.line(14, headerY, 196, headerY);
+    headerY += 8;
+  }
+
+  // Title
+  doc.setFontSize(16);
+  doc.setFont('helvetica', 'bold');
+  doc.text('ESPELHO DE PONTO', 105, headerY, { align: 'center' });
+  headerY += 10;
+
+  // Employee Info
+  doc.setFontSize(11);
   doc.setFont('helvetica', 'normal');
-  doc.text(`Colaborador: ${employeeName}`, 14, 35);
-  doc.text(`Período: ${format(startDate, "MMMM 'de' yyyy", { locale: ptBR })}`, 14, 42);
-  doc.text(`Gerado em: ${format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}`, 14, 49);
+  doc.text(`Colaborador: ${employeeName}`, 14, headerY);
+  headerY += 7;
+  doc.text(`Período: ${format(startDate, "MMMM 'de' yyyy", { locale: ptBR })}`, 14, headerY);
+  headerY += 7;
+  doc.text(`Gerado em: ${format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}`, 14, headerY);
 
   // Prepare table data
   const tableData: (string | number)[][] = [];
@@ -83,7 +132,7 @@ export const generateTimesheetPDF = ({ records, month, employeeName, signatureDa
 
   // Table
   autoTable(doc, {
-    startY: 55,
+    startY: headerY + 5,
     head: [['Data', 'Entrada', 'Saída Almoço', 'Volta Almoço', 'Saída', 'Trabalhado', 'H. Extra', 'Obs']],
     body: tableData,
     styles: { fontSize: 8, cellPadding: 2 },
@@ -132,6 +181,27 @@ function formatMinutes(minutes: number): string {
   const h = Math.floor(minutes / 60);
   const m = minutes % 60;
   return `${h}h${m.toString().padStart(2, '0')}`;
+}
+
+function loadImage(url: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.drawImage(img, 0, 0);
+        resolve(canvas.toDataURL('image/png'));
+      } else {
+        reject(new Error('Could not get canvas context'));
+      }
+    };
+    img.onerror = reject;
+    img.src = url;
+  });
 }
 
 export const downloadPDF = (doc: jsPDF, filename: string) => {

@@ -160,18 +160,34 @@ const TimesheetPage = () => {
 
   const analysis = useMemo(() => analyzeDayRecords(date, records), [date, records]);
 
-  const handleDownloadPDF = () => {
-    const pdf = generateTimesheetPDF({
-      records: monthRecords,
-      month: date,
-      employeeName: profile?.full_name || "Colaborador",
-      signatureData: null,
-    });
-    downloadPDF(pdf, `espelho-ponto-${format(date, "yyyy-MM")}.pdf`);
-    toast({
-      title: "PDF gerado com sucesso!",
-      description: "O espelho de ponto foi baixado.",
-    });
+  const handleDownloadPDF = async () => {
+    try {
+      // Fetch company info
+      const { data: companyData } = await supabase
+        .from('company_info')
+        .select('logo_url, cnpj, nome_fantasia')
+        .limit(1)
+        .single();
+
+      const pdf = await generateTimesheetPDF({
+        records: monthRecords,
+        month: date,
+        employeeName: profile?.full_name || "Colaborador",
+        signatureData: null,
+        companyInfo: companyData,
+      });
+      downloadPDF(pdf, `espelho-ponto-${format(date, "yyyy-MM")}.pdf`);
+      toast({
+        title: "PDF gerado com sucesso!",
+        description: "O espelho de ponto foi baixado.",
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Erro ao gerar PDF",
+        description: error.message,
+      });
+    }
   };
 
   const handleSignAndSave = async () => {
@@ -187,12 +203,20 @@ const TimesheetPage = () => {
     setIsSigning(true);
 
     try {
+      // Fetch company info
+      const { data: companyData } = await supabase
+        .from('company_info')
+        .select('logo_url, cnpj, nome_fantasia')
+        .limit(1)
+        .single();
+
       // Generate signed PDF
-      const pdf = generateTimesheetPDF({
+      const pdf = await generateTimesheetPDF({
         records: monthRecords,
         month: date,
         employeeName: profile?.full_name || "Colaborador",
         signatureData: signature,
+        companyInfo: companyData,
       });
 
       // Convert PDF to blob
