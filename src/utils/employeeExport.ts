@@ -1,6 +1,6 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -157,74 +157,108 @@ export const exportToPDF = ({ employees, schedules, filters }: ExportParams): vo
   doc.save(filename);
 };
 
-export const exportToExcel = ({ employees, schedules, filters }: ExportParams): void => {
-  // Prepare data
-  const data = employees.map((emp) => ({
-    'Nome': emp.full_name,
-    'E-mail': emp.email,
-    'CPF': formatCPF(emp.cpf),
-    'Telefone': formatPhone(emp.phone),
-    'Data de Nascimento': formatDate(emp.birth_date),
-    'Setor': emp.sector || '-',
-    'Cargo': emp.position || '-',
-    'Data de Admissão': formatDate(emp.hire_date),
-    'Data de Desligamento': formatDate(emp.termination_date),
-    'Jornada': getScheduleName(emp.work_schedule_id, schedules),
-    'Status': (emp.status || 'ativo').charAt(0).toUpperCase() + (emp.status || 'ativo').slice(1),
-    'Especificação': emp.specification || '-',
-    'CEP': emp.address_cep || '-',
-    'Endereço': emp.address_street || '-',
-    'Número': emp.address_number || '-',
-    'Complemento': emp.address_complement || '-',
-    'Bairro': emp.address_neighborhood || '-',
-    'Cidade': emp.address_city || '-',
-    'Estado': emp.address_state || '-',
-  }));
-
+export const exportToExcel = async ({ employees, schedules, filters }: ExportParams): Promise<void> => {
   // Create workbook
-  const wb = XLSX.utils.book_new();
-  
-  // Create worksheet
-  const ws = XLSX.utils.json_to_sheet(data);
-  
-  // Set column widths
-  ws['!cols'] = [
-    { wch: 30 }, // Nome
-    { wch: 35 }, // E-mail
-    { wch: 15 }, // CPF
-    { wch: 16 }, // Telefone
-    { wch: 15 }, // Data de Nascimento
-    { wch: 15 }, // Setor
-    { wch: 20 }, // Cargo
-    { wch: 15 }, // Data de Admissão
-    { wch: 18 }, // Data de Desligamento
-    { wch: 20 }, // Jornada
-    { wch: 12 }, // Status
-    { wch: 20 }, // Especificação
-    { wch: 10 }, // CEP
-    { wch: 35 }, // Endereço
-    { wch: 10 }, // Número
-    { wch: 20 }, // Complemento
-    { wch: 20 }, // Bairro
-    { wch: 20 }, // Cidade
-    { wch: 8 },  // Estado
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = 'Sistema de Ponto Digital';
+  workbook.created = new Date();
+
+  // Create main worksheet
+  const worksheet = workbook.addWorksheet('Colaboradores');
+
+  // Define columns with headers and widths
+  worksheet.columns = [
+    { header: 'Nome', key: 'nome', width: 30 },
+    { header: 'E-mail', key: 'email', width: 35 },
+    { header: 'CPF', key: 'cpf', width: 15 },
+    { header: 'Telefone', key: 'telefone', width: 16 },
+    { header: 'Data de Nascimento', key: 'nascimento', width: 15 },
+    { header: 'Setor', key: 'setor', width: 15 },
+    { header: 'Cargo', key: 'cargo', width: 20 },
+    { header: 'Data de Admissão', key: 'admissao', width: 15 },
+    { header: 'Data de Desligamento', key: 'desligamento', width: 18 },
+    { header: 'Jornada', key: 'jornada', width: 20 },
+    { header: 'Status', key: 'status', width: 12 },
+    { header: 'Especificação', key: 'especificacao', width: 20 },
+    { header: 'CEP', key: 'cep', width: 10 },
+    { header: 'Endereço', key: 'endereco', width: 35 },
+    { header: 'Número', key: 'numero', width: 10 },
+    { header: 'Complemento', key: 'complemento', width: 20 },
+    { header: 'Bairro', key: 'bairro', width: 20 },
+    { header: 'Cidade', key: 'cidade', width: 20 },
+    { header: 'Estado', key: 'estado', width: 8 },
   ];
 
-  XLSX.utils.book_append_sheet(wb, ws, 'Colaboradores');
-  
-  // Add metadata sheet
-  const metadata = [
-    ['Relatório de Colaboradores'],
-    [''],
-    ['Gerado em:', format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })],
-    ['Filtros aplicados:', getFilterDescription(filters)],
-    ['Total de colaboradores:', employees.length.toString()],
-  ];
-  const wsMetadata = XLSX.utils.aoa_to_sheet(metadata);
-  wsMetadata['!cols'] = [{ wch: 25 }, { wch: 50 }];
-  XLSX.utils.book_append_sheet(wb, wsMetadata, 'Informações');
+  // Style header row
+  const headerRow = worksheet.getRow(1);
+  headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+  headerRow.fill = {
+    type: 'pattern',
+    pattern: 'solid',
+    fgColor: { argb: 'FFDB2777' },
+  };
+  headerRow.alignment = { vertical: 'middle', horizontal: 'center' };
 
-  // Save file
-  const filename = `colaboradores_${format(new Date(), 'yyyy-MM-dd_HH-mm')}.xlsx`;
-  XLSX.writeFile(wb, filename);
+  // Add data rows
+  employees.forEach((emp) => {
+    worksheet.addRow({
+      nome: emp.full_name,
+      email: emp.email,
+      cpf: formatCPF(emp.cpf),
+      telefone: formatPhone(emp.phone),
+      nascimento: formatDate(emp.birth_date),
+      setor: emp.sector || '-',
+      cargo: emp.position || '-',
+      admissao: formatDate(emp.hire_date),
+      desligamento: formatDate(emp.termination_date),
+      jornada: getScheduleName(emp.work_schedule_id, schedules),
+      status: (emp.status || 'ativo').charAt(0).toUpperCase() + (emp.status || 'ativo').slice(1),
+      especificacao: emp.specification || '-',
+      cep: emp.address_cep || '-',
+      endereco: emp.address_street || '-',
+      numero: emp.address_number || '-',
+      complemento: emp.address_complement || '-',
+      bairro: emp.address_neighborhood || '-',
+      cidade: emp.address_city || '-',
+      estado: emp.address_state || '-',
+    });
+  });
+
+  // Add alternating row colors
+  worksheet.eachRow((row, rowNumber) => {
+    if (rowNumber > 1 && rowNumber % 2 === 0) {
+      row.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FFF5F5F5' },
+      };
+    }
+  });
+
+  // Create metadata worksheet
+  const metadataSheet = workbook.addWorksheet('Informações');
+  metadataSheet.columns = [
+    { header: '', key: 'label', width: 25 },
+    { header: '', key: 'value', width: 50 },
+  ];
+
+  metadataSheet.addRow({ label: 'Relatório de Colaboradores', value: '' });
+  metadataSheet.addRow({ label: '', value: '' });
+  metadataSheet.addRow({ label: 'Gerado em:', value: format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) });
+  metadataSheet.addRow({ label: 'Filtros aplicados:', value: getFilterDescription(filters) });
+  metadataSheet.addRow({ label: 'Total de colaboradores:', value: employees.length.toString() });
+
+  // Style metadata title
+  const titleRow = metadataSheet.getRow(1);
+  titleRow.font = { bold: true, size: 14 };
+
+  // Generate file and download
+  const buffer = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `colaboradores_${format(new Date(), 'yyyy-MM-dd_HH-mm')}.xlsx`;
+  link.click();
+  window.URL.revokeObjectURL(url);
 };
