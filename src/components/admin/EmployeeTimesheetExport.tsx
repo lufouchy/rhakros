@@ -81,11 +81,19 @@ const EmployeeTimesheetExport = ({ employeeId, employeeName, userId }: EmployeeT
         .eq('status', 'signed')
         .maybeSingle();
 
-      const pdf = generateTimesheetPDF({
+      // Fetch company info
+      const { data: companyData } = await supabase
+        .from('company_info')
+        .select('logo_url, cnpj, nome_fantasia')
+        .limit(1)
+        .single();
+
+      const pdf = await generateTimesheetPDF({
         records: records || [],
         month: startDate,
         employeeName,
         signatureData: signedDoc?.signature_data,
+        companyInfo: companyData,
       });
 
       const filename = `espelho-ponto-${employeeName.toLowerCase().replace(/\s+/g, '-')}-${selectedMonth}.pdf`;
