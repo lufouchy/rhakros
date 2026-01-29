@@ -363,6 +363,136 @@ export type Database = {
         }
         Relationships: []
       }
+      monthly_overtime_decisions: {
+        Row: {
+          bank_minutes: number | null
+          created_at: string
+          destination: string
+          finalized: boolean | null
+          finalized_at: string | null
+          finalized_by: string | null
+          id: string
+          is_edited: boolean | null
+          overtime_minutes: number
+          payment_amount: number | null
+          payment_minutes: number | null
+          reference_month: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bank_minutes?: number | null
+          created_at?: string
+          destination?: string
+          finalized?: boolean | null
+          finalized_at?: string | null
+          finalized_by?: string | null
+          id?: string
+          is_edited?: boolean | null
+          overtime_minutes?: number
+          payment_amount?: number | null
+          payment_minutes?: number | null
+          reference_month: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bank_minutes?: number | null
+          created_at?: string
+          destination?: string
+          finalized?: boolean | null
+          finalized_at?: string | null
+          finalized_by?: string | null
+          id?: string
+          is_edited?: boolean | null
+          overtime_minutes?: number
+          payment_amount?: number | null
+          payment_minutes?: number | null
+          reference_month?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      payroll_settings: {
+        Row: {
+          auto_decision_enabled: boolean | null
+          auto_decision_threshold_hours: number | null
+          bank_compensation_ratio: number | null
+          bank_custom_months: number | null
+          bank_daily_limit_hours: number | null
+          bank_holiday_multiplier: number | null
+          bank_sunday_multiplier: number | null
+          bank_validity: Database["public"]["Enums"]["bank_validity"] | null
+          created_at: string
+          cycle_start_day: number
+          id: string
+          mixed_bank_days: string[] | null
+          mixed_hours_threshold: number | null
+          mixed_payment_days: string[] | null
+          mixed_rule_type: Database["public"]["Enums"]["mixed_rule_type"] | null
+          overtime_strategy: Database["public"]["Enums"]["overtime_strategy"]
+          payment_holiday_percent: number | null
+          payment_saturday_percent: number | null
+          payment_sunday_percent: number | null
+          payment_weekday_percent: number | null
+          tolerance_minutes: number
+          updated_at: string
+        }
+        Insert: {
+          auto_decision_enabled?: boolean | null
+          auto_decision_threshold_hours?: number | null
+          bank_compensation_ratio?: number | null
+          bank_custom_months?: number | null
+          bank_daily_limit_hours?: number | null
+          bank_holiday_multiplier?: number | null
+          bank_sunday_multiplier?: number | null
+          bank_validity?: Database["public"]["Enums"]["bank_validity"] | null
+          created_at?: string
+          cycle_start_day?: number
+          id?: string
+          mixed_bank_days?: string[] | null
+          mixed_hours_threshold?: number | null
+          mixed_payment_days?: string[] | null
+          mixed_rule_type?:
+            | Database["public"]["Enums"]["mixed_rule_type"]
+            | null
+          overtime_strategy?: Database["public"]["Enums"]["overtime_strategy"]
+          payment_holiday_percent?: number | null
+          payment_saturday_percent?: number | null
+          payment_sunday_percent?: number | null
+          payment_weekday_percent?: number | null
+          tolerance_minutes?: number
+          updated_at?: string
+        }
+        Update: {
+          auto_decision_enabled?: boolean | null
+          auto_decision_threshold_hours?: number | null
+          bank_compensation_ratio?: number | null
+          bank_custom_months?: number | null
+          bank_daily_limit_hours?: number | null
+          bank_holiday_multiplier?: number | null
+          bank_sunday_multiplier?: number | null
+          bank_validity?: Database["public"]["Enums"]["bank_validity"] | null
+          created_at?: string
+          cycle_start_day?: number
+          id?: string
+          mixed_bank_days?: string[] | null
+          mixed_hours_threshold?: number | null
+          mixed_payment_days?: string[] | null
+          mixed_rule_type?:
+            | Database["public"]["Enums"]["mixed_rule_type"]
+            | null
+          overtime_strategy?: Database["public"]["Enums"]["overtime_strategy"]
+          payment_holiday_percent?: number | null
+          payment_saturday_percent?: number | null
+          payment_sunday_percent?: number | null
+          payment_weekday_percent?: number | null
+          tolerance_minutes?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           address_cep: string | null
@@ -716,6 +846,7 @@ export type Database = {
         | "socio"
         | "outro"
       app_role: "admin" | "employee"
+      bank_validity: "3_months" | "6_months" | "1_year" | "custom"
       business_sector:
         | "tecnologia"
         | "varejo"
@@ -730,6 +861,8 @@ export type Database = {
         | "alimentacao"
         | "outro"
       document_status: "pending_signature" | "signed" | "expired"
+      mixed_rule_type: "hours_threshold" | "day_type"
+      overtime_strategy: "bank" | "payment" | "mixed"
       time_record_type: "entry" | "lunch_out" | "lunch_in" | "exit"
       vacation_type: "individual" | "collective"
     }
@@ -876,6 +1009,7 @@ export const Constants = {
         "outro",
       ],
       app_role: ["admin", "employee"],
+      bank_validity: ["3_months", "6_months", "1_year", "custom"],
       business_sector: [
         "tecnologia",
         "varejo",
@@ -891,6 +1025,8 @@ export const Constants = {
         "outro",
       ],
       document_status: ["pending_signature", "signed", "expired"],
+      mixed_rule_type: ["hours_threshold", "day_type"],
+      overtime_strategy: ["bank", "payment", "mixed"],
       time_record_type: ["entry", "lunch_out", "lunch_in", "exit"],
       vacation_type: ["individual", "collective"],
     },
