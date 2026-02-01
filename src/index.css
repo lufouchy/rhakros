@@ -6,31 +6,31 @@
 
 @layer base {
   :root {
-    /* Flash-inspired color palette with magenta accent */
+    /* Color palette: Blue Green, Deep Space Blue, Sky Blue, Amber, Orange */
     --background: 0 0% 98%;
-    --foreground: 220 20% 10%;
+    --foreground: 200 95% 14%;
 
     --card: 0 0% 100%;
-    --card-foreground: 220 20% 10%;
+    --card-foreground: 200 95% 14%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 20% 10%;
+    --popover-foreground: 200 95% 14%;
 
-    /* Primary - Vibrant Magenta/Pink */
-    --primary: 330 85% 55%;
+    /* Primary - Blue Green #219EBC */
+    --primary: 192 70% 43%;
     --primary-foreground: 0 0% 100%;
 
     /* Secondary - Light gray */
-    --secondary: 220 14% 96%;
-    --secondary-foreground: 220 20% 10%;
+    --secondary: 199 65% 95%;
+    --secondary-foreground: 200 95% 14%;
 
     /* Muted */
-    --muted: 220 14% 96%;
-    --muted-foreground: 220 10% 50%;
+    --muted: 199 30% 94%;
+    --muted-foreground: 200 20% 40%;
 
-    /* Accent - Light pink tint */
-    --accent: 330 60% 96%;
-    --accent-foreground: 330 85% 40%;
+    /* Accent - Sky Blue Light #8ECAE6 */
+    --accent: 199 65% 73%;
+    --accent-foreground: 200 95% 14%;
 
     /* Status colors */
     --destructive: 0 84% 60%;
@@ -39,59 +39,65 @@
     --success: 142 76% 36%;
     --success-foreground: 0 0% 100%;
 
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 100%;
+    /* Warning - Amber Flame #FFB703 */
+    --warning: 43 100% 51%;
+    --warning-foreground: 200 95% 14%;
+
+    /* Orange accent - Princeton Orange #FB8500 */
+    --orange: 32 100% 49%;
+    --orange-foreground: 0 0% 100%;
 
     /* UI elements */
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 330 85% 55%;
+    --border: 199 30% 88%;
+    --input: 199 30% 88%;
+    --ring: 192 70% 43%;
 
     --radius: 0.75rem;
 
     /* Custom gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(330, 85%, 55%) 0%, hsl(340, 90%, 60%) 100%);
-    --gradient-card: linear-gradient(180deg, hsl(0, 0%, 100%) 0%, hsl(220, 14%, 99%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(192, 70%, 43%) 0%, hsl(199, 65%, 73%) 100%);
+    --gradient-card: linear-gradient(180deg, hsl(0, 0%, 100%) 0%, hsl(199, 30%, 98%) 100%);
     
     /* Shadows */
     --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
     --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
     --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
     --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-    --shadow-primary: 0 10px 40px -10px hsl(330, 85%, 55%, 0.4);
+    --shadow-primary: 0 10px 40px -10px hsl(192, 70%, 43%, 0.4);
 
-    /* Sidebar */
-    --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 220 20% 10%;
-    --sidebar-primary: 330 85% 55%;
+    /* Sidebar - Deep Space Blue #023047 */
+    --sidebar-background: 200 95% 14%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 192 70% 43%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 330 60% 96%;
-    --sidebar-accent-foreground: 330 85% 40%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 330 85% 55%;
+    --sidebar-accent: 199 65% 73%;
+    --sidebar-accent-foreground: 200 95% 14%;
+    --sidebar-border: 200 60% 25%;
+    --sidebar-ring: 192 70% 43%;
   }
 
   .dark {
-    --background: 220 20% 8%;
+    /* Dark mode - Deep Space Blue based */
+    --background: 200 95% 8%;
     --foreground: 0 0% 98%;
 
-    --card: 220 20% 10%;
+    --card: 200 80% 12%;
     --card-foreground: 0 0% 98%;
 
-    --popover: 220 20% 10%;
+    --popover: 200 80% 12%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 330 85% 60%;
+    --primary: 192 70% 50%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 14% 15%;
+    --secondary: 200 60% 18%;
     --secondary-foreground: 0 0% 98%;
 
-    --muted: 220 14% 15%;
-    --muted-foreground: 220 10% 60%;
+    --muted: 200 40% 18%;
+    --muted-foreground: 199 30% 65%;
 
-    --accent: 330 50% 15%;
-    --accent-foreground: 330 85% 70%;
+    --accent: 199 50% 25%;
+    --accent-foreground: 199 65% 80%;
 
     --destructive: 0 62% 50%;
     --destructive-foreground: 0 0% 100%;
@@ -99,21 +105,24 @@
     --success: 142 70% 45%;
     --success-foreground: 0 0% 100%;
 
-    --warning: 38 90% 55%;
-    --warning-foreground: 0 0% 100%;
+    --warning: 43 100% 55%;
+    --warning-foreground: 200 95% 14%;
 
-    --border: 220 14% 18%;
-    --input: 220 14% 18%;
-    --ring: 330 85% 60%;
+    --orange: 32 100% 52%;
+    --orange-foreground: 0 0% 100%;
 
-    --sidebar-background: 220 20% 8%;
+    --border: 200 50% 22%;
+    --input: 200 50% 22%;
+    --ring: 192 70% 50%;
+
+    --sidebar-background: 200 95% 8%;
     --sidebar-foreground: 0 0% 98%;
-    --sidebar-primary: 330 85% 60%;
+    --sidebar-primary: 192 70% 50%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 330 50% 15%;
-    --sidebar-accent-foreground: 330 85% 70%;
-    --sidebar-border: 220 14% 18%;
-    --sidebar-ring: 330 85% 60%;
+    --sidebar-accent: 199 50% 25%;
+    --sidebar-accent-foreground: 199 65% 80%;
+    --sidebar-border: 200 50% 22%;
+    --sidebar-ring: 192 70% 50%;
   }
 }
 
@@ -144,7 +153,7 @@
 
   .btn-punch:hover {
     @apply scale-105;
-    box-shadow: 0 15px 50px -10px hsl(330, 85%, 55%, 0.5);
+    box-shadow: 0 15px 50px -10px hsl(192, 70%, 43%, 0.5);
   }
 
   .btn-punch:active {
@@ -197,6 +206,14 @@
 
   .pulse-ring {
     @apply absolute inset-0 rounded-full animate-ping bg-primary/30;
+  }
+
+  .bg-deep-space {
+    background-color: hsl(200, 95%, 14%);
+  }
+
+  .text-sky-light {
+    color: hsl(199, 65%, 73%);
   }
 }
 
