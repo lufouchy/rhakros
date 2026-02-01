@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import AdminRoute from "@/components/auth/AdminRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import RequestsPage from "./pages/RequestsPage";
@@ -31,13 +32,13 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/requests" element={<RequestsPage />} />
             <Route path="/timesheet" element={<TimesheetPage />} />
-            <Route path="/documents" element={<DocumentManagement />} />
-            <Route path="/vacations" element={<VacationManagement />} />
+            <Route path="/documents" element={<AdminRoute><DocumentManagement /></AdminRoute>} />
+            <Route path="/vacations" element={<AdminRoute><VacationManagement /></AdminRoute>} />
             <Route path="/profile" element={<EmployeeProfile />} />
-            <Route path="/employees" element={<EmployeeManagement />} />
-            <Route path="/schedules" element={<WorkSchedulesPage />} />
-            <Route path="/settings" element={<AdminSettings />} />
-            <Route path="/institutional" element={<InstitutionalInfo />} />
+            <Route path="/employees" element={<AdminRoute><EmployeeManagement /></AdminRoute>} />
+            <Route path="/schedules" element={<AdminRoute><WorkSchedulesPage /></AdminRoute>} />
+            <Route path="/settings" element={<AdminRoute><AdminSettings /></AdminRoute>} />
+            <Route path="/institutional" element={<AdminRoute><InstitutionalInfo /></AdminRoute>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

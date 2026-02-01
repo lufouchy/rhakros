@@ -26,44 +26,31 @@ Deno.serve(async (req) => {
       },
     })
 
-    // Verify the requesting user is an admin
+    // Verify the requesting user is authenticated
     const authHeader = req.headers.get('Authorization')
-    if (!authHeader) {
-      throw new Error('No authorization header')
+    if (!authHeader?.startsWith('Bearer ')) {
+      console.error('Missing or invalid authorization header')
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
     }
 
-    const supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } },
-    })
+    const token = authHeader.replace('Bearer ', '')
 
-    // validate JWT manually (verify_jwt=false in config)
-    // Prefer getClaims() when available; fallback to getUser() for compatibility.
-    let requestingUserId: string | null = null
-
-    const authAny = supabaseClient.auth as unknown as {
-      getClaims?: () => Promise<{ data?: { claims?: { sub?: string } }, error?: { message?: string } | null }>
-      getUser?: () => Promise<{ data: { user: { id: string } | null }, error: { message?: string } | null }>
+    // Validate JWT and get user using service role client
+    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token)
+    
+    if (authError || !user) {
+      console.error('JWT validation failed:', authError?.message || 'Invalid token')
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized: ' + (authError?.message || 'Invalid token') }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
     }
 
-    if (typeof authAny.getClaims === 'function') {
-      const { data: claimsData, error: claimsError } = await authAny.getClaims()
-      requestingUserId = claimsData?.claims?.sub ?? null
-      if (claimsError) {
-        console.warn('getClaims error:', claimsError)
-      }
-    }
-
-    if (!requestingUserId && typeof authAny.getUser === 'function') {
-      const { data: userData, error: userError } = await authAny.getUser()
-      requestingUserId = userData?.user?.id ?? null
-      if (userError) {
-        console.warn('getUser error:', userError)
-      }
-    }
-
-    if (!requestingUserId) {
-      throw new Error('Unauthorized')
-    }
+    const requestingUserId = user.id
+    console.log('Authenticated user:', requestingUserId)
 
     // Check if user is admin
     const { data: roleData, error: roleError } = await supabaseAdmin
@@ -74,7 +61,11 @@ Deno.serve(async (req) => {
       .maybeSingle()
 
     if (roleError || !roleData) {
-      throw new Error('Only admins can create employees')
+      console.error('Admin role check failed:', roleError?.message || 'Not an admin')
+      return new Response(
+        JSON.stringify({ error: 'Forbidden: Only admins can create employees' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
     }
 
     const body = await req.json()
@@ -84,19 +75,23 @@ Deno.serve(async (req) => {
       throw new Error('Email, password and full_name are required')
     }
 
+    console.log('Creating employee:', email)
+
     // Create user using admin API (doesn't affect current session)
-    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+    const { data: authData, error: createError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
       email_confirm: true,
       user_metadata: { full_name },
     })
 
-    if (authError) {
-      throw authError
+    if (createError) {
+      console.error('Error creating user:', createError.message)
+      throw createError
     }
 
     const newUserId = authData.user.id
+    console.log('User created:', newUserId)
 
     // Create profile (explicit insert because we don't assume any auth trigger exists)
     const { error: profileInsertError } = await supabaseAdmin
@@ -109,7 +104,7 @@ Deno.serve(async (req) => {
       })
 
     if (profileInsertError) {
-      console.error('Profile insert error:', profileInsertError)
+      console.error('Profile insert error:', profileInsertError.message)
     }
 
     // Create user role as employee
@@ -121,7 +116,7 @@ Deno.serve(async (req) => {
       })
 
     if (roleInsertError) {
-      console.error('Role insert error:', roleInsertError)
+      console.error('Role insert error:', roleInsertError.message)
     }
 
     // Create hours balance
@@ -133,8 +128,10 @@ Deno.serve(async (req) => {
       })
 
     if (balanceError) {
-      console.error('Balance insert error:', balanceError)
+      console.error('Balance insert error:', balanceError.message)
     }
+
+    console.log('Employee creation completed successfully')
 
     return new Response(
       JSON.stringify({ success: true, user_id: newUserId }),
