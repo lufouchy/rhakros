@@ -165,15 +165,6 @@ const Auth = () => {
                   </Button>
                 </form>
 
-                <div className="mt-6 p-4 bg-muted rounded-lg">
-                  <p className="text-sm text-muted-foreground mb-2">
-                    <strong>Credenciais de teste:</strong>
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Admin: admin@empresa.com / admin<br />
-                    Funcionário: funcionario@empresa.com / 123456
-                  </p>
-                </div>
               </TabsContent>
 
               <TabsContent value="signup" className="mt-0">
