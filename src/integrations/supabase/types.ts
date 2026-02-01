@@ -854,6 +854,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      archive_old_location_data: { Args: never; Returns: undefined }
       check_and_reset_employee_status: {
         Args: { p_user_id: string }
         Returns: undefined
