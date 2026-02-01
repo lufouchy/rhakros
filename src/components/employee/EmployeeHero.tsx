@@ -17,7 +17,7 @@ const EmployeeHero = () => {
   };
 
   return (
-    <div className="bg-gradient-to-r from-[#1e3a5f] to-[#2d4a6f] text-white rounded-2xl p-6 mb-6">
+    <div className="bg-gradient-to-r from-[#023047] to-[#034a6b] text-white rounded-2xl p-6 mb-6">
       <div className="flex items-center gap-6">
         <AvatarUpload
           userId={user?.id || ''}
@@ -34,10 +34,10 @@ const EmployeeHero = () => {
           </p>
           
           <div className="flex flex-wrap items-center gap-2 mt-3">
-            <Badge variant="secondary" className="bg-cyan-400/20 text-cyan-200 border-0">
+            <Badge variant="secondary" className="bg-[#8ECAE6]/20 text-[#8ECAE6] border-0">
               Filial: Centro
             </Badge>
-            <Badge variant="secondary" className="bg-blue-400/20 text-blue-200 border-0">
+            <Badge variant="secondary" className="bg-[#219EBC]/20 text-[#8ECAE6] border-0">
               Depto: Operações
             </Badge>
           </div>

@@ -42,6 +42,10 @@ export default {
           DEFAULT: "hsl(var(--warning))",
           foreground: "hsl(var(--warning-foreground))",
         },
+        orange: {
+          DEFAULT: "hsl(var(--orange))",
+          foreground: "hsl(var(--orange-foreground))",
+        },
         muted: {
           DEFAULT: "hsl(var(--muted))",
           foreground: "hsl(var(--muted-foreground))",
@@ -94,8 +98,8 @@ export default {
         "pulse-scale": "pulse-scale 2s ease-in-out infinite",
       },
       boxShadow: {
-        "glow": "0 0 20px rgba(236, 72, 153, 0.3)",
-        "glow-lg": "0 0 40px rgba(236, 72, 153, 0.4)",
+        "glow": "0 0 20px rgba(33, 158, 188, 0.3)",
+        "glow-lg": "0 0 40px rgba(33, 158, 188, 0.4)",
       },
     },
   },
