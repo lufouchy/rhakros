@@ -1263,7 +1263,15 @@ const EmployeeManagement = () => {
                   <TableBody>
                     {filteredEmployees.map((employee) => (
                       <TableRow key={employee.id}>
-                        <TableCell className="font-medium">{employee.full_name}</TableCell>
+                        <TableCell className="font-medium">
+                          <button
+                            onClick={() => handleEdit(employee)}
+                            className="text-left hover:text-primary hover:underline transition-colors cursor-pointer"
+                            title="Clique para editar"
+                          >
+                            {employee.full_name}
+                          </button>
+                        </TableCell>
                         <TableCell>{employee.email}</TableCell>
                         <TableCell>{employee.sector || '-'}</TableCell>
                         <TableCell>{employee.position || '-'}</TableCell>
