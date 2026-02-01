@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Calendar } from '@/components/ui/calendar';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Dialog,
   DialogContent,
@@ -272,7 +273,7 @@ const VacationManagement = () => {
                 Registrar Férias
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-lg">
+            <DialogContent className="max-w-lg max-h-[90vh] flex flex-col">
               <DialogHeader>
                 <DialogTitle>Registrar Férias</DialogTitle>
                 <DialogDescription>
@@ -280,7 +281,8 @@ const VacationManagement = () => {
                 </DialogDescription>
               </DialogHeader>
 
-              <div className="space-y-4 pt-4">
+              <ScrollArea className="flex-1 pr-4">
+                <div className="space-y-4 pt-4">
                 <div className="space-y-2">
                   <Label>Tipo de Férias</Label>
                   <Select
@@ -368,6 +370,7 @@ const VacationManagement = () => {
                   )}
                 </Button>
               </div>
+              </ScrollArea>
             </DialogContent>
           </Dialog>
         </div>
