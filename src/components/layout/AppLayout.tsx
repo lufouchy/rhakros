@@ -49,14 +49,14 @@ const AppLayout = ({ children }: AppLayoutProps) => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-card border-b border-border">
+      <header className="sticky top-0 z-50 bg-[#023047] border-b border-[#034a6b]">
         <div className="container flex items-center justify-between h-16 px-4">
           <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary">
-              <Clock className="h-5 w-5 text-primary-foreground" />
+            <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-[#219EBC]">
+              <Clock className="h-5 w-5 text-white" />
             </div>
             <div className="hidden sm:block">
-              <h1 className="text-lg font-semibold text-foreground">Ponto Digital</h1>
+              <h1 className="text-lg font-semibold text-white">Ponto Digital</h1>
             </div>
           </div>
 
@@ -65,10 +65,10 @@ const AppLayout = ({ children }: AppLayoutProps) => {
             {navItems.map((item) => (
               <Button
                 key={item.path}
-                variant={location.pathname === item.path ? 'secondary' : 'ghost'}
+                variant="ghost"
                 className={cn(
-                  "gap-2",
-                  location.pathname === item.path && "bg-accent text-accent-foreground"
+                  "gap-2 text-white/70 hover:text-white hover:bg-white/10",
+                  location.pathname === item.path && "bg-[#219EBC]/20 text-white"
                 )}
                 onClick={() => navigate(item.path)}
               >
@@ -80,8 +80,8 @@ const AppLayout = ({ children }: AppLayoutProps) => {
 
           <div className="flex items-center gap-3">
             <div className="hidden sm:block text-right">
-              <p className="text-sm font-medium text-foreground">{profile?.full_name}</p>
-              <p className="text-xs text-muted-foreground capitalize">
+              <p className="text-sm font-medium text-white">{profile?.full_name}</p>
+              <p className="text-xs text-white/60 capitalize">
                 {userRole === 'admin' ? 'Administrador' : 'Colaborador'}
               </p>
             </div>
@@ -90,7 +90,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
               variant="ghost"
               size="icon"
               onClick={handleLogout}
-              className="text-muted-foreground hover:text-foreground"
+              className="text-white/70 hover:text-white hover:bg-white/10"
             >
               <LogOut className="h-5 w-5" />
             </Button>
@@ -99,7 +99,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
             <Button
               variant="ghost"
               size="icon"
-              className="md:hidden"
+              className="md:hidden text-white/70 hover:text-white hover:bg-white/10"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
               {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -109,14 +109,14 @@ const AppLayout = ({ children }: AppLayoutProps) => {
 
         {/* Mobile nav */}
         {mobileMenuOpen && (
-          <nav className="md:hidden border-t border-border bg-card p-4 space-y-2">
+          <nav className="md:hidden border-t border-[#034a6b] bg-[#023047] p-4 space-y-2">
             {navItems.map((item) => (
               <Button
                 key={item.path}
-                variant={location.pathname === item.path ? 'secondary' : 'ghost'}
+                variant="ghost"
                 className={cn(
-                  "w-full justify-start gap-2",
-                  location.pathname === item.path && "bg-accent text-accent-foreground"
+                  "w-full justify-start gap-2 text-white/70 hover:text-white hover:bg-white/10",
+                  location.pathname === item.path && "bg-[#219EBC]/20 text-white"
                 )}
                 onClick={() => {
                   navigate(item.path);
