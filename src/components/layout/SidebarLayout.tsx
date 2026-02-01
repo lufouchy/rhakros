@@ -67,17 +67,17 @@ const SidebarLayout = ({ children }: SidebarLayoutProps) => {
   };
 
   const SidebarContent = ({ isMobile = false }: { isMobile?: boolean }) => (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-[#023047]">
       {/* Logo */}
       <div className={cn(
-        "flex items-center gap-3 p-4 border-b border-sidebar-border",
+        "flex items-center gap-3 p-4 border-b border-[#034a6b]",
         collapsed && !isMobile && "justify-center"
       )}>
-        <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary">
-          <Clock className="h-5 w-5 text-primary-foreground" />
+        <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-[#219EBC]">
+          <Clock className="h-5 w-5 text-white" />
         </div>
         {(!collapsed || isMobile) && (
-          <span className="font-bold text-sidebar-foreground text-lg">MINHAS ROTINAS</span>
+          <span className="font-bold text-white text-lg">MINHAS ROTINAS</span>
         )}
       </div>
 
@@ -90,14 +90,14 @@ const SidebarLayout = ({ children }: SidebarLayoutProps) => {
               key={item.path}
               variant="ghost"
               className={cn(
-                "w-full justify-start gap-3 h-12 text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent",
+                "w-full justify-start gap-3 h-12 text-white/70 hover:text-white hover:bg-white/10",
                 collapsed && !isMobile && "justify-center px-2",
-                isActive && "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                isActive && "bg-[#219EBC]/20 text-white font-medium"
               )}
               onClick={() => navigate(item.path)}
               title={collapsed && !isMobile ? item.label : undefined}
             >
-              <item.icon className={cn("h-5 w-5 shrink-0", isActive && "text-primary")} />
+              <item.icon className={cn("h-5 w-5 shrink-0", isActive && "text-[#8ECAE6]")} />
               {(!collapsed || isMobile) && <span>{item.label}</span>}
             </Button>
           );
@@ -106,11 +106,11 @@ const SidebarLayout = ({ children }: SidebarLayoutProps) => {
 
       {/* Collapse toggle - desktop only */}
       {!isMobile && (
-        <div className="p-3 border-t border-sidebar-border">
+        <div className="p-3 border-t border-[#034a6b]">
           <Button
             variant="ghost"
             size="sm"
-            className="w-full justify-center text-sidebar-foreground/50 hover:text-sidebar-foreground"
+            className="w-full justify-center text-white/50 hover:text-white hover:bg-white/10"
             onClick={() => setCollapsed(!collapsed)}
           >
             {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
@@ -124,7 +124,7 @@ const SidebarLayout = ({ children }: SidebarLayoutProps) => {
     <div className="min-h-screen flex w-full bg-background">
       {/* Desktop Sidebar */}
       <aside className={cn(
-        "hidden md:flex flex-col bg-sidebar-background border-r border-sidebar-border transition-all duration-300",
+        "hidden md:flex flex-col bg-[#023047] border-r border-[#034a6b] transition-all duration-300",
         collapsed ? "w-16" : "w-64"
       )}>
         <SidebarContent />
@@ -141,7 +141,7 @@ const SidebarLayout = ({ children }: SidebarLayoutProps) => {
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-64 p-0 bg-sidebar-background">
+            <SheetContent side="left" className="w-64 p-0 bg-[#023047] border-[#034a6b]">
               <SidebarContent isMobile />
             </SheetContent>
           </Sheet>
