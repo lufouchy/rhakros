@@ -130,14 +130,14 @@ export const generateTimesheetPDF = async ({ records, month, employeeName, signa
     ]);
   });
 
-  // Table
+  // Table - Using Deep Space Blue (#023047 = RGB 2, 48, 71) for header
   autoTable(doc, {
     startY: headerY + 5,
     head: [['Data', 'Entrada', 'Saída Almoço', 'Volta Almoço', 'Saída', 'Trabalhado', 'H. Extra', 'Obs']],
     body: tableData,
     styles: { fontSize: 8, cellPadding: 2 },
-    headStyles: { fillColor: [219, 39, 119], textColor: 255 },
-    alternateRowStyles: { fillColor: [245, 245, 245] },
+    headStyles: { fillColor: [2, 48, 71], textColor: 255 },
+    alternateRowStyles: { fillColor: [237, 247, 250] },
     columnStyles: {
       0: { cellWidth: 28 },
       1: { cellWidth: 20, halign: 'center' },
