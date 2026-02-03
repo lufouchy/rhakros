@@ -48,6 +48,8 @@ import { format, differenceInDays, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import type { DateRange } from 'react-day-picker';
 import VacationReceiptExport from '@/components/vacation/VacationReceiptExport';
+import VacationEditDialog from '@/components/vacation/VacationEditDialog';
+import VacationCancelDialog from '@/components/vacation/VacationCancelDialog';
 
 type VacationType = 'individual' | 'collective';
 type VacationStatus = 'pending' | 'approved' | 'rejected';
@@ -404,7 +406,8 @@ const VacationManagement = () => {
                     <TableHead>Período</TableHead>
                     <TableHead>Dias</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Recibo</TableHead>
+                    <TableHead className="text-center">Recibo</TableHead>
+                    <TableHead className="text-center">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -432,36 +435,55 @@ const VacationManagement = () => {
                             {statusConfig[vacation.status].label}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
-                            {vacation.status === 'approved' && (
-                              <VacationReceiptExport
+                        <TableCell className="text-center">
+                          {vacation.status === 'approved' && (
+                            <VacationReceiptExport
+                              vacationId={vacation.id}
+                              userId={vacation.user_id}
+                              userName={vacation.userName || 'Colaborador'}
+                              startDate={vacation.start_date}
+                              endDate={vacation.end_date}
+                              daysCount={vacation.days_count}
+                            />
+                          )}
+                          {vacation.status === 'pending' && !vacation.is_admin_created && (
+                            <div className="flex justify-center gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleUpdateStatus(vacation.id, 'rejected')}
+                              >
+                                <XCircle className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                onClick={() => handleUpdateStatus(vacation.id, 'approved')}
+                              >
+                                <CheckCircle className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {vacation.status !== 'rejected' && (
+                            <div className="flex justify-center gap-1">
+                              <VacationEditDialog
                                 vacationId={vacation.id}
-                                userId={vacation.user_id}
                                 userName={vacation.userName || 'Colaborador'}
                                 startDate={vacation.start_date}
                                 endDate={vacation.end_date}
-                                daysCount={vacation.days_count}
+                                reason={vacation.reason}
+                                onSuccess={fetchData}
                               />
-                            )}
-                            {vacation.status === 'pending' && !vacation.is_admin_created && (
-                              <>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => handleUpdateStatus(vacation.id, 'rejected')}
-                                >
-                                  <XCircle className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  onClick={() => handleUpdateStatus(vacation.id, 'approved')}
-                                >
-                                  <CheckCircle className="h-4 w-4" />
-                                </Button>
-                              </>
-                            )}
-                          </div>
+                              <VacationCancelDialog
+                                vacationId={vacation.id}
+                                userName={vacation.userName || 'Colaborador'}
+                                startDate={vacation.start_date}
+                                endDate={vacation.end_date}
+                                onSuccess={fetchData}
+                              />
+                            </div>
+                          )}
                         </TableCell>
                       </TableRow>
                     );
