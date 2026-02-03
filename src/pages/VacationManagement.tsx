@@ -404,7 +404,7 @@ const VacationManagement = () => {
                     <TableHead>Período</TableHead>
                     <TableHead>Dias</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Ações</TableHead>
+                    <TableHead className="text-right">Recibo</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
