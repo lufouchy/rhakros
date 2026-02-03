@@ -5,7 +5,6 @@ import SidebarLayout from '@/components/layout/SidebarLayout';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
@@ -48,6 +47,7 @@ import {
 import { format, differenceInDays, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import type { DateRange } from 'react-day-picker';
+import VacationReceiptExport from '@/components/vacation/VacationReceiptExport';
 
 type VacationType = 'individual' | 'collective';
 type VacationStatus = 'pending' | 'approved' | 'rejected';
@@ -433,23 +433,35 @@ const VacationManagement = () => {
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right">
-                          {vacation.status === 'pending' && !vacation.is_admin_created && (
-                            <div className="flex justify-end gap-2">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleUpdateStatus(vacation.id, 'rejected')}
-                              >
-                                <XCircle className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                size="sm"
-                                onClick={() => handleUpdateStatus(vacation.id, 'approved')}
-                              >
-                                <CheckCircle className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          )}
+                          <div className="flex justify-end gap-2">
+                            {vacation.status === 'approved' && (
+                              <VacationReceiptExport
+                                vacationId={vacation.id}
+                                userId={vacation.user_id}
+                                userName={vacation.userName || 'Colaborador'}
+                                startDate={vacation.start_date}
+                                endDate={vacation.end_date}
+                                daysCount={vacation.days_count}
+                              />
+                            )}
+                            {vacation.status === 'pending' && !vacation.is_admin_created && (
+                              <>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleUpdateStatus(vacation.id, 'rejected')}
+                                >
+                                  <XCircle className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  onClick={() => handleUpdateStatus(vacation.id, 'approved')}
+                                >
+                                  <CheckCircle className="h-4 w-4" />
+                                </Button>
+                              </>
+                            )}
+                          </div>
                         </TableCell>
                       </TableRow>
                     );
