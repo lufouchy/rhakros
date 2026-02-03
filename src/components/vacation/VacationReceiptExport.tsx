@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import {
@@ -9,9 +9,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { FileText, Loader2 } from 'lucide-react';
+import { FileText, Loader2, Download, CheckCircle } from 'lucide-react';
 import { generateVacationReceiptPDF, downloadVacationReceiptPDF } from './VacationReceiptPDF';
+import SignatureCanvas from '@/components/timesheet/SignatureCanvas';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -35,44 +38,80 @@ const VacationReceiptExport = ({
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSigning, setIsSigning] = useState(false);
+  const [signatureData, setSignatureData] = useState<string | null>(null);
+  const [existingDocument, setExistingDocument] = useState<{
+    id: string;
+    signature_data: string | null;
+    signed_at: string | null;
+    status: string;
+  } | null>(null);
+
+  useEffect(() => {
+    if (open) {
+      checkExistingDocument();
+    }
+  }, [open, vacationId]);
+
+  const checkExistingDocument = async () => {
+    const { data } = await supabase
+      .from('documents')
+      .select('id, signature_data, signed_at, status')
+      .eq('user_id', userId)
+      .eq('document_type', 'vacation_receipt')
+      .eq('reference_month', startDate)
+      .maybeSingle();
+
+    setExistingDocument(data);
+    if (data?.signature_data) {
+      setSignatureData(data.signature_data);
+    }
+  };
+
+  const fetchDataAndGeneratePDF = async (includeSignature: boolean = false) => {
+    // Fetch employee profile for CPF
+    const { data: profileData, error: profileError } = await supabase
+      .from('profiles')
+      .select('full_name, cpf')
+      .eq('user_id', userId)
+      .single();
+
+    if (profileError) throw profileError;
+
+    // Fetch company info
+    const { data: companyData, error: companyError } = await supabase
+      .from('company_info')
+      .select('logo_url, cnpj, nome_fantasia, address_city, address_state')
+      .limit(1)
+      .single();
+
+    if (companyError && companyError.code !== 'PGRST116') {
+      throw companyError;
+    }
+
+    const pdf = await generateVacationReceiptPDF({
+      companyInfo: companyData,
+      employeeInfo: {
+        full_name: profileData.full_name || userName,
+        cpf: profileData.cpf,
+      },
+      vacationData: {
+        start_date: startDate,
+        end_date: endDate,
+        days_count: daysCount,
+      },
+      signatureData: includeSignature ? (existingDocument?.signature_data || signatureData) : null,
+      signedAt: includeSignature ? existingDocument?.signed_at : null,
+    });
+
+    return pdf;
+  };
 
   const handleExport = async () => {
     setIsLoading(true);
 
     try {
-      // Fetch employee profile for CPF
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('full_name, cpf')
-        .eq('user_id', userId)
-        .single();
-
-      if (profileError) throw profileError;
-
-      // Fetch company info
-      const { data: companyData, error: companyError } = await supabase
-        .from('company_info')
-        .select('logo_url, cnpj, nome_fantasia, address_city, address_state')
-        .limit(1)
-        .single();
-
-      if (companyError && companyError.code !== 'PGRST116') {
-        throw companyError;
-      }
-
-      const pdf = await generateVacationReceiptPDF({
-        companyInfo: companyData,
-        employeeInfo: {
-          full_name: profileData.full_name || userName,
-          cpf: profileData.cpf,
-        },
-        vacationData: {
-          start_date: startDate,
-          end_date: endDate,
-          days_count: daysCount,
-        },
-      });
-
+      const pdf = await fetchDataAndGeneratePDF(!!existingDocument?.signature_data);
       const filename = `recibo-ferias-${userName.toLowerCase().replace(/\s+/g, '-')}-${format(new Date(startDate), 'yyyy-MM')}.pdf`;
       downloadVacationReceiptPDF(pdf, filename);
 
@@ -80,8 +119,6 @@ const VacationReceiptExport = ({
         title: 'Recibo exportado!',
         description: `Recibo de férias de ${userName} exportado com sucesso.`,
       });
-
-      setOpen(false);
     } catch (error: any) {
       console.error('Error generating vacation receipt:', error);
       toast({
@@ -94,6 +131,76 @@ const VacationReceiptExport = ({
     }
   };
 
+  const handleSign = async () => {
+    if (!signatureData) {
+      toast({
+        variant: 'destructive',
+        title: 'Assinatura obrigatória',
+        description: 'Por favor, desenhe sua assinatura no campo acima.',
+      });
+      return;
+    }
+
+    setIsSigning(true);
+
+    try {
+      const documentTitle = `Recibo de Férias - ${format(new Date(startDate), "MMMM 'de' yyyy", { locale: ptBR })}`;
+      const signedAt = new Date().toISOString();
+
+      if (existingDocument) {
+        // Update existing document
+        const { error } = await supabase
+          .from('documents')
+          .update({
+            signature_data: signatureData,
+            signed_at: signedAt,
+            status: 'signed',
+          })
+          .eq('id', existingDocument.id);
+
+        if (error) throw error;
+      } else {
+        // Create new document
+        const { error } = await supabase
+          .from('documents')
+          .insert({
+            user_id: userId,
+            title: documentTitle,
+            document_type: 'vacation_receipt',
+            reference_month: startDate,
+            signature_data: signatureData,
+            signed_at: signedAt,
+            status: 'signed',
+          });
+
+        if (error) throw error;
+      }
+
+      // Generate and download signed PDF
+      const pdf = await fetchDataAndGeneratePDF(true);
+      const filename = `recibo-ferias-assinado-${userName.toLowerCase().replace(/\s+/g, '-')}-${format(new Date(startDate), 'yyyy-MM')}.pdf`;
+      downloadVacationReceiptPDF(pdf, filename);
+
+      toast({
+        title: 'Recibo assinado!',
+        description: 'O recibo foi assinado e exportado com sucesso.',
+      });
+
+      await checkExistingDocument();
+    } catch (error: any) {
+      console.error('Error signing vacation receipt:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Erro ao assinar',
+        description: error.message || 'Erro ao assinar o recibo de férias.',
+      });
+    } finally {
+      setIsSigning(false);
+    }
+  };
+
+  const isSigned = existingDocument?.status === 'signed';
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -101,46 +208,89 @@ const VacationReceiptExport = ({
           <FileText className="h-4 w-4" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-lg max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5 text-primary" />
-            Exportar Recibo de Férias
+            Recibo de Férias
+            {isSigned && (
+              <Badge variant="default" className="ml-2 gap-1">
+                <CheckCircle className="h-3 w-3" />
+                Assinado
+              </Badge>
+            )}
           </DialogTitle>
           <DialogDescription>
-            Gere o recibo de férias de {userName} em PDF.
+            Assine e exporte o recibo de férias de {userName}.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 pt-4">
-          <div className="bg-muted rounded-lg p-4 space-y-2">
-            <p className="text-sm">
-              <span className="font-medium">Colaborador:</span> {userName}
-            </p>
-            <p className="text-sm">
-              <span className="font-medium">Período:</span>{' '}
-              {format(new Date(startDate), 'dd/MM/yyyy', { locale: ptBR })} a{' '}
-              {format(new Date(endDate), 'dd/MM/yyyy', { locale: ptBR })}
-            </p>
-            <p className="text-sm">
-              <span className="font-medium">Dias:</span> {daysCount}
-            </p>
-          </div>
+        <ScrollArea className="flex-1 pr-4">
+          <div className="space-y-4 pt-4">
+            <div className="bg-muted rounded-lg p-4 space-y-2">
+              <p className="text-sm">
+                <span className="font-medium">Colaborador:</span> {userName}
+              </p>
+              <p className="text-sm">
+                <span className="font-medium">Período:</span>{' '}
+                {format(new Date(startDate), 'dd/MM/yyyy', { locale: ptBR })} a{' '}
+                {format(new Date(endDate), 'dd/MM/yyyy', { locale: ptBR })}
+              </p>
+              <p className="text-sm">
+                <span className="font-medium">Dias:</span> {daysCount}
+              </p>
+              {isSigned && existingDocument?.signed_at && (
+                <p className="text-sm text-muted-foreground">
+                  <span className="font-medium">Assinado em:</span>{' '}
+                  {format(new Date(existingDocument.signed_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                </p>
+              )}
+            </div>
 
-          <Button onClick={handleExport} disabled={isLoading} className="w-full">
-            {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Gerando PDF...
-              </>
-            ) : (
-              <>
-                <FileText className="mr-2 h-4 w-4" />
-                Exportar Recibo PDF
-              </>
+            {!isSigned && (
+              <div className="border rounded-lg p-4">
+                <SignatureCanvas onSignatureChange={setSignatureData} />
+              </div>
             )}
-          </Button>
-        </div>
+
+            <div className="flex flex-col gap-2">
+              {!isSigned && (
+                <Button onClick={handleSign} disabled={isSigning || !signatureData} className="w-full">
+                  {isSigning ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Assinando...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle className="mr-2 h-4 w-4" />
+                      Assinar e Exportar PDF
+                    </>
+                  )}
+                </Button>
+              )}
+
+              <Button 
+                onClick={handleExport} 
+                disabled={isLoading} 
+                variant={isSigned ? 'default' : 'outline'}
+                className="w-full"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Gerando PDF...
+                  </>
+                ) : (
+                  <>
+                    <Download className="mr-2 h-4 w-4" />
+                    {isSigned ? 'Baixar Recibo Assinado' : 'Exportar sem Assinatura'}
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );

@@ -25,6 +25,8 @@ interface GenerateVacationReceiptParams {
   companyInfo: CompanyInfo | null;
   employeeInfo: EmployeeInfo;
   vacationData: VacationData;
+  signatureData?: string | null;
+  signedAt?: string | null;
 }
 
 const formatCNPJ = (cnpj: string): string => {
@@ -64,6 +66,8 @@ export const generateVacationReceiptPDF = async ({
   companyInfo,
   employeeInfo,
   vacationData,
+  signatureData,
+  signedAt,
 }: GenerateVacationReceiptParams): Promise<jsPDF> => {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
@@ -220,7 +224,6 @@ export const generateVacationReceiptPDF = async ({
 
   // Signature lines
   const signatureWidth = 70;
-  const signatureGap = 20;
   const firstSignatureX = margin + 10;
   const secondSignatureX = pageWidth / 2 + 10;
 
@@ -230,9 +233,22 @@ export const generateVacationReceiptPDF = async ({
   doc.setFontSize(9);
   doc.text('Assinatura do Empregador', firstSignatureX + signatureWidth / 2, currentY + 5, { align: 'center' });
 
-  // Second signature line - Employee
-  doc.line(secondSignatureX, currentY, secondSignatureX + signatureWidth, currentY);
-  doc.text('Assinatura do Empregado(a)', secondSignatureX + signatureWidth / 2, currentY + 5, { align: 'center' });
+  // Second signature line - Employee (with digital signature if available)
+  if (signatureData) {
+    // Add the digital signature image
+    doc.addImage(signatureData, 'PNG', secondSignatureX, currentY - 25, signatureWidth, 22);
+    doc.line(secondSignatureX, currentY, secondSignatureX + signatureWidth, currentY);
+    doc.text('Assinatura do Empregado(a)', secondSignatureX + signatureWidth / 2, currentY + 5, { align: 'center' });
+    
+    if (signedAt) {
+      doc.setFontSize(7);
+      doc.setTextColor(100, 100, 100);
+      doc.text(`Assinado digitalmente em: ${format(new Date(signedAt), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}`, secondSignatureX + signatureWidth / 2, currentY + 10, { align: 'center' });
+    }
+  } else {
+    doc.line(secondSignatureX, currentY, secondSignatureX + signatureWidth, currentY);
+    doc.text('Assinatura do Empregado(a)', secondSignatureX + signatureWidth / 2, currentY + 5, { align: 'center' });
+  }
 
   // Footer
   doc.setFontSize(8);
