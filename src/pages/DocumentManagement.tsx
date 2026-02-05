@@ -184,32 +184,36 @@ const DocumentManagement = () => {
   const handleDownload = async (doc: Document) => {
     if (doc.file_url) {
       try {
-        // Extract the file path from the URL
+        // Extract the file path from the URL - handle both old public URLs and new signed URLs
+        let filePath: string;
         const urlParts = doc.file_url.split('/timesheet-documents/');
         if (urlParts.length > 1) {
-          const filePath = urlParts[1];
-          
-          // Get a fresh download URL
-          const { data } = supabase.storage
-            .from('timesheet-documents')
-            .getPublicUrl(filePath);
-          
-          // Create a link and trigger download
-          const link = document.createElement('a');
-          link.href = data.publicUrl;
-          link.download = `espelho-ponto-${format(parseISO(doc.reference_month), "yyyy-MM")}.pdf`;
-          link.target = '_blank';
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          
-          toast({
-            title: 'Download iniciado',
-            description: 'O documento está sendo baixado.',
-          });
+          // Remove any query params from path (for signed URLs)
+          filePath = urlParts[1].split('?')[0];
         } else {
           throw new Error('URL inválida');
         }
+        
+        // Get a fresh signed URL (1 hour expiry)
+        const { data, error } = await supabase.storage
+          .from('timesheet-documents')
+          .createSignedUrl(filePath, 3600);
+        
+        if (error) throw error;
+        
+        // Create a link and trigger download
+        const link = document.createElement('a');
+        link.href = data.signedUrl;
+        link.download = `espelho-ponto-${format(parseISO(doc.reference_month), "yyyy-MM")}.pdf`;
+        link.target = '_blank';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        toast({
+          title: 'Download iniciado',
+          description: 'O documento está sendo baixado.',
+        });
       } catch (error) {
         toast({
           variant: 'destructive',
@@ -226,18 +230,35 @@ const DocumentManagement = () => {
     }
   };
 
-  const handleOpenInNewTab = (doc: Document) => {
+  const handleOpenInNewTab = async (doc: Document) => {
     if (doc.file_url) {
-      // Extract the file path and get fresh URL
-      const urlParts = doc.file_url.split('/timesheet-documents/');
-      if (urlParts.length > 1) {
-        const filePath = urlParts[1];
-        const { data } = supabase.storage
-          .from('timesheet-documents')
-          .getPublicUrl(filePath);
-        window.open(data.publicUrl, '_blank');
-      } else {
-        window.open(doc.file_url, '_blank');
+      try {
+        // Extract the file path - handle both old public URLs and new signed URLs
+        const urlParts = doc.file_url.split('/timesheet-documents/');
+        if (urlParts.length > 1) {
+          // Remove any query params from path (for signed URLs)
+          const filePath = urlParts[1].split('?')[0];
+          
+          // Get a fresh signed URL (1 hour expiry)
+          const { data, error } = await supabase.storage
+            .from('timesheet-documents')
+            .createSignedUrl(filePath, 3600);
+          
+          if (error) throw error;
+          window.open(data.signedUrl, '_blank');
+        } else {
+          toast({
+            variant: 'destructive',
+            title: 'Erro ao abrir documento',
+            description: 'URL do documento inválida.',
+          });
+        }
+      } catch (error) {
+        toast({
+          variant: 'destructive',
+          title: 'Erro ao abrir documento',
+          description: 'Não foi possível gerar URL de acesso.',
+        });
       }
     }
   };
