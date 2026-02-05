@@ -68,7 +68,7 @@ const VacationReceiptExport = ({
     }
   };
 
-  const fetchDataAndGeneratePDF = async (includeSignature: boolean = false) => {
+  const fetchDataAndGeneratePDF = async (signatureToUse: string | null = null, signedAtToUse: string | null = null) => {
     // Fetch employee profile for CPF
     const { data: profileData, error: profileError } = await supabase
       .from('profiles')
@@ -100,8 +100,8 @@ const VacationReceiptExport = ({
         end_date: endDate,
         days_count: daysCount,
       },
-      signatureData: includeSignature ? (existingDocument?.signature_data || signatureData) : null,
-      signedAt: includeSignature ? existingDocument?.signed_at : null,
+      signatureData: signatureToUse,
+      signedAt: signedAtToUse,
     });
 
     return pdf;
@@ -111,7 +111,11 @@ const VacationReceiptExport = ({
     setIsLoading(true);
 
     try {
-      const pdf = await fetchDataAndGeneratePDF(!!existingDocument?.signature_data);
+      // Use existing signature data if document is signed
+      const sigToUse = existingDocument?.signature_data || null;
+      const signedAtToUse = existingDocument?.signed_at || null;
+      
+      const pdf = await fetchDataAndGeneratePDF(sigToUse, signedAtToUse);
       const filename = `recibo-ferias-${userName.toLowerCase().replace(/\s+/g, '-')}-${format(new Date(startDate), 'yyyy-MM')}.pdf`;
       downloadVacationReceiptPDF(pdf, filename);
 
@@ -176,8 +180,8 @@ const VacationReceiptExport = ({
         if (error) throw error;
       }
 
-      // Generate and download signed PDF
-      const pdf = await fetchDataAndGeneratePDF(true);
+      // Generate and download signed PDF - pass signature directly to ensure it's included
+      const pdf = await fetchDataAndGeneratePDF(signatureData, signedAt);
       const filename = `recibo-ferias-assinado-${userName.toLowerCase().replace(/\s+/g, '-')}-${format(new Date(startDate), 'yyyy-MM')}.pdf`;
       downloadVacationReceiptPDF(pdf, filename);
 
