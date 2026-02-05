@@ -233,10 +233,12 @@ const TimesheetPage = () => {
 
       if (uploadError) throw uploadError;
 
-      // Get public URL
-      const { data: urlData } = supabase.storage
+      // Get signed URL (1 hour expiry)
+      const { data: urlData, error: urlError } = await supabase.storage
         .from("timesheet-documents")
-        .getPublicUrl(fileName);
+        .createSignedUrl(fileName, 3600);
+
+      if (urlError) throw urlError;
 
       // Save document reference in database
       const { error: dbError } = await supabase.from("documents").insert({
@@ -244,7 +246,7 @@ const TimesheetPage = () => {
         document_type: "timesheet",
         title: `Espelho de Ponto - ${format(date, "MMMM yyyy", { locale: ptBR })}`,
         reference_month: format(startOfMonth(date), "yyyy-MM-dd"),
-        file_url: urlData.publicUrl,
+        file_url: urlData.signedUrl,
         signature_data: signature,
         signed_at: new Date().toISOString(),
         status: "signed",
