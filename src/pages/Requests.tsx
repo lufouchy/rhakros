@@ -222,12 +222,13 @@ const Requests = () => {
           description: error.message,
         });
       } else {
-        toast({
+      toast({
           title: 'Solicitação de férias enviada!',
           description: `Aguarde a aprovação para ${daysCount} dias de férias.`,
         });
         setShowNewDialog(false);
         resetForm();
+        fetchRequests();
       }
       setSubmitting(false);
       return;
