@@ -38,61 +38,94 @@ const formatCNPJ = (cnpj: string): string => {
 
 export const generateTimesheetPDF = async ({ records, month, employeeName, signatureData, companyInfo }: GeneratePDFParams): Promise<jsPDF> => {
   const doc = new jsPDF();
+  const pageWidth = doc.internal.pageSize.getWidth();
   const startDate = startOfMonth(month);
   const endDate = endOfMonth(month);
   const days = eachDayOfInterval({ start: startDate, end: endDate });
 
-  let headerY = 14;
+  // Colors - Deep Space Blue (#023047) and Blue Green (#219EBC)
+  const deepSpaceBlue: [number, number, number] = [2, 48, 71];
+  const blueGreen: [number, number, number] = [33, 158, 188];
+  const skyBlue: [number, number, number] = [142, 202, 230];
+  const lightBg: [number, number, number] = [248, 250, 252];
 
-  // Company Header
+  let headerY = 10;
+
+  // Top accent bar
+  doc.setFillColor(...deepSpaceBlue);
+  doc.rect(0, 0, pageWidth, 4, 'F');
+
+  headerY = 12;
+
+  // Company Header with improved layout
   if (companyInfo) {
     // Logo on the left
     if (companyInfo.logo_url) {
       try {
         const logoImage = await loadImage(companyInfo.logo_url);
-        doc.addImage(logoImage, 'PNG', 14, headerY, 25, 25);
+        doc.addImage(logoImage, 'PNG', 14, headerY, 28, 28);
       } catch (error) {
         console.error('Error loading company logo:', error);
       }
     }
 
-    // Company info on the right of the logo
-    const textX = companyInfo.logo_url ? 45 : 14;
+    // Company info with better typography
+    const textX = companyInfo.logo_url ? 48 : 14;
     
-    doc.setFontSize(14);
+    doc.setFontSize(16);
     doc.setFont('helvetica', 'bold');
-    doc.text(companyInfo.nome_fantasia.toUpperCase(), textX, headerY + 8);
+    doc.setTextColor(...deepSpaceBlue);
+    doc.text(companyInfo.nome_fantasia.toUpperCase(), textX, headerY + 10);
     
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
-    doc.text(`CNPJ: ${formatCNPJ(companyInfo.cnpj)}`, textX, headerY + 16);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`CNPJ: ${formatCNPJ(companyInfo.cnpj)}`, textX, headerY + 18);
 
-    // Separator line
-    headerY += 32;
-    doc.setDrawColor(200);
-    doc.line(14, headerY, 196, headerY);
-    headerY += 8;
+    headerY += 35;
   }
 
-  // Title
-  doc.setFontSize(16);
+  // Document title with accent background
+  doc.setFillColor(...lightBg);
+  doc.roundedRect(14, headerY, pageWidth - 28, 20, 3, 3, 'F');
+  
+  doc.setFontSize(14);
   doc.setFont('helvetica', 'bold');
-  doc.text('ESPELHO DE PONTO', 105, headerY, { align: 'center' });
-  headerY += 10;
+  doc.setTextColor(...deepSpaceBlue);
+  doc.text('ESPELHO DE PONTO', pageWidth / 2, headerY + 13, { align: 'center' });
+  
+  headerY += 28;
 
-  // Employee Info
-  doc.setFontSize(11);
+  // Employee info in a styled box
+  doc.setDrawColor(...skyBlue);
+  doc.setLineWidth(0.5);
+  doc.roundedRect(14, headerY, pageWidth - 28, 24, 2, 2, 'S');
+  
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(...deepSpaceBlue);
+  doc.text('Colaborador:', 18, headerY + 8);
+  doc.text('Período:', 18, headerY + 16);
+  
   doc.setFont('helvetica', 'normal');
-  doc.text(`Colaborador: ${employeeName}`, 14, headerY);
-  headerY += 7;
-  doc.text(`Período: ${format(startDate, "MMMM 'de' yyyy", { locale: ptBR })}`, 14, headerY);
-  headerY += 7;
-  doc.text(`Gerado em: ${format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}`, 14, headerY);
+  doc.setTextColor(60, 60, 60);
+  doc.text(employeeName, 50, headerY + 8);
+  
+  const monthName = format(startDate, "MMMM 'de' yyyy", { locale: ptBR });
+  doc.text(monthName.charAt(0).toUpperCase() + monthName.slice(1), 42, headerY + 16);
+  
+  // Generation date on the right
+  doc.setFontSize(8);
+  doc.setTextColor(120, 120, 120);
+  doc.text(`Gerado em: ${format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}`, pageWidth - 18, headerY + 12, { align: 'right' });
+
+  headerY += 30;
 
   // Prepare table data
   const tableData: (string | number)[][] = [];
   let totalWorkedMinutes = 0;
   let totalOvertimeMinutes = 0;
+  let workDaysCount = 0;
   const STANDARD_WORK_MINUTES = 8 * 60;
 
   days.forEach((day) => {
@@ -115,6 +148,8 @@ export const generateTimesheetPDF = async ({ records, month, employeeName, signa
     const overtime = Math.max(0, workedMinutes - STANDARD_WORK_MINUTES);
     totalWorkedMinutes += workedMinutes;
     totalOvertimeMinutes += overtime;
+    
+    if (workedMinutes > 0) workDaysCount++;
 
     const isWeekendDay = isWeekend(day);
 
@@ -130,49 +165,141 @@ export const generateTimesheetPDF = async ({ records, month, employeeName, signa
     ]);
   });
 
-  // Table - Using Deep Space Blue (#023047 = RGB 2, 48, 71) for header
+  // Table with improved styling
   autoTable(doc, {
-    startY: headerY + 5,
+    startY: headerY,
     head: [['Data', 'Entrada', 'Saída Almoço', 'Volta Almoço', 'Saída', 'Trabalhado', 'H. Extra', 'Obs']],
     body: tableData,
-    styles: { fontSize: 8, cellPadding: 2 },
-    headStyles: { fillColor: [2, 48, 71], textColor: 255 },
-    alternateRowStyles: { fillColor: [237, 247, 250] },
+    styles: { 
+      fontSize: 8, 
+      cellPadding: 2.5,
+      lineColor: [220, 220, 220],
+      lineWidth: 0.1,
+    },
+    headStyles: { 
+      fillColor: deepSpaceBlue, 
+      textColor: 255,
+      fontStyle: 'bold',
+      halign: 'center',
+    },
+    alternateRowStyles: { fillColor: [245, 250, 252] },
     columnStyles: {
-      0: { cellWidth: 28 },
+      0: { cellWidth: 28, fontStyle: 'bold' },
       1: { cellWidth: 20, halign: 'center' },
       2: { cellWidth: 25, halign: 'center' },
       3: { cellWidth: 25, halign: 'center' },
       4: { cellWidth: 20, halign: 'center' },
-      5: { cellWidth: 22, halign: 'center' },
-      6: { cellWidth: 20, halign: 'center' },
-      7: { cellWidth: 15, halign: 'center' },
+      5: { cellWidth: 22, halign: 'center', fontStyle: 'bold' },
+      6: { cellWidth: 20, halign: 'center', textColor: blueGreen },
+      7: { cellWidth: 15, halign: 'center', textColor: [150, 150, 150] },
+    },
+    didParseCell: (data) => {
+      // Highlight weekend rows
+      if (data.section === 'body' && data.row.raw && (data.row.raw as any[])[7] === 'FDS') {
+        data.cell.styles.fillColor = [255, 247, 235];
+        data.cell.styles.textColor = [180, 130, 80];
+      }
     },
   });
 
-  // Summary
-  const finalY = (doc as any).lastAutoTable.finalY + 10;
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'bold');
-  doc.text('RESUMO DO PERÍODO', 14, finalY);
+  // Summary section with styled cards
+  const finalY = (doc as any).lastAutoTable.finalY + 8;
   
+  // Summary title
+  doc.setFillColor(...deepSpaceBlue);
+  doc.roundedRect(14, finalY, 60, 6, 1, 1, 'F');
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(255, 255, 255);
+  doc.text('RESUMO DO PERÍODO', 17, finalY + 4.5);
+  
+  // Summary cards
+  const cardY = finalY + 12;
+  const cardWidth = (pageWidth - 42) / 3;
+  
+  // Card 1 - Dias trabalhados
+  doc.setFillColor(...lightBg);
+  doc.roundedRect(14, cardY, cardWidth, 20, 2, 2, 'F');
+  doc.setFontSize(8);
+  doc.setTextColor(100, 100, 100);
+  doc.text('Dias Trabalhados', 14 + cardWidth / 2, cardY + 6, { align: 'center' });
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(...deepSpaceBlue);
+  doc.text(`${workDaysCount}`, 14 + cardWidth / 2, cardY + 15, { align: 'center' });
+  
+  // Card 2 - Total trabalhado
+  doc.setFillColor(...lightBg);
+  doc.roundedRect(14 + cardWidth + 7, cardY, cardWidth, 20, 2, 2, 'F');
+  doc.setFontSize(8);
   doc.setFont('helvetica', 'normal');
-  doc.text(`Total de horas trabalhadas: ${formatMinutes(totalWorkedMinutes)}`, 14, finalY + 7);
-  doc.text(`Total de horas extras: ${formatMinutes(totalOvertimeMinutes)}`, 14, finalY + 14);
+  doc.setTextColor(100, 100, 100);
+  doc.text('Total Trabalhado', 14 + cardWidth + 7 + cardWidth / 2, cardY + 6, { align: 'center' });
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(...deepSpaceBlue);
+  doc.text(formatMinutes(totalWorkedMinutes), 14 + cardWidth + 7 + cardWidth / 2, cardY + 15, { align: 'center' });
+  
+  // Card 3 - Horas extras
+  doc.setFillColor(235, 251, 238);
+  doc.roundedRect(14 + (cardWidth + 7) * 2, cardY, cardWidth, 20, 2, 2, 'F');
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(100, 100, 100);
+  doc.text('Horas Extras', 14 + (cardWidth + 7) * 2 + cardWidth / 2, cardY + 6, { align: 'center' });
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(34, 139, 34);
+  doc.text(`+${formatMinutes(totalOvertimeMinutes)}`, 14 + (cardWidth + 7) * 2 + cardWidth / 2, cardY + 15, { align: 'center' });
 
-  // Signature
+  // Signature section
+  const signatureY = cardY + 30;
+  
   if (signatureData) {
-    const signatureY = finalY + 30;
+    doc.setDrawColor(...skyBlue);
+    doc.setLineWidth(0.3);
+    doc.roundedRect(14, signatureY, 90, 40, 2, 2, 'S');
+    
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...deepSpaceBlue);
+    doc.text('Assinatura do Colaborador', 18, signatureY + 6);
+    
+    doc.addImage(signatureData, 'PNG', 18, signatureY + 10, 55, 20);
+    
+    doc.setFontSize(8);
     doc.setFont('helvetica', 'normal');
-    doc.text('Assinatura do colaborador:', 14, signatureY);
-    doc.addImage(signatureData, 'PNG', 14, signatureY + 5, 60, 22);
-    doc.text(`Data: ${format(new Date(), 'dd/MM/yyyy')}`, 14, signatureY + 32);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Assinado em: ${format(new Date(), 'dd/MM/yyyy')}`, 18, signatureY + 35);
+  } else {
+    // Space for manual signature
+    doc.setDrawColor(200, 200, 200);
+    doc.setLineWidth(0.3);
+    doc.setLineDashPattern([2, 2], 0);
+    doc.roundedRect(14, signatureY, 90, 40, 2, 2, 'S');
+    doc.setLineDashPattern([], 0);
+    
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(150, 150, 150);
+    doc.text('Assinatura do Colaborador', 59, signatureY + 20, { align: 'center' });
+    
+    doc.setDrawColor(180, 180, 180);
+    doc.line(24, signatureY + 30, 94, signatureY + 30);
   }
 
-  // Footer
+  // Footer with accent bar
+  const footerY = 280;
+  doc.setFillColor(...deepSpaceBlue);
+  doc.rect(0, footerY, pageWidth, 17, 'F');
+  
   doc.setFontSize(8);
-  doc.setTextColor(100);
-  doc.text('Documento gerado automaticamente pelo Sistema de Ponto Digital', 105, 285, { align: 'center' });
+  doc.setTextColor(255, 255, 255);
+  doc.text('Documento gerado automaticamente pelo Sistema de Ponto Digital', pageWidth / 2, footerY + 7, { align: 'center' });
+  
+  doc.setFontSize(7);
+  doc.setTextColor(180, 200, 210);
+  doc.text('Este documento é parte integrante do controle de jornada de trabalho', pageWidth / 2, footerY + 12, { align: 'center' });
 
   return doc;
 };
