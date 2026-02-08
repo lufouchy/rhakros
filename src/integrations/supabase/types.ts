@@ -541,6 +541,7 @@ export type Database = {
           allowed_radius_meters: number | null
           avatar_url: string | null
           birth_date: string | null
+          branch_id: string | null
           cpf: string | null
           created_at: string
           email: string
@@ -564,6 +565,7 @@ export type Database = {
           work_address_state: string | null
           work_address_street: string | null
           work_latitude: number | null
+          work_location_type: string
           work_longitude: number | null
           work_schedule_id: string | null
         }
@@ -578,6 +580,7 @@ export type Database = {
           allowed_radius_meters?: number | null
           avatar_url?: string | null
           birth_date?: string | null
+          branch_id?: string | null
           cpf?: string | null
           created_at?: string
           email: string
@@ -601,6 +604,7 @@ export type Database = {
           work_address_state?: string | null
           work_address_street?: string | null
           work_latitude?: number | null
+          work_location_type?: string
           work_longitude?: number | null
           work_schedule_id?: string | null
         }
@@ -615,6 +619,7 @@ export type Database = {
           allowed_radius_meters?: number | null
           avatar_url?: string | null
           birth_date?: string | null
+          branch_id?: string | null
           cpf?: string | null
           created_at?: string
           email?: string
@@ -638,10 +643,18 @@ export type Database = {
           work_address_state?: string | null
           work_address_street?: string | null
           work_latitude?: number | null
+          work_location_type?: string
           work_longitude?: number | null
           work_schedule_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "profiles_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "company_branches"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "profiles_work_schedule_id_fkey"
             columns: ["work_schedule_id"]

@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { UserPlus, Loader2, Search, Plus, MapPin } from 'lucide-react';
+import { UserPlus, Loader2, Search, Plus, MapPin, Building2 } from 'lucide-react';
 import { validateCPF, formatCPF } from '@/utils/cpfValidation';
 
 interface WorkSchedule {
@@ -43,7 +43,15 @@ interface WorkSchedule {
   shift_rest_hours: number | null;
 }
 
+interface CompanyBranch {
+  id: string;
+  cnpj: string;
+  address_city: string | null;
+  address_state: string | null;
+}
+
 type LocationMode = 'disabled' | 'log_only' | 'require_exact' | 'require_radius';
+type WorkLocationType = 'sede' | 'filial';
 
 interface EmployeeForm {
   full_name: string;
@@ -62,6 +70,9 @@ interface EmployeeForm {
   position: string;
   work_schedule_id: string;
   password: string;
+  // Work location
+  work_location_type: WorkLocationType;
+  branch_id: string;
   // Location settings
   location_mode: LocationMode;
   work_address_cep: string;
@@ -86,6 +97,8 @@ const EmployeeRegistration = () => {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [schedules, setSchedules] = useState<WorkSchedule[]>([]);
+  const [branches, setBranches] = useState<CompanyBranch[]>([]);
+  const [hasBranches, setHasBranches] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isSearchingCep, setIsSearchingCep] = useState(false);
   const [isSearchingWorkCep, setIsSearchingWorkCep] = useState(false);
@@ -108,6 +121,9 @@ const EmployeeRegistration = () => {
     position: '',
     work_schedule_id: '',
     password: '',
+    // Work location
+    work_location_type: 'sede',
+    branch_id: '',
     // Location settings
     location_mode: 'disabled',
     work_address_cep: '',
@@ -130,6 +146,7 @@ const EmployeeRegistration = () => {
 
   useEffect(() => {
     fetchSchedules();
+    fetchBranchesInfo();
   }, []);
 
   const fetchSchedules = async () => {
@@ -140,6 +157,29 @@ const EmployeeRegistration = () => {
     
     if (data) {
       setSchedules(data);
+    }
+  };
+
+  const fetchBranchesInfo = async () => {
+    // Check if company has branches
+    const { data: companyData } = await supabase
+      .from('company_info')
+      .select('has_branches')
+      .limit(1)
+      .single();
+    
+    if (companyData?.has_branches) {
+      setHasBranches(true);
+      
+      // Fetch branches
+      const { data: branchesData } = await supabase
+        .from('company_branches')
+        .select('id, cnpj, address_city, address_state')
+        .order('address_city');
+      
+      if (branchesData) {
+        setBranches(branchesData);
+      }
     }
   };
 
@@ -334,6 +374,9 @@ const EmployeeRegistration = () => {
             sector: form.sector || null,
             position: form.position || null,
             work_schedule_id: form.work_schedule_id || null,
+            // Work location
+            work_location_type: form.work_location_type,
+            branch_id: form.work_location_type === 'filial' && form.branch_id ? form.branch_id : null,
             // Location settings
             location_mode: form.location_mode,
             work_address_cep: form.work_address_cep || null,
@@ -379,6 +422,8 @@ const EmployeeRegistration = () => {
         position: '',
         work_schedule_id: '',
         password: '',
+        work_location_type: 'sede',
+        branch_id: '',
         location_mode: 'disabled',
         work_address_cep: '',
         work_address_street: '',
@@ -614,6 +659,76 @@ const EmployeeRegistration = () => {
               </div>
             </div>
           </div>
+
+          {/* Work Location */}
+          {hasBranches && (
+            <div className="space-y-4 border-t pt-4">
+              <h3 className="font-medium text-sm text-muted-foreground flex items-center gap-2">
+                <Building2 className="h-4 w-4" />
+                Local de Trabalho
+              </h3>
+              
+              <div className="space-y-3">
+                <RadioGroup
+                  value={form.work_location_type}
+                  onValueChange={(value) => {
+                    setForm(prev => ({ 
+                      ...prev, 
+                      work_location_type: value as WorkLocationType,
+                      branch_id: value === 'sede' ? '' : prev.branch_id 
+                    }));
+                  }}
+                  className="flex gap-4"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="sede" id="work_loc_sede" />
+                    <Label htmlFor="work_loc_sede" className="cursor-pointer font-medium">
+                      Sede (Matriz)
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="filial" id="work_loc_filial" />
+                    <Label htmlFor="work_loc_filial" className="cursor-pointer font-medium">
+                      Filial
+                    </Label>
+                  </div>
+                </RadioGroup>
+
+                {form.work_location_type === 'filial' && (
+                  <div className="space-y-2">
+                    <Label>Selecionar Filial</Label>
+                    <Select
+                      value={form.branch_id}
+                      onValueChange={(value) => setForm(prev => ({ ...prev, branch_id: value }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione a filial" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-popover">
+                        {branches.map((branch) => (
+                          <SelectItem key={branch.id} value={branch.id}>
+                            <span className="flex items-center gap-2">
+                              {branch.address_city && branch.address_state 
+                                ? `${branch.address_city}/${branch.address_state}` 
+                                : 'Filial'}
+                              <span className="text-muted-foreground text-xs">
+                                (CNPJ: {branch.cnpj})
+                              </span>
+                            </span>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {branches.length === 0 && (
+                      <p className="text-xs text-muted-foreground">
+                        Nenhuma filial cadastrada. Cadastre filiais em Informações Institucionais.
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Work Schedule */}
           <div className="space-y-4 border-t pt-4">
