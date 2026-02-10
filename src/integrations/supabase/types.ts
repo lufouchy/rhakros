@@ -895,7 +895,7 @@ export type Database = {
         | "coordenador"
         | "socio"
         | "outro"
-      app_role: "admin" | "employee"
+      app_role: "admin" | "employee" | "suporte"
       bank_validity: "3_months" | "6_months" | "1_year" | "custom"
       business_sector:
         | "tecnologia"
@@ -1058,7 +1058,7 @@ export const Constants = {
         "socio",
         "outro",
       ],
-      app_role: ["admin", "employee"],
+      app_role: ["admin", "employee", "suporte"],
       bank_validity: ["3_months", "6_months", "1_year", "custom"],
       business_sector: [
         "tecnologia",
