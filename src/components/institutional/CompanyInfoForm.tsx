@@ -304,9 +304,10 @@ const CompanyInfoForm = ({ companyId, onSave }: CompanyInfoFormProps) => {
         });
         onSave(companyId, form.has_branches);
       } else {
+        const { data: ciOrgData } = await supabase.from('profiles').select('organization_id').eq('user_id', (await supabase.auth.getUser()).data.user?.id).single();
         const { data, error } = await supabase
           .from('company_info')
-          .insert(companyData)
+          .insert({ ...companyData, organization_id: ciOrgData?.organization_id })
           .select('id')
           .single();
 

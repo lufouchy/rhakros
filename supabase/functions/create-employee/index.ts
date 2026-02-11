@@ -68,6 +68,23 @@ Deno.serve(async (req) => {
       )
     }
 
+    // Get the admin's organization_id
+    const { data: adminProfile, error: adminProfileError } = await supabaseAdmin
+      .from('profiles')
+      .select('organization_id')
+      .eq('user_id', requestingUserId)
+      .single()
+
+    if (adminProfileError || !adminProfile) {
+      console.error('Admin profile fetch failed:', adminProfileError?.message)
+      return new Response(
+        JSON.stringify({ error: 'Could not determine organization' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    const organizationId = adminProfile.organization_id
+
     const body = await req.json()
     const { email, password, full_name, profileData } = body
 
@@ -75,7 +92,7 @@ Deno.serve(async (req) => {
       throw new Error('Email, password and full_name are required')
     }
 
-    console.log('Creating employee:', email)
+    console.log('Creating employee:', email, 'for org:', organizationId)
 
     // Create user using admin API (doesn't affect current session)
     const { data: authData, error: createError } = await supabaseAdmin.auth.admin.createUser({
@@ -93,13 +110,14 @@ Deno.serve(async (req) => {
     const newUserId = authData.user.id
     console.log('User created:', newUserId)
 
-    // Create profile (explicit insert because we don't assume any auth trigger exists)
+    // Create profile with organization_id
     const { error: profileInsertError } = await supabaseAdmin
       .from('profiles')
       .insert({
         user_id: newUserId,
         email,
         full_name,
+        organization_id: organizationId,
         ...profileData,
       })
 
@@ -107,24 +125,26 @@ Deno.serve(async (req) => {
       console.error('Profile insert error:', profileInsertError.message)
     }
 
-    // Create user role as employee
+    // Create user role as employee with organization_id
     const { error: roleInsertError } = await supabaseAdmin
       .from('user_roles')
       .insert({
         user_id: newUserId,
         role: 'employee',
+        organization_id: organizationId,
       })
 
     if (roleInsertError) {
       console.error('Role insert error:', roleInsertError.message)
     }
 
-    // Create hours balance
+    // Create hours balance with organization_id
     const { error: balanceError } = await supabaseAdmin
       .from('hours_balance')
       .insert({
         user_id: newUserId,
         balance_minutes: 0,
+        organization_id: organizationId,
       })
 
     if (balanceError) {

@@ -217,9 +217,10 @@ const BranchesForm = ({ companyId, hasBranches }: BranchesFormProps) => {
           description: 'Os dados da filial foram atualizados com sucesso',
         });
       } else {
+        const { data: brOrgData } = await supabase.from('profiles').select('organization_id').eq('user_id', (await supabase.auth.getUser()).data.user?.id).single();
         const { data, error } = await supabase
           .from('company_branches')
-          .insert(branchData)
+          .insert({ ...branchData, organization_id: brOrgData?.organization_id })
           .select('id')
           .single();
 

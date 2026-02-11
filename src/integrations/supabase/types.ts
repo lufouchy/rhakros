@@ -22,6 +22,7 @@ export type Database = {
           created_at: string
           end_time: string | null
           id: string
+          organization_id: string
           reason: string
           record_type: Database["public"]["Enums"]["time_record_type"]
           request_type: string
@@ -39,6 +40,7 @@ export type Database = {
           created_at?: string
           end_time?: string | null
           id?: string
+          organization_id: string
           reason: string
           record_type: Database["public"]["Enums"]["time_record_type"]
           request_type: string
@@ -56,6 +58,7 @@ export type Database = {
           created_at?: string
           end_time?: string | null
           id?: string
+          organization_id?: string
           reason?: string
           record_type?: Database["public"]["Enums"]["time_record_type"]
           request_type?: string
@@ -66,7 +69,15 @@ export type Database = {
           status?: Database["public"]["Enums"]["adjustment_status"]
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "adjustment_requests_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       company_admins: {
         Row: {
@@ -76,6 +87,7 @@ export type Database = {
           email: string
           full_name: string
           id: string
+          organization_id: string
           position: Database["public"]["Enums"]["admin_position"]
           updated_at: string
           user_id: string | null
@@ -87,6 +99,7 @@ export type Database = {
           email: string
           full_name: string
           id?: string
+          organization_id: string
           position: Database["public"]["Enums"]["admin_position"]
           updated_at?: string
           user_id?: string | null
@@ -98,6 +111,7 @@ export type Database = {
           email?: string
           full_name?: string
           id?: string
+          organization_id?: string
           position?: Database["public"]["Enums"]["admin_position"]
           updated_at?: string
           user_id?: string | null
@@ -108,6 +122,13 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "company_info"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "company_admins_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]
@@ -126,6 +147,7 @@ export type Database = {
           created_at: string
           financial_email: string | null
           id: string
+          organization_id: string
           phone: string | null
           updated_at: string
           whatsapp: string | null
@@ -143,6 +165,7 @@ export type Database = {
           created_at?: string
           financial_email?: string | null
           id?: string
+          organization_id: string
           phone?: string | null
           updated_at?: string
           whatsapp?: string | null
@@ -160,6 +183,7 @@ export type Database = {
           created_at?: string
           financial_email?: string | null
           id?: string
+          organization_id?: string
           phone?: string | null
           updated_at?: string
           whatsapp?: string | null
@@ -170,6 +194,13 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "company_info"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "company_branches_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]
@@ -193,6 +224,7 @@ export type Database = {
           inscricao_municipal: string | null
           logo_url: string | null
           nome_fantasia: string
+          organization_id: string
           phone: string | null
           razao_social: string
           updated_at: string
@@ -216,6 +248,7 @@ export type Database = {
           inscricao_municipal?: string | null
           logo_url?: string | null
           nome_fantasia: string
+          organization_id: string
           phone?: string | null
           razao_social: string
           updated_at?: string
@@ -239,12 +272,21 @@ export type Database = {
           inscricao_municipal?: string | null
           logo_url?: string | null
           nome_fantasia?: string
+          organization_id?: string
           phone?: string | null
           razao_social?: string
           updated_at?: string
           whatsapp?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "company_info_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       documents: {
         Row: {
@@ -253,6 +295,7 @@ export type Database = {
           expires_at: string | null
           file_url: string | null
           id: string
+          organization_id: string
           reference_month: string
           signature_data: string | null
           signed_at: string | null
@@ -267,6 +310,7 @@ export type Database = {
           expires_at?: string | null
           file_url?: string | null
           id?: string
+          organization_id: string
           reference_month: string
           signature_data?: string | null
           signed_at?: string | null
@@ -281,6 +325,7 @@ export type Database = {
           expires_at?: string | null
           file_url?: string | null
           id?: string
+          organization_id?: string
           reference_month?: string
           signature_data?: string | null
           signed_at?: string | null
@@ -289,7 +334,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "documents_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       holidays: {
         Row: {
@@ -299,6 +352,7 @@ export type Database = {
           id: string
           is_custom: boolean
           name: string
+          organization_id: string
           state_code: string | null
           type: string
           updated_at: string
@@ -310,6 +364,7 @@ export type Database = {
           id?: string
           is_custom?: boolean
           name: string
+          organization_id: string
           state_code?: string | null
           type: string
           updated_at?: string
@@ -321,32 +376,52 @@ export type Database = {
           id?: string
           is_custom?: boolean
           name?: string
+          organization_id?: string
           state_code?: string | null
           type?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "holidays_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       hours_balance: {
         Row: {
           balance_minutes: number
           id: string
           last_calculated_at: string
+          organization_id: string
           user_id: string
         }
         Insert: {
           balance_minutes?: number
           id?: string
           last_calculated_at?: string
+          organization_id: string
           user_id: string
         }
         Update: {
           balance_minutes?: number
           id?: string
           last_calculated_at?: string
+          organization_id?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "hours_balance_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       location_settings: {
         Row: {
@@ -363,6 +438,7 @@ export type Database = {
           created_at: string
           id: string
           location_mode: string
+          organization_id: string
           updated_at: string
         }
         Insert: {
@@ -379,6 +455,7 @@ export type Database = {
           created_at?: string
           id?: string
           location_mode?: string
+          organization_id: string
           updated_at?: string
         }
         Update: {
@@ -395,9 +472,18 @@ export type Database = {
           created_at?: string
           id?: string
           location_mode?: string
+          organization_id?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "location_settings_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       monthly_overtime_decisions: {
         Row: {
@@ -409,6 +495,7 @@ export type Database = {
           finalized_by: string | null
           id: string
           is_edited: boolean | null
+          organization_id: string
           overtime_minutes: number
           payment_amount: number | null
           payment_minutes: number | null
@@ -425,6 +512,7 @@ export type Database = {
           finalized_by?: string | null
           id?: string
           is_edited?: boolean | null
+          organization_id: string
           overtime_minutes?: number
           payment_amount?: number | null
           payment_minutes?: number | null
@@ -441,12 +529,45 @@ export type Database = {
           finalized_by?: string | null
           id?: string
           is_edited?: boolean | null
+          organization_id?: string
           overtime_minutes?: number
           payment_amount?: number | null
           payment_minutes?: number | null
           reference_month?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "monthly_overtime_decisions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organizations: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          slug: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          slug?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          slug?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
@@ -467,6 +588,7 @@ export type Database = {
           mixed_hours_threshold: number | null
           mixed_payment_days: string[] | null
           mixed_rule_type: Database["public"]["Enums"]["mixed_rule_type"] | null
+          organization_id: string
           overtime_strategy: Database["public"]["Enums"]["overtime_strategy"]
           payment_holiday_percent: number | null
           payment_saturday_percent: number | null
@@ -493,6 +615,7 @@ export type Database = {
           mixed_rule_type?:
             | Database["public"]["Enums"]["mixed_rule_type"]
             | null
+          organization_id: string
           overtime_strategy?: Database["public"]["Enums"]["overtime_strategy"]
           payment_holiday_percent?: number | null
           payment_saturday_percent?: number | null
@@ -519,6 +642,7 @@ export type Database = {
           mixed_rule_type?:
             | Database["public"]["Enums"]["mixed_rule_type"]
             | null
+          organization_id?: string
           overtime_strategy?: Database["public"]["Enums"]["overtime_strategy"]
           payment_holiday_percent?: number | null
           payment_saturday_percent?: number | null
@@ -527,7 +651,15 @@ export type Database = {
           tolerance_minutes?: number
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "payroll_settings_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -549,6 +681,7 @@ export type Database = {
           hire_date: string | null
           id: string
           location_mode: string
+          organization_id: string
           phone: string | null
           position: string | null
           sector: string | null
@@ -588,6 +721,7 @@ export type Database = {
           hire_date?: string | null
           id?: string
           location_mode?: string
+          organization_id: string
           phone?: string | null
           position?: string | null
           sector?: string | null
@@ -627,6 +761,7 @@ export type Database = {
           hire_date?: string | null
           id?: string
           location_mode?: string
+          organization_id?: string
           phone?: string | null
           position?: string | null
           sector?: string | null
@@ -656,6 +791,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "profiles_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "profiles_work_schedule_id_fkey"
             columns: ["work_schedule_id"]
             isOneToOne: false
@@ -671,6 +813,7 @@ export type Database = {
           id: string
           new_specification: string | null
           new_status: string | null
+          organization_id: string
           previous_specification: string | null
           previous_status: string | null
           reason: string | null
@@ -682,6 +825,7 @@ export type Database = {
           id?: string
           new_specification?: string | null
           new_status?: string | null
+          organization_id: string
           previous_specification?: string | null
           previous_status?: string | null
           reason?: string | null
@@ -693,12 +837,21 @@ export type Database = {
           id?: string
           new_specification?: string | null
           new_status?: string | null
+          organization_id?: string
           previous_specification?: string | null
           previous_status?: string | null
           reason?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "status_history_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       time_records: {
         Row: {
@@ -706,6 +859,7 @@ export type Database = {
           id: string
           latitude: number | null
           longitude: number | null
+          organization_id: string
           record_type: Database["public"]["Enums"]["time_record_type"]
           recorded_at: string
           user_id: string
@@ -715,6 +869,7 @@ export type Database = {
           id?: string
           latitude?: number | null
           longitude?: number | null
+          organization_id: string
           record_type: Database["public"]["Enums"]["time_record_type"]
           recorded_at?: string
           user_id: string
@@ -724,29 +879,49 @@ export type Database = {
           id?: string
           latitude?: number | null
           longitude?: number | null
+          organization_id?: string
           record_type?: Database["public"]["Enums"]["time_record_type"]
           recorded_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "time_records_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
           id: string
+          organization_id: string
           role: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
         Insert: {
           id?: string
+          organization_id: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
         Update: {
           id?: string
+          organization_id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_roles_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       vacation_requests: {
         Row: {
@@ -756,6 +931,7 @@ export type Database = {
           end_date: string
           id: string
           is_admin_created: boolean
+          organization_id: string
           reason: string | null
           reviewed_at: string | null
           reviewed_by: string | null
@@ -772,6 +948,7 @@ export type Database = {
           end_date: string
           id?: string
           is_admin_created?: boolean
+          organization_id: string
           reason?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
@@ -788,6 +965,7 @@ export type Database = {
           end_date?: string
           id?: string
           is_admin_created?: boolean
+          organization_id?: string
           reason?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
@@ -797,7 +975,15 @@ export type Database = {
           user_id?: string
           vacation_type?: Database["public"]["Enums"]["vacation_type"]
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "vacation_requests_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       work_schedules: {
         Row: {
@@ -810,6 +996,7 @@ export type Database = {
           id: string
           monday_hours: number | null
           name: string
+          organization_id: string
           saturday_hours: number | null
           schedule_type: string
           shift_rest_hours: number | null
@@ -830,6 +1017,7 @@ export type Database = {
           id?: string
           monday_hours?: number | null
           name: string
+          organization_id: string
           saturday_hours?: number | null
           schedule_type?: string
           shift_rest_hours?: number | null
@@ -850,6 +1038,7 @@ export type Database = {
           id?: string
           monday_hours?: number | null
           name?: string
+          organization_id?: string
           saturday_hours?: number | null
           schedule_type?: string
           shift_rest_hours?: number | null
@@ -860,7 +1049,15 @@ export type Database = {
           tuesday_hours?: number | null
           wednesday_hours?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "work_schedules_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
@@ -872,6 +1069,7 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: undefined
       }
+      get_user_org_id: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -879,6 +1077,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_suporte: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       absence_type:

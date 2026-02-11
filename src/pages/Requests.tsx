@@ -201,6 +201,7 @@ const Requests = () => {
     if (requestType === 'vacation') {
       const daysCount = differenceInDays(vacationRange!.to!, vacationRange!.from!) + 1;
       
+      const { data: profileData } = await supabase.from('profiles').select('organization_id').eq('user_id', user?.id).single();
       const { error } = await supabase
         .from('vacation_requests')
         .insert({
@@ -213,6 +214,7 @@ const Requests = () => {
           status: 'pending',
           created_by: user?.id,
           is_admin_created: false,
+          organization_id: profileData?.organization_id,
         });
 
       if (error) {
@@ -235,6 +237,7 @@ const Requests = () => {
     }
 
     // Regular adjustment requests
+    const { data: adjProfileData } = await supabase.from('profiles').select('organization_id').eq('user_id', user?.id).single();
     const insertData: any = {
       user_id: user?.id,
       request_type: requestType,
@@ -244,6 +247,7 @@ const Requests = () => {
       record_type: recordType,
       reason: reason,
       status: 'pending',
+      organization_id: adjProfileData?.organization_id,
     };
 
     if (requestType === 'medical_consultation' || requestType === 'justified_absence') {

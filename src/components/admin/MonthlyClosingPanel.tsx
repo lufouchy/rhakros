@@ -156,11 +156,13 @@ const MonthlyClosingPanel = () => {
   // Update decision mutation
   const updateDecisionMutation = useMutation({
     mutationFn: async (decision: OvertimeDecision) => {
+      const { data: mcOrgData } = await supabase.from('profiles').select('organization_id').eq('user_id', (await supabase.auth.getUser()).data.user?.id).single();
       const { error } = await supabase
         .from('monthly_overtime_decisions')
         .upsert({
           ...decision,
           reference_month: referenceMonthStr,
+          organization_id: mcOrgData?.organization_id,
         }, {
           onConflict: 'user_id,reference_month',
         });
@@ -175,6 +177,7 @@ const MonthlyClosingPanel = () => {
   // Finalize mutation
   const finalizeMutation = useMutation({
     mutationFn: async (userIds: string[]) => {
+      const { data: fOrgData } = await supabase.from('profiles').select('organization_id').eq('user_id', (await supabase.auth.getUser()).data.user?.id).single();
       const updates = userIds.map((userId) => {
         const emp = employeesWithData.find((e) => e.user_id === userId);
         if (!emp) return null;
@@ -190,12 +193,13 @@ const MonthlyClosingPanel = () => {
           is_edited: emp.decision.is_edited,
           finalized: true,
           finalized_at: new Date().toISOString(),
+          organization_id: fOrgData?.organization_id,
         };
       }).filter(Boolean);
 
       const { error } = await supabase
         .from('monthly_overtime_decisions')
-        .upsert(updates as OvertimeDecision[], {
+        .upsert(updates as any[], {
           onConflict: 'user_id,reference_month',
         });
 

@@ -165,6 +165,7 @@ const VacationReceiptExport = ({
         if (error) throw error;
       } else {
         // Create new document
+        const { data: vrOrgData } = await supabase.from('profiles').select('organization_id').eq('user_id', userId).single();
         const { error } = await supabase
           .from('documents')
           .insert({
@@ -175,6 +176,7 @@ const VacationReceiptExport = ({
             signature_data: signatureData,
             signed_at: signedAt,
             status: 'signed',
+            organization_id: vrOrgData?.organization_id,
           });
 
         if (error) throw error;

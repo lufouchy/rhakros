@@ -241,6 +241,7 @@ const TimesheetPage = () => {
       if (urlError) throw urlError;
 
       // Save document reference in database
+      const { data: tsOrgData } = await supabase.from("profiles").select("organization_id").eq("user_id", user?.id).single();
       const { error: dbError } = await supabase.from("documents").insert({
         user_id: user?.id,
         document_type: "timesheet",
@@ -251,6 +252,7 @@ const TimesheetPage = () => {
         signed_at: new Date().toISOString(),
         status: "signed",
         expires_at: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString(),
+        organization_id: tsOrgData?.organization_id,
       });
 
       if (dbError) throw dbError;
