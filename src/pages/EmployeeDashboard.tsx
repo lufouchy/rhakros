@@ -141,6 +141,7 @@ const EmployeeDashboard = () => {
     const recordType = getNextRecordType();
     const recordedAt = new Date().toISOString();
 
+    const { data: profileData } = await supabase.from('profiles').select('organization_id').eq('user_id', user?.id).single();
     const { error } = await supabase
       .from('time_records')
       .insert({
@@ -149,6 +150,7 @@ const EmployeeDashboard = () => {
         recorded_at: recordedAt,
         latitude: locationResult.latitude,
         longitude: locationResult.longitude,
+        organization_id: profileData?.organization_id,
       });
 
     if (error) {

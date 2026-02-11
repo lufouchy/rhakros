@@ -180,9 +180,10 @@ const CompanyAdminsForm = ({ companyId }: CompanyAdminsFormProps) => {
       } else {
         // Create user in auth system via edge function would be ideal
         // For now, just save to company_admins table
+        const { data: caOrgData } = await supabase.from('profiles').select('organization_id').eq('user_id', (await supabase.auth.getUser()).data.user?.id).single();
         const { data, error } = await supabase
           .from('company_admins')
-          .insert(adminData)
+          .insert({ ...adminData, organization_id: caOrgData?.organization_id })
           .select('id')
           .single();
 

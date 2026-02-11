@@ -241,9 +241,10 @@ const WorkScheduleManagement = () => {
           description: `A jornada "${form.name}" foi atualizada com sucesso.`,
         });
       } else {
+        const { data: wsOrgData } = await supabase.from('profiles').select('organization_id').eq('user_id', (await supabase.auth.getUser()).data.user?.id).single();
         const { error } = await supabase
           .from('work_schedules')
-          .insert(scheduleData);
+          .insert({ ...scheduleData, organization_id: wsOrgData?.organization_id });
 
         if (error) throw error;
 

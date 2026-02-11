@@ -154,9 +154,10 @@ const HolidaysCalendar = () => {
         .eq('id', editingHoliday.id);
       error = updateError;
     } else {
+      const { data: hOrgData } = await supabase.from('profiles').select('organization_id').eq('user_id', (await supabase.auth.getUser()).data.user?.id).single();
       const { error: insertError } = await supabase
         .from('holidays')
-        .insert(holidayData);
+        .insert({ ...holidayData, organization_id: hOrgData?.organization_id });
       error = insertError;
     }
 

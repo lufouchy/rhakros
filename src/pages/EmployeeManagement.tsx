@@ -438,6 +438,7 @@ const EmployeeManagement = () => {
       return;
     }
 
+    const { data: emOrgData } = await supabase.from('profiles').select('organization_id').eq('user_id', user?.id).single();
     const { data, error } = await supabase
       .from('work_schedules')
       .insert({
@@ -447,6 +448,7 @@ const EmployeeManagement = () => {
         break_start_time: newSchedule.break_start_time || null,
         break_end_time: newSchedule.break_end_time || null,
         break_duration_minutes: parseInt(newSchedule.break_duration_minutes) || 60,
+        organization_id: emOrgData?.organization_id,
       })
       .select()
       .single();

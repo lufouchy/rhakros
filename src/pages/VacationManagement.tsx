@@ -152,6 +152,7 @@ const VacationManagement = () => {
 
     if (vacationType === 'collective') {
       // Create vacation for all employees
+      const { data: vacOrgData } = await supabase.from('profiles').select('organization_id').eq('user_id', user?.id).single();
       const inserts = profiles.map((profile) => ({
         user_id: profile.user_id,
         vacation_type: 'collective' as const,
@@ -162,6 +163,7 @@ const VacationManagement = () => {
         status: 'approved' as const,
         created_by: user?.id,
         is_admin_created: true,
+        organization_id: vacOrgData?.organization_id,
       }));
 
       const { error } = await supabase.from('vacation_requests').insert(inserts);
@@ -182,6 +184,7 @@ const VacationManagement = () => {
       }
     } else {
       // Individual vacation
+      const { data: indOrgData } = await supabase.from('profiles').select('organization_id').eq('user_id', user?.id).single();
       const { error } = await supabase.from('vacation_requests').insert({
         user_id: selectedEmployee,
         vacation_type: 'individual',
@@ -192,6 +195,7 @@ const VacationManagement = () => {
         status: 'approved',
         created_by: user?.id,
         is_admin_created: true,
+        organization_id: indOrgData?.organization_id,
       });
 
       if (error) {

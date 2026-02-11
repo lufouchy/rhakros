@@ -253,6 +253,7 @@ const AdminDashboard = () => {
   };
 
   const handleCreateSchedule = async () => {
+    const { data: adOrgData } = await supabase.from('profiles').select('organization_id').eq('user_id', (await supabase.auth.getUser()).data.user?.id).single();
     const { error } = await supabase
       .from('work_schedules')
       .insert({
@@ -261,6 +262,7 @@ const AdminDashboard = () => {
         end_time: newSchedule.end_time,
         break_start_time: newSchedule.break_start_time || null,
         break_end_time: newSchedule.break_end_time || null,
+        organization_id: adOrgData?.organization_id,
       });
 
     if (error) {

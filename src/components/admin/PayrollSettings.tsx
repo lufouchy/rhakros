@@ -105,7 +105,8 @@ const PayrollSettings = () => {
     mutationFn: async (data: Partial<PayrollSettingsData>) => {
       if (!settings?.id) {
         // Create new settings
-        const { error } = await supabase.from('payroll_settings').insert(data);
+        const { data: orgData } = await supabase.from('profiles').select('organization_id').eq('user_id', (await supabase.auth.getUser()).data.user?.id).single();
+        const { error } = await supabase.from('payroll_settings').insert({ ...data, organization_id: orgData?.organization_id });
         if (error) throw error;
       } else {
         // Update existing settings
