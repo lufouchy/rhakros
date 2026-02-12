@@ -1,6 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Plus, CheckCircle } from 'lucide-react';
+import { CheckCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -31,18 +30,10 @@ const TodayRecordsCard = ({ records, onIncluir }: TodayRecordsCardProps) => {
 
   return (
     <Card className="border-0 shadow-md">
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
+      <CardHeader className="pb-2">
         <CardTitle className="text-sm font-semibold text-primary uppercase tracking-wide">
           Marcações Hoje
         </CardTitle>
-        <Button 
-          size="sm" 
-          className="bg-cyan-500 hover:bg-cyan-600 text-white h-7 text-xs"
-          onClick={onIncluir}
-        >
-          <Plus className="h-3 w-3 mr-1" />
-          Incluir
-        </Button>
       </CardHeader>
       <CardContent>
         <div className="flex items-center gap-3 mb-4 pb-3 border-b border-border">

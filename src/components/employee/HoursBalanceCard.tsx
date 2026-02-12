@@ -31,10 +31,20 @@ const HoursBalanceCard = ({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Main balance row - responsive */}
-        <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
-          <div className="flex items-center gap-2 min-w-0">
-            <span className="text-xl sm:text-2xl font-bold text-primary tabular-nums whitespace-nowrap">
+        {/* Saldo Período - centralizado e destacado */}
+        <div className="flex flex-col items-center justify-center py-2">
+          <span className="text-3xl sm:text-4xl font-bold text-primary tabular-nums">
+            {formatTime(balanceMinutes)}
+          </span>
+          <span className="text-xs text-muted-foreground uppercase tracking-wide mt-1">
+            Saldo Período
+          </span>
+        </div>
+
+        {/* Detalhes */}
+        <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 pt-3 border-t border-border text-sm">
+          <div className="flex items-center gap-2">
+            <span className="text-lg font-bold text-foreground tabular-nums whitespace-nowrap">
               {formatTime(saldoAnterior)}
             </span>
             <span className="text-[10px] sm:text-xs text-muted-foreground uppercase leading-tight">
@@ -42,25 +52,14 @@ const HoursBalanceCard = ({
             </span>
           </div>
           
-          <span className="text-lg sm:text-xl text-muted-foreground">+</span>
+          <span className="text-muted-foreground">+</span>
           
-          <div className="flex items-center gap-2 min-w-0">
-            <span className="text-xl sm:text-2xl font-bold text-foreground tabular-nums whitespace-nowrap">
+          <div className="flex items-center gap-2">
+            <span className="text-lg font-bold text-foreground tabular-nums whitespace-nowrap">
               {formatTime(saldoPeriodo)}
             </span>
             <span className="text-[10px] sm:text-xs text-muted-foreground uppercase leading-tight">
               Horas<br/>Período
-            </span>
-          </div>
-          
-          <span className="text-lg sm:text-xl text-muted-foreground">=</span>
-          
-          <div className="flex items-center gap-2 min-w-0">
-            <span className="text-xl sm:text-2xl font-bold text-primary tabular-nums whitespace-nowrap">
-              {formatTime(balanceMinutes)}
-            </span>
-            <span className="text-[10px] sm:text-xs text-muted-foreground uppercase leading-tight">
-              Saldo<br/>Período
             </span>
           </div>
         </div>
