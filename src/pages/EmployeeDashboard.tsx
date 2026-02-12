@@ -6,6 +6,7 @@ import { format, startOfDay, endOfDay } from 'date-fns';
 import EmployeeHero from '@/components/employee/EmployeeHero';
 import TodayRecordsCard from '@/components/employee/TodayRecordsCard';
 import HoursBalanceCard from '@/components/employee/HoursBalanceCard';
+import MonthlyTimesheetCard from '@/components/employee/MonthlyTimesheetCard';
 import TodayScheduleCard from '@/components/employee/TodayScheduleCard';
 
 import LocationInfoDialog from '@/components/employee/LocationInfoDialog';
@@ -210,6 +211,11 @@ const EmployeeDashboard = () => {
           <HoursBalanceCard balanceMinutes={hoursBalance} />
           <TodayScheduleCard />
         </div>
+      </div>
+
+      {/* Monthly timesheet */}
+      <div className="mt-6">
+        <MonthlyTimesheetCard />
       </div>
 
       {/* Location map dialog */}
