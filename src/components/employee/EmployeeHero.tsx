@@ -40,16 +40,16 @@ const EmployeeHero = ({ isRegistering, onPunchClock }: EmployeeHeroProps) => {
 
         {onPunchClock && (
           <Button
-            className="w-16 h-16 rounded-full bg-warning hover:bg-warning/90 text-warning-foreground shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 active:scale-95 flex flex-col items-center justify-center gap-0.5 shrink-0"
+            className="h-14 px-6 rounded-xl bg-[#FFB703] hover:bg-[#FB8500] text-[#023047] shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 active:scale-95 flex items-center justify-center gap-2 shrink-0 font-bold text-sm uppercase tracking-wide"
             onClick={onPunchClock}
             disabled={isRegistering}
           >
             {isRegistering ? (
-              <Clock className="h-6 w-6 animate-spin" />
+              <Clock className="h-5 w-5 animate-spin" />
             ) : (
               <>
-                <span className="text-[10px] font-bold uppercase leading-tight">Marcar</span>
-                <span className="text-[10px] font-bold uppercase leading-tight">Ponto</span>
+                <Clock className="h-5 w-5" />
+                <span>Marcar Ponto</span>
               </>
             )}
           </Button>
