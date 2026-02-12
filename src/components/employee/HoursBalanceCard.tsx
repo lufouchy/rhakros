@@ -18,7 +18,6 @@ const HoursBalanceCard = ({
     return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
   };
 
-  // Mock values for demonstration - these would come from actual calculations
   const saldoAnterior = previousPeriod || Math.floor(balanceMinutes * 0.6);
   const saldoPeriodo = currentPeriod || Math.floor(balanceMinutes * 0.4);
   const horasAPagar = Math.max(0, balanceMinutes);
@@ -32,56 +31,56 @@ const HoursBalanceCard = ({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Main balance row */}
-        <div className="flex items-center justify-between gap-2 text-sm">
-          <div className="flex items-center gap-2">
-            <span className="text-2xl font-bold text-primary tabular-nums">
+        {/* Main balance row - responsive */}
+        <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="text-xl sm:text-2xl font-bold text-primary tabular-nums whitespace-nowrap">
               {formatTime(saldoAnterior)}
             </span>
-            <span className="text-xs text-muted-foreground uppercase">
+            <span className="text-[10px] sm:text-xs text-muted-foreground uppercase leading-tight">
               Saldo<br/>Anterior
             </span>
           </div>
           
-          <span className="text-xl text-muted-foreground">+</span>
+          <span className="text-lg sm:text-xl text-muted-foreground">+</span>
           
-          <div className="flex items-center gap-2">
-            <span className="text-2xl font-bold text-foreground tabular-nums">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="text-xl sm:text-2xl font-bold text-foreground tabular-nums whitespace-nowrap">
               {formatTime(saldoPeriodo)}
             </span>
-            <span className="text-xs text-muted-foreground uppercase">
+            <span className="text-[10px] sm:text-xs text-muted-foreground uppercase leading-tight">
               Horas<br/>Período
             </span>
           </div>
           
-          <span className="text-xl text-muted-foreground">=</span>
+          <span className="text-lg sm:text-xl text-muted-foreground">=</span>
           
-          <div className="flex items-center gap-2">
-            <span className="text-2xl font-bold text-primary tabular-nums">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="text-xl sm:text-2xl font-bold text-primary tabular-nums whitespace-nowrap">
               {formatTime(balanceMinutes)}
             </span>
-            <span className="text-xs text-muted-foreground uppercase">
-              Saldo 01 a 13<br/>Período
+            <span className="text-[10px] sm:text-xs text-muted-foreground uppercase leading-tight">
+              Saldo<br/>Período
             </span>
           </div>
         </div>
 
         {/* Secondary row */}
-        <div className="flex items-center justify-start gap-8 pt-2 border-t border-border">
+        <div className="flex flex-wrap items-center justify-start gap-6 sm:gap-8 pt-2 border-t border-border">
           <div className="flex items-center gap-2">
-            <span className="text-xl font-bold text-primary tabular-nums">
+            <span className="text-lg sm:text-xl font-bold text-primary tabular-nums whitespace-nowrap">
               {formatTime(horasAPagar)}
             </span>
-            <span className="text-xs text-muted-foreground uppercase">
+            <span className="text-[10px] sm:text-xs text-muted-foreground uppercase leading-tight">
               Horas<br/>A Pagar
             </span>
           </div>
           
           <div className="flex items-center gap-2">
-            <span className="text-xl font-bold text-warning tabular-nums">
+            <span className="text-lg sm:text-xl font-bold text-warning tabular-nums whitespace-nowrap">
               {formatTime(Math.abs(horasADescontar))}
             </span>
-            <span className="text-xs text-muted-foreground uppercase">
+            <span className="text-[10px] sm:text-xs text-muted-foreground uppercase leading-tight">
               Horas<br/>A Descontar
             </span>
           </div>

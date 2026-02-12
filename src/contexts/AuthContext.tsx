@@ -9,7 +9,7 @@ interface AuthContextType {
   session: Session | null;
   userRole: UserRole;
   organizationId: string | null;
-  profile: { full_name: string; email: string; avatar_url: string | null } | null;
+  profile: { full_name: string; email: string; avatar_url: string | null; position: string | null } | null;
   refreshProfile: () => Promise<void>;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
@@ -36,19 +36,19 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [session, setSession] = useState<Session | null>(null);
   const [userRole, setUserRole] = useState<UserRole>(null);
   const [organizationId, setOrganizationId] = useState<string | null>(null);
-  const [profile, setProfile] = useState<{ full_name: string; email: string; avatar_url: string | null } | null>(null);
+  const [profile, setProfile] = useState<{ full_name: string; email: string; avatar_url: string | null; position: string | null } | null>(null);
   const [loading, setLoading] = useState(true);
 
   const fetchUserData = async (userId: string) => {
     // Fetch profile (includes organization_id)
     const { data: profileData } = await supabase
       .from('profiles')
-      .select('full_name, email, avatar_url, organization_id')
+      .select('full_name, email, avatar_url, organization_id, position')
       .eq('user_id', userId)
       .single();
 
     if (profileData) {
-      setProfile({ full_name: profileData.full_name, email: profileData.email, avatar_url: profileData.avatar_url });
+      setProfile({ full_name: profileData.full_name, email: profileData.email, avatar_url: profileData.avatar_url, position: profileData.position });
       setOrganizationId(profileData.organization_id);
     }
 

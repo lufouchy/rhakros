@@ -7,7 +7,7 @@ import EmployeeHero from '@/components/employee/EmployeeHero';
 import TodayRecordsCard from '@/components/employee/TodayRecordsCard';
 import HoursBalanceCard from '@/components/employee/HoursBalanceCard';
 import TodayScheduleCard from '@/components/employee/TodayScheduleCard';
-import PunchButton from '@/components/employee/PunchButton';
+
 import LocationInfoDialog from '@/components/employee/LocationInfoDialog';
 import { useLocationValidation } from '@/hooks/useLocationValidation';
 
@@ -182,9 +182,21 @@ const EmployeeDashboard = () => {
   };
 
   return (
-    <div className="p-6 pb-32 animate-fade-in">
-      {/* Hero section with employee info */}
-      <EmployeeHero />
+    <div className="p-6 animate-fade-in">
+      {/* Hero section with employee info + punch button */}
+      <EmployeeHero
+        isRegistering={isRegistering || isValidating}
+        onPunchClock={handlePunchClock}
+      />
+
+      {/* Success feedback */}
+      {showSuccess && lastRegisteredTime && (
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 animate-scale-in">
+          <span className="text-sm font-medium text-foreground bg-card px-3 py-1 rounded-full shadow-lg">
+            Registrado às {lastRegisteredTime}
+          </span>
+        </div>
+      )}
 
       {/* Main content grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -199,14 +211,6 @@ const EmployeeDashboard = () => {
           <TodayScheduleCard />
         </div>
       </div>
-
-      {/* Floating punch button */}
-      <PunchButton
-        isRegistering={isRegistering || isValidating}
-        showSuccess={showSuccess}
-        lastRegisteredTime={lastRegisteredTime}
-        onClick={handlePunchClock}
-      />
 
       {/* Location map dialog */}
       <LocationInfoDialog
