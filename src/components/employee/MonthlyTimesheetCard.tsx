@@ -19,9 +19,11 @@ interface TimeRecord {
 
 function formatMinutes(minutes: number): string {
   if (minutes === 0) return '-';
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+  const abs = Math.abs(minutes);
+  const h = Math.floor(abs / 60);
+  const m = abs % 60;
+  const sign = minutes < 0 ? '-' : '';
+  return `${sign}${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 }
 
 const MonthlyTimesheetCard = () => {
@@ -80,6 +82,9 @@ const MonthlyTimesheetCard = () => {
         workedMinutes += differenceInMinutes(new Date(exit.recorded_at), new Date(lunchIn.recorded_at));
       }
 
+      const expectedMinutes = isWeekend(day) ? 0 : 480; // 8h para dias úteis
+      const balanceMinutes = workedMinutes > 0 ? workedMinutes - expectedMinutes : 0;
+
       return {
         date: day,
         isWeekendDay: isWeekend(day),
@@ -88,6 +93,7 @@ const MonthlyTimesheetCard = () => {
         lunchIn: lunchIn ? format(new Date(lunchIn.recorded_at), 'HH:mm') : null,
         exit: exit ? format(new Date(exit.recorded_at), 'HH:mm') : null,
         workedMinutes,
+        balanceMinutes,
         hasRecords: dayRecords.length > 0,
       };
     });
@@ -116,6 +122,7 @@ const MonthlyTimesheetCard = () => {
                 <TableHead className="py-1 text-xs">Volta Alm.</TableHead>
                 <TableHead className="py-1 text-xs">Saída</TableHead>
                 <TableHead className="text-right py-1 text-xs">Total</TableHead>
+                <TableHead className="text-right py-1 text-xs">Saldo</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -140,11 +147,19 @@ const MonthlyTimesheetCard = () => {
                   <TableCell className="tabular-nums text-right font-medium py-1 text-xs">
                     {day.workedMinutes > 0 ? formatMinutes(day.workedMinutes) : '-'}
                   </TableCell>
+                  <TableCell className={cn(
+                    "tabular-nums text-right font-bold py-1 text-xs",
+                    day.hasRecords && day.balanceMinutes > 0 && "text-green-600",
+                    day.hasRecords && day.balanceMinutes < 0 && "text-red-600",
+                    day.hasRecords && day.balanceMinutes === 0 && "text-muted-foreground"
+                  )}>
+                    {day.hasRecords ? (day.balanceMinutes > 0 ? '+' : '') + formatMinutes(day.balanceMinutes) : '-'}
+                  </TableCell>
                 </TableRow>
               ))}
               {days.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
                     Nenhum registro encontrado neste mês.
                   </TableCell>
                 </TableRow>
