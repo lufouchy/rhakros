@@ -160,6 +160,29 @@ const TimesheetPage = () => {
 
   const analysis = useMemo(() => analyzeDayRecords(date, records), [date, records]);
 
+  // Check for inconsistencies across the entire month
+  const monthInconsistencies = useMemo(() => {
+    const mStart = startOfMonth(date);
+    const mEnd = endOfMonth(date);
+    const today = new Date();
+    const lastDay = today < mEnd ? today : mEnd;
+    const allDays = eachDayOfInterval({ start: mStart, end: lastDay });
+    
+    const daysWithIssues: string[] = [];
+    allDays.forEach(day => {
+      if (isWeekend(day)) return;
+      const dayStr = format(day, 'yyyy-MM-dd');
+      const dayRecs = monthRecords.filter(r => r.recorded_at.startsWith(dayStr));
+      if (dayRecs.length === 0) return; // no records = no partial inconsistency
+      const types = dayRecs.map(r => r.record_type);
+      const missing = EXPECTED_SEQUENCE.filter(t => !types.includes(t));
+      if (missing.length > 0) {
+        daysWithIssues.push(format(day, 'dd/MM'));
+      }
+    });
+    return daysWithIssues;
+  }, [date, monthRecords]);
+
   const handleDownloadPDF = async () => {
     try {
       // Fetch company info
@@ -289,7 +312,7 @@ const TimesheetPage = () => {
 
   if (!user) return <Navigate to="/auth" replace />;
 
-  const showMissingAlert = !isLoading && records.length > 0 && analysis.missingRecords.length > 0;
+  const showInconsistencyAlert = !isLoading && monthInconsistencies.length > 0;
   const showOvertimeAlert = !isLoading && analysis.hasExcessiveOvertime;
 
   return (
@@ -377,12 +400,12 @@ const TimesheetPage = () => {
               )}
 
               {/* Alerts */}
-              {showMissingAlert && (
+              {showInconsistencyAlert && (
                 <Alert variant="destructive" className="border-destructive/50 bg-destructive/10">
                   <AlertTriangle className="h-4 w-4" />
-                  <AlertTitle>Marcação incompleta</AlertTitle>
+                  <AlertTitle>Inconsistência no ponto</AlertTitle>
                   <AlertDescription>
-                    Faltam registros de: {analysis.missingRecords.map((t) => recordTypeLabel[t]).join(", ")}.
+                    Existem marcações incompletas nos dias: {monthInconsistencies.join(', ')}.
                   </AlertDescription>
                 </Alert>
               )}
