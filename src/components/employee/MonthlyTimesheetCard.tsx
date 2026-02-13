@@ -109,13 +109,13 @@ const MonthlyTimesheetCard = () => {
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
-              <TableRow className="bg-muted/50">
-                <TableHead className="w-[100px]">Dia</TableHead>
-                <TableHead>Entrada</TableHead>
-                <TableHead>Saída Almoço</TableHead>
-                <TableHead>Volta Almoço</TableHead>
-                <TableHead>Saída</TableHead>
-                <TableHead className="text-right">Total</TableHead>
+              <TableRow className="bg-muted/50 h-8">
+                <TableHead className="w-[90px] py-1 text-xs">Dia</TableHead>
+                <TableHead className="py-1 text-xs">Entrada</TableHead>
+                <TableHead className="py-1 text-xs">Saída Alm.</TableHead>
+                <TableHead className="py-1 text-xs">Volta Alm.</TableHead>
+                <TableHead className="py-1 text-xs">Saída</TableHead>
+                <TableHead className="text-right py-1 text-xs">Total</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -126,18 +126,18 @@ const MonthlyTimesheetCard = () => {
                     day.isWeekendDay && 'bg-muted/30 text-muted-foreground'
                   )}
                 >
-                  <TableCell className="font-medium whitespace-nowrap">
+                  <TableCell className="font-medium whitespace-nowrap py-1 text-xs">
                     <span className="capitalize">
                       {format(day.date, 'EEE', { locale: ptBR })}
                     </span>
                     {' '}
                     {format(day.date, 'dd/MM')}
                   </TableCell>
-                  <TableCell className="tabular-nums">{day.entry || '-'}</TableCell>
-                  <TableCell className="tabular-nums">{day.lunchOut || '-'}</TableCell>
-                  <TableCell className="tabular-nums">{day.lunchIn || '-'}</TableCell>
-                  <TableCell className="tabular-nums">{day.exit || '-'}</TableCell>
-                  <TableCell className="tabular-nums text-right font-medium">
+                  <TableCell className="tabular-nums py-1 text-xs">{day.entry || '-'}</TableCell>
+                  <TableCell className="tabular-nums py-1 text-xs">{day.lunchOut || '-'}</TableCell>
+                  <TableCell className="tabular-nums py-1 text-xs">{day.lunchIn || '-'}</TableCell>
+                  <TableCell className="tabular-nums py-1 text-xs">{day.exit || '-'}</TableCell>
+                  <TableCell className="tabular-nums text-right font-medium py-1 text-xs">
                     {day.workedMinutes > 0 ? formatMinutes(day.workedMinutes) : '-'}
                   </TableCell>
                 </TableRow>

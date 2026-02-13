@@ -102,6 +102,21 @@ const EmployeeDashboard = () => {
   };
 
   const handlePunchClock = async () => {
+    // Block duplicate punches within 1 minute
+    if (todayRecords.length > 0) {
+      const lastRecord = todayRecords[todayRecords.length - 1];
+      const lastTime = new Date(lastRecord.recorded_at).getTime();
+      const now = Date.now();
+      if (now - lastTime < 60_000) {
+        toast({
+          variant: 'destructive',
+          title: 'Aguarde',
+          description: 'É necessário aguardar pelo menos 1 minuto entre as marcações.',
+        });
+        return;
+      }
+    }
+
     setIsRegistering(true);
     
     // Validate location before allowing punch
