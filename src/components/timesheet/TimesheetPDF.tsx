@@ -279,18 +279,15 @@ export const generateTimesheetPDF = async ({ records, month, employeeName, signa
     doc.line(24, signatureY + 30, 94, signatureY + 30);
   }
 
-  // Footer with accent bar
-  const footerY = 280;
+  // Footer - compact accent line
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const footerY = pageHeight - 8;
   doc.setFillColor(...deepSpaceBlue);
-  doc.rect(0, footerY, pageWidth, 17, 'F');
+  doc.rect(0, footerY, pageWidth, 8, 'F');
   
-  doc.setFontSize(8);
+  doc.setFontSize(6);
   doc.setTextColor(255, 255, 255);
-  doc.text('Documento gerado automaticamente pelo Sistema de Ponto Digital', pageWidth / 2, footerY + 7, { align: 'center' });
-  
-  doc.setFontSize(7);
-  doc.setTextColor(180, 200, 210);
-  doc.text('Este documento é parte integrante do controle de jornada de trabalho', pageWidth / 2, footerY + 12, { align: 'center' });
+  doc.text('Documento gerado automaticamente pelo Sistema de Ponto Digital', pageWidth / 2, footerY + 5, { align: 'center' });
 
   return doc;
 };
