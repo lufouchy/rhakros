@@ -15,13 +15,12 @@ const HoursBalanceCard = ({
     const absMinutes = Math.abs(minutes);
     const hours = Math.floor(absMinutes / 60);
     const mins = absMinutes % 60;
-    return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
+    const sign = minutes < 0 ? '-' : '';
+    return `${sign}${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
   };
 
   const saldoAnterior = previousPeriod || Math.floor(balanceMinutes * 0.6);
   const saldoPeriodo = currentPeriod || Math.floor(balanceMinutes * 0.4);
-  const horasAPagar = Math.max(0, balanceMinutes);
-  const horasADescontar = Math.min(0, balanceMinutes);
 
   return (
     <Card className="border-0 shadow-md">
@@ -33,11 +32,11 @@ const HoursBalanceCard = ({
       <CardContent className="space-y-4">
         {/* Saldo Período - centralizado e destacado */}
         <div className="flex flex-col items-center justify-center py-2">
-          <span className="text-3xl sm:text-4xl font-bold text-primary tabular-nums">
+          <span className={`text-3xl sm:text-4xl font-bold tabular-nums ${balanceMinutes < 0 ? 'text-destructive' : 'text-primary'}`}>
             {formatTime(balanceMinutes)}
           </span>
           <span className="text-xs text-muted-foreground uppercase tracking-wide mt-1">
-            Saldo Período
+            Saldo Período {balanceMinutes < 0 ? '(a descontar)' : balanceMinutes > 0 ? '(a pagar)' : ''}
           </span>
         </div>
 
@@ -60,27 +59,6 @@ const HoursBalanceCard = ({
             </span>
             <span className="text-[10px] sm:text-xs text-muted-foreground uppercase leading-tight">
               Horas<br/>Período
-            </span>
-          </div>
-        </div>
-
-        {/* Secondary row */}
-        <div className="flex flex-wrap items-center justify-start gap-6 sm:gap-8 pt-2 border-t border-border">
-          <div className="flex items-center gap-2">
-            <span className="text-lg sm:text-xl font-bold text-primary tabular-nums whitespace-nowrap">
-              {formatTime(horasAPagar)}
-            </span>
-            <span className="text-[10px] sm:text-xs text-muted-foreground uppercase leading-tight">
-              Horas<br/>A Pagar
-            </span>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <span className="text-lg sm:text-xl font-bold text-warning tabular-nums whitespace-nowrap">
-              {formatTime(Math.abs(horasADescontar))}
-            </span>
-            <span className="text-[10px] sm:text-xs text-muted-foreground uppercase leading-tight">
-              Horas<br/>A Descontar
             </span>
           </div>
         </div>
