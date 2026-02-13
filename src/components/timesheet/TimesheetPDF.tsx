@@ -85,16 +85,7 @@ export const generateTimesheetPDF = async ({ records, month, employeeName, signa
     headerY += 35;
   }
 
-  // Document title with accent background
-  doc.setFillColor(...lightBg);
-  doc.roundedRect(14, headerY, pageWidth - 28, 20, 3, 3, 'F');
-  
-  doc.setFontSize(14);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(...deepSpaceBlue);
-  doc.text('ESPELHO DE PONTO', pageWidth / 2, headerY + 13, { align: 'center' });
-  
-  headerY += 28;
+  // Employee info in a styled box (no title block)
 
   // Employee info in a styled box
   doc.setDrawColor(...skyBlue);
@@ -171,8 +162,8 @@ export const generateTimesheetPDF = async ({ records, month, employeeName, signa
     head: [['Data', 'Entrada', 'Saída Almoço', 'Volta Almoço', 'Saída', 'Trabalhado', 'H. Extra', 'Obs']],
     body: tableData,
     styles: { 
-      fontSize: 8, 
-      cellPadding: 2.5,
+      fontSize: 7, 
+      cellPadding: 1.5,
       lineColor: [220, 220, 220],
       lineWidth: 0.1,
     },
