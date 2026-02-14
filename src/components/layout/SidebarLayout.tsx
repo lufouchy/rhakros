@@ -46,7 +46,7 @@ const SidebarLayout = ({ children }: SidebarLayoutProps) => {
         { icon: Clock, label: 'Gestão de Jornada', path: '/schedules' },
         { icon: FileText, label: 'Solicitações', path: '/requests' },
         { icon: Palmtree, label: 'Férias', path: '/vacations' },
-        { icon: FolderOpen, label: 'Documentos', path: '/documents' },
+        { icon: FolderOpen, label: 'Espelhos Ponto', path: '/documents' },
         { icon: Settings, label: 'Configurações', path: '/settings' },
       ]
     : [

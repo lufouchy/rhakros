@@ -440,7 +440,7 @@ const DocumentManagement = () => {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Gestão de Documentos</h1>
+            <h1 className="text-2xl font-bold text-foreground">Gestão de Espelhos Ponto</h1>
             <p className="text-muted-foreground">
               Gerencie os espelhos de ponto assinados dos colaboradores
             </p>
@@ -460,6 +460,7 @@ const DocumentManagement = () => {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Documentos a vencer</p>
+                <p className="text-xs text-muted-foreground/70">Vencem nos próximos 60 dias</p>
                 <p className="text-3xl font-bold text-foreground">{expiringCount}</p>
                 <button 
                   className="text-sm text-primary hover:underline"
@@ -478,6 +479,7 @@ const DocumentManagement = () => {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Documentos vencidos</p>
+                <p className="text-xs text-muted-foreground/70">Prazo de assinatura expirado</p>
                 <p className="text-3xl font-bold text-foreground">{expiredCount}</p>
                 <button 
                   className="text-sm text-primary hover:underline"
@@ -496,6 +498,7 @@ const DocumentManagement = () => {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Aguardando assinatura</p>
+                <p className="text-xs text-muted-foreground/70">Pendentes de assinatura do colaborador</p>
                 <p className="text-3xl font-bold text-foreground">{pendingCount}</p>
                 <button 
                   className="text-sm text-primary hover:underline"
