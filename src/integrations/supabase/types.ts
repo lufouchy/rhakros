@@ -552,6 +552,7 @@ export type Database = {
           created_at: string
           id: string
           name: string
+          org_code: string | null
           slug: string | null
           updated_at: string
         }
@@ -559,6 +560,7 @@ export type Database = {
           created_at?: string
           id?: string
           name: string
+          org_code?: string | null
           slug?: string | null
           updated_at?: string
         }
@@ -566,6 +568,7 @@ export type Database = {
           created_at?: string
           id?: string
           name?: string
+          org_code?: string | null
           slug?: string | null
           updated_at?: string
         }

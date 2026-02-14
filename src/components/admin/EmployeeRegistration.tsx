@@ -103,6 +103,7 @@ const EmployeeRegistration = () => {
   const [isSearchingCep, setIsSearchingCep] = useState(false);
   const [isSearchingWorkCep, setIsSearchingWorkCep] = useState(false);
   const [showNewSchedule, setShowNewSchedule] = useState(false);
+  const [orgCode, setOrgCode] = useState<string>('');
   
   const [form, setForm] = useState<EmployeeForm>({
     full_name: '',
@@ -121,10 +122,8 @@ const EmployeeRegistration = () => {
     position: '',
     work_schedule_id: '',
     password: '',
-    // Work location
     work_location_type: 'sede',
     branch_id: '',
-    // Location settings
     location_mode: 'disabled',
     work_address_cep: '',
     work_address_street: '',
@@ -144,9 +143,88 @@ const EmployeeRegistration = () => {
     break_end_time: '',
   });
 
+  const generateOrgCode = async () => {
+    try {
+      // Get current org's existing code first
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) return;
+
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('organization_id')
+        .eq('user_id', userData.user.id)
+        .single();
+
+      if (!profileData?.organization_id) return;
+
+      // Check if org already has a code
+      const { data: orgData } = await supabase
+        .from('organizations')
+        .select('org_code')
+        .eq('id', profileData.organization_id)
+        .single();
+
+      if (orgData?.org_code) {
+        setOrgCode(orgData.org_code);
+        return;
+      }
+
+      // Fetch company CNPJ
+      const { data: companyData } = await supabase
+        .from('company_info')
+        .select('cnpj')
+        .limit(1)
+        .maybeSingle();
+
+      if (!companyData?.cnpj) {
+        setOrgCode('');
+        return;
+      }
+
+      const cnpjDigits = companyData.cnpj.replace(/\D/g, '');
+      
+      // Get all existing org_codes
+      const { data: allOrgs } = await supabase
+        .from('organizations')
+        .select('org_code')
+        .not('org_code', 'is', null);
+
+      const existingCodes = new Set((allOrgs || []).map(o => o.org_code));
+
+      // Try first 5 digits, then skip digits if taken
+      let code = '';
+      let startIndex = 0;
+      
+      while (startIndex + 5 <= cnpjDigits.length) {
+        const candidate = cnpjDigits.substring(startIndex, startIndex + 5);
+        if (!existingCodes.has(candidate)) {
+          code = candidate;
+          break;
+        }
+        startIndex++;
+      }
+
+      // Fallback: if all 5-digit combinations are taken
+      if (!code) {
+        code = cnpjDigits.substring(0, 5) + cnpjDigits.substring(cnpjDigits.length - 1);
+      }
+
+      // Save the code
+      await supabase
+        .from('organizations')
+        .update({ org_code: code })
+        .eq('id', profileData.organization_id);
+
+      setOrgCode(code);
+    } catch (error) {
+      console.error('Error generating org code:', error);
+    }
+  };
+
   useEffect(() => {
     fetchSchedules();
     fetchBranchesInfo();
+    generateOrgCode();
   }, []);
 
   const fetchSchedules = async () => {
@@ -470,6 +548,27 @@ const EmployeeRegistration = () => {
         </DialogHeader>
 
         <div className="space-y-6 pt-4">
+          {/* Organization ID */}
+          <div className="space-y-4">
+            <h3 className="font-medium text-sm text-muted-foreground">Identificação da Organização</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="org_code">ID da Organização</Label>
+                <Input
+                  id="org_code"
+                  value={orgCode}
+                  readOnly
+                  disabled
+                  className="bg-muted font-mono"
+                  placeholder="Cadastre o CNPJ nas Informações Institucionais"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Gerado automaticamente a partir do CNPJ da empresa
+                </p>
+              </div>
+            </div>
+          </div>
+
           {/* Personal Data */}
           <div className="space-y-4">
             <h3 className="font-medium text-sm text-muted-foreground">Dados Pessoais</h3>
