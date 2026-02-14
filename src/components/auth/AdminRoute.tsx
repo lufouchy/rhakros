@@ -33,7 +33,7 @@ const AdminRoute = ({ children }: AdminRouteProps) => {
           .from('user_roles')
           .select('role')
           .eq('user_id', user.id)
-          .eq('role', 'admin')
+          .in('role', ['admin', 'suporte'])
           .maybeSingle();
 
         if (error) {

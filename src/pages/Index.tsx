@@ -22,7 +22,7 @@ const Index = () => {
 
   return (
     <SidebarLayout>
-      {userRole === 'admin' ? <AdminDashboard /> : <EmployeeDashboard />}
+      {(userRole === 'admin' || userRole === 'suporte') ? <AdminDashboard /> : <EmployeeDashboard />}
     </SidebarLayout>
   );
 };

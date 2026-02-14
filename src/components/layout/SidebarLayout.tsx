@@ -36,7 +36,7 @@ const SidebarLayout = ({ children }: SidebarLayoutProps) => {
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
 
-  const isAdmin = userRole === 'admin';
+  const isAdmin = userRole === 'admin' || userRole === 'suporte';
 
   const navItems = isAdmin
     ? [
@@ -164,7 +164,7 @@ const SidebarLayout = ({ children }: SidebarLayoutProps) => {
               <div className="hidden sm:block text-right">
                 <p className="text-sm font-medium text-foreground">{profile?.full_name}</p>
                 <p className="text-xs text-muted-foreground capitalize">
-                  {userRole === 'admin' ? 'Administrador' : 'Colaborador'}
+                  {userRole === 'admin' || userRole === 'suporte' ? 'Administrador' : 'Colaborador'}
                 </p>
               </div>
             </div>

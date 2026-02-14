@@ -26,7 +26,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const isAdmin = userRole === 'admin';
+  const isAdmin = userRole === 'admin' || userRole === 'suporte';
 
   const navItems = isAdmin
     ? [
@@ -82,7 +82,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
             <div className="hidden sm:block text-right">
               <p className="text-sm font-medium text-white">{profile?.full_name}</p>
               <p className="text-xs text-white/60 capitalize">
-                {userRole === 'admin' ? 'Administrador' : 'Colaborador'}
+                {userRole === 'admin' || userRole === 'suporte' ? 'Administrador' : 'Colaborador'}
               </p>
             </div>
             
