@@ -21,7 +21,7 @@ const AdminSettings = () => {
     );
   }
 
-  if (!user || userRole !== 'admin') {
+  if (!user || (userRole !== 'admin' && userRole !== 'suporte')) {
     return <Navigate to="/" replace />;
   }
 

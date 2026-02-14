@@ -281,9 +281,18 @@ const EmployeeManagement = () => {
       .order('full_name');
     
     if (profilesData) {
+      // Filter out suporte users (master user should be invisible)
+      const { data: suporteRoles } = await supabase
+        .from('user_roles')
+        .select('user_id')
+        .eq('role', 'suporte');
+      
+      const suporteUserIds = new Set((suporteRoles || []).map(r => r.user_id));
+      const visibleProfiles = profilesData.filter(p => !suporteUserIds.has(p.user_id));
+      
       // Update statuses based on active vacations/leaves
       const updatedEmployees = await Promise.all(
-        profilesData.map(async (employee) => {
+        visibleProfiles.map(async (employee) => {
           const calculatedStatus = await calculateEmployeeStatus(employee.user_id);
           return {
             ...employee,
@@ -691,7 +700,7 @@ const EmployeeManagement = () => {
     );
   }
 
-  if (!user || userRole !== 'admin') {
+  if (!user || (userRole !== 'admin' && userRole !== 'suporte')) {
     return <Navigate to="/" replace />;
   }
 
