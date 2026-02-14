@@ -58,6 +58,7 @@ const CompanyInfoForm = ({ companyId, onSave }: CompanyInfoFormProps) => {
   const [uploading, setUploading] = useState(false);
   const [fetchingCep, setFetchingCep] = useState(false);
   const [cnpjError, setCnpjError] = useState('');
+  const [orgCode, setOrgCode] = useState('');
   
   const [form, setForm] = useState<CompanyForm>({
     logo_url: '',
@@ -79,6 +80,85 @@ const CompanyInfoForm = ({ companyId, onSave }: CompanyInfoFormProps) => {
     financial_email: '',
     has_branches: false,
   });
+
+  const fetchOrgCode = async () => {
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) return;
+
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('organization_id')
+        .eq('user_id', userData.user.id)
+        .single();
+
+      if (!profileData?.organization_id) return;
+
+      const { data: orgData } = await supabase
+        .from('organizations')
+        .select('org_code')
+        .eq('id', profileData.organization_id)
+        .single();
+
+      if (orgData?.org_code) {
+        setOrgCode(orgData.org_code);
+      }
+    } catch (error) {
+      console.error('Error fetching org code:', error);
+    }
+  };
+
+  const generateAndSaveOrgCode = async (cnpjDigits: string) => {
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) return;
+
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('organization_id')
+        .eq('user_id', userData.user.id)
+        .single();
+
+      if (!profileData?.organization_id) return;
+
+      // Get all existing org_codes
+      const { data: allOrgs } = await supabase
+        .from('organizations')
+        .select('org_code')
+        .not('org_code', 'is', null);
+
+      const existingCodes = new Set((allOrgs || []).map(o => o.org_code));
+
+      let code = '';
+      let startIndex = 0;
+      
+      while (startIndex + 5 <= cnpjDigits.length) {
+        const candidate = cnpjDigits.substring(startIndex, startIndex + 5);
+        if (!existingCodes.has(candidate)) {
+          code = candidate;
+          break;
+        }
+        startIndex++;
+      }
+
+      if (!code) {
+        code = cnpjDigits.substring(0, 5) + cnpjDigits.substring(cnpjDigits.length - 1);
+      }
+
+      await supabase
+        .from('organizations')
+        .update({ org_code: code })
+        .eq('id', profileData.organization_id);
+
+      setOrgCode(code);
+    } catch (error) {
+      console.error('Error generating org code:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchOrgCode();
+  }, []);
 
   useEffect(() => {
     const fetchCompanyData = async () => {
@@ -319,6 +399,11 @@ const CompanyInfoForm = ({ companyId, onSave }: CompanyInfoFormProps) => {
         });
         onSave(data.id, form.has_branches);
       }
+
+      // Generate org code from CNPJ if not yet set
+      if (!orgCode && cleanCNPJ.length === 14) {
+        await generateAndSaveOrgCode(cleanCNPJ);
+      }
     } catch (error: any) {
       console.error('Error saving company:', error);
       toast({
@@ -401,6 +486,21 @@ const CompanyInfoForm = ({ companyId, onSave }: CompanyInfoFormProps) => {
               {cnpjError && (
                 <p className="text-sm text-destructive">{cnpjError}</p>
               )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="org_code">ID da Organização</Label>
+              <Input
+                id="org_code"
+                value={orgCode}
+                readOnly
+                disabled
+                className="bg-muted font-mono"
+                placeholder="Gerado ao salvar o CNPJ"
+              />
+              <p className="text-xs text-muted-foreground">
+                Gerado automaticamente a partir do CNPJ
+              </p>
             </div>
 
             <div className="space-y-2">
