@@ -490,7 +490,7 @@ const BranchesForm = ({ companyId, hasBranches }: BranchesFormProps) => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="branch_email">E-mail Financeiro</Label>
+              <Label htmlFor="branch_email">E-mail</Label>
               <Input
                 id="branch_email"
                 type="email"
@@ -594,7 +594,7 @@ const BranchesForm = ({ companyId, hasBranches }: BranchesFormProps) => {
                 <p className="font-medium">{viewingBranch.whatsapp || '—'}</p>
               </div>
               <div>
-                <p className="text-muted-foreground">E-mail Financeiro</p>
+                <p className="text-muted-foreground">E-mail</p>
                 <p className="font-medium">{viewingBranch.financial_email || '—'}</p>
               </div>
             </div>

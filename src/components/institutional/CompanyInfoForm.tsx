@@ -121,6 +121,18 @@ const CompanyInfoForm = ({ companyId, onSave }: CompanyInfoFormProps) => {
 
       if (!profileData?.organization_id) return;
 
+      // Check if org already has a code - never overwrite
+      const { data: existingOrg } = await supabase
+        .from('organizations')
+        .select('org_code')
+        .eq('id', profileData.organization_id)
+        .single();
+
+      if (existingOrg?.org_code) {
+        setOrgCode(existingOrg.org_code);
+        return; // Already has a code, don't regenerate
+      }
+
       // Get all existing org_codes
       const { data: allOrgs } = await supabase
         .from('organizations')
@@ -685,7 +697,7 @@ const CompanyInfoForm = ({ companyId, onSave }: CompanyInfoFormProps) => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="financial_email">E-mail Financeiro</Label>
+              <Label htmlFor="financial_email">E-mail</Label>
               <Input
                 id="financial_email"
                 type="email"
