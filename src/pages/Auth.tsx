@@ -4,18 +4,20 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Clock, Mail, Lock, User, Building2, Loader2 } from 'lucide-react';
+import { Clock, Mail, Lock, Building2, Loader2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [fullName, setFullName] = useState('');
-  const [companyName, setCompanyName] = useState('');
-  const { signIn, signUp, user, loading } = useAuth();
+  const [orgCode, setOrgCode] = useState('');
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const { signIn, user, loading } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -35,14 +37,41 @@ const Auth = () => {
     e.preventDefault();
     setIsLoading(true);
 
+    if (!orgCode.trim()) {
+      toast({
+        variant: 'destructive',
+        title: 'Erro',
+        description: 'Por favor, informe o ID da Organização.',
+      });
+      setIsLoading(false);
+      return;
+    }
+
+    // Validate org_code exists
+    const { data: orgData, error: orgError } = await supabase
+      .from('organizations')
+      .select('id')
+      .eq('org_code', orgCode.trim())
+      .single();
+
+    if (orgError || !orgData) {
+      toast({
+        variant: 'destructive',
+        title: 'Erro',
+        description: 'ID da Organização não encontrado.',
+      });
+      setIsLoading(false);
+      return;
+    }
+
     const { error } = await signIn(email, password);
 
     if (error) {
       toast({
         variant: 'destructive',
         title: 'Erro ao entrar',
-        description: error.message === 'Invalid login credentials' 
-          ? 'Email ou senha incorretos' 
+        description: error.message === 'Invalid login credentials'
+          ? 'Email ou senha incorretos'
           : error.message,
       });
     } else {
@@ -56,51 +85,30 @@ const Auth = () => {
     setIsLoading(false);
   };
 
-  const handleSignUp = async (e: React.FormEvent) => {
+  const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    setForgotLoading(true);
 
-    if (!fullName.trim()) {
-      toast({
-        variant: 'destructive',
-        title: 'Erro',
-        description: 'Por favor, informe seu nome completo.',
-      });
-      setIsLoading(false);
-      return;
-    }
-
-    if (!companyName.trim()) {
-      toast({
-        variant: 'destructive',
-        title: 'Erro',
-        description: 'Por favor, informe o nome da empresa.',
-      });
-      setIsLoading(false);
-      return;
-    }
-
-    const { error } = await signUp(email, password, fullName, companyName);
+    const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
+      redirectTo: `${window.location.origin}/auth`,
+    });
 
     if (error) {
-      let message = error.message;
-      if (error.message.includes('already registered')) {
-        message = 'Este email já está cadastrado. Tente fazer login.';
-      }
       toast({
         variant: 'destructive',
-        title: 'Erro ao cadastrar',
-        description: message,
+        title: 'Erro',
+        description: 'Não foi possível enviar o e-mail de recuperação. Verifique o endereço informado.',
       });
     } else {
       toast({
-        title: 'Conta criada!',
-        description: 'Sua empresa e conta foram criadas com sucesso.',
+        title: 'E-mail enviado!',
+        description: 'Verifique sua caixa de entrada para redefinir sua senha.',
       });
-      navigate('/');
+      setShowForgotPassword(false);
+      setForgotEmail('');
     }
 
-    setIsLoading(false);
+    setForgotLoading(false);
   };
 
   return (
@@ -116,17 +124,77 @@ const Auth = () => {
         </div>
 
         <Card className="border-0 shadow-xl">
-          <Tabs defaultValue="login">
-            <CardHeader className="pb-4">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="login">Entrar</TabsTrigger>
-                <TabsTrigger value="signup">Cadastrar Empresa</TabsTrigger>
-              </TabsList>
-            </CardHeader>
+          {showForgotPassword ? (
+            <>
+              <CardHeader className="pb-4">
+                <h2 className="text-lg font-semibold text-foreground text-center">Recuperar Senha</h2>
+                <p className="text-sm text-muted-foreground text-center">
+                  Informe seu e-mail cadastrado para receber o link de recuperação.
+                </p>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleForgotPassword} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="forgot-email">Email</Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="forgot-email"
+                        type="email"
+                        placeholder="seu@email.com"
+                        value={forgotEmail}
+                        onChange={(e) => setForgotEmail(e.target.value)}
+                        className="pl-10"
+                        required
+                      />
+                    </div>
+                  </div>
 
-            <CardContent>
-              <TabsContent value="login" className="mt-0">
+                  <Button type="submit" className="w-full" disabled={forgotLoading}>
+                    {forgotLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Enviando...
+                      </>
+                    ) : (
+                      'Enviar link de recuperação'
+                    )}
+                  </Button>
+
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="w-full"
+                    onClick={() => setShowForgotPassword(false)}
+                  >
+                    Voltar ao login
+                  </Button>
+                </form>
+              </CardContent>
+            </>
+          ) : (
+            <>
+              <CardHeader className="pb-4">
+                <h2 className="text-lg font-semibold text-foreground text-center">Entrar</h2>
+              </CardHeader>
+              <CardContent>
                 <form onSubmit={handleSignIn} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="signin-org">ID da Organização</Label>
+                    <div className="relative">
+                      <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="signin-org"
+                        type="text"
+                        placeholder="Ex: 12345"
+                        value={orgCode}
+                        onChange={(e) => setOrgCode(e.target.value)}
+                        className="pl-10"
+                        required
+                      />
+                    </div>
+                  </div>
+
                   <div className="space-y-2">
                     <Label htmlFor="signin-email">Email</Label>
                     <div className="relative">
@@ -169,90 +237,20 @@ const Auth = () => {
                       'Entrar'
                     )}
                   </Button>
+
+                  <div className="text-center">
+                    <button
+                      type="button"
+                      className="text-sm text-primary hover:underline"
+                      onClick={() => setShowForgotPassword(true)}
+                    >
+                      Esqueci minha senha
+                    </button>
+                  </div>
                 </form>
-              </TabsContent>
-
-              <TabsContent value="signup" className="mt-0">
-                <form onSubmit={handleSignUp} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-company">Nome da Empresa</Label>
-                    <div className="relative">
-                      <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="signup-company"
-                        type="text"
-                        placeholder="Nome da sua empresa"
-                        value={companyName}
-                        onChange={(e) => setCompanyName(e.target.value)}
-                        className="pl-10"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-name">Seu Nome Completo</Label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="signup-name"
-                        type="text"
-                        placeholder="Seu nome completo"
-                        value={fullName}
-                        onChange={(e) => setFullName(e.target.value)}
-                        className="pl-10"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-email">Email</Label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="signup-email"
-                        type="email"
-                        placeholder="seu@email.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="pl-10"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-password">Senha</Label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="signup-password"
-                        type="password"
-                        placeholder="••••••••"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        className="pl-10"
-                        minLength={6}
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Cadastrando...
-                      </>
-                    ) : (
-                      'Cadastrar Empresa'
-                    )}
-                  </Button>
-                </form>
-              </TabsContent>
-            </CardContent>
-          </Tabs>
+              </CardContent>
+            </>
+          )}
         </Card>
 
         <p className="text-center text-sm text-muted-foreground mt-6">
