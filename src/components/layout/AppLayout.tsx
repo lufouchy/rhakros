@@ -33,7 +33,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
         { icon: Users, label: 'Gestão de Jornada', path: '/' },
         { icon: FileText, label: 'Solicitações', path: '/requests' },
         { icon: Palmtree, label: 'Férias', path: '/vacations' },
-        { icon: FolderOpen, label: 'Documentos', path: '/documents' },
+        { icon: FolderOpen, label: 'Espelhos Ponto', path: '/documents' },
       ]
     : [
         { icon: Clock, label: 'Registrar Ponto', path: '/' },
