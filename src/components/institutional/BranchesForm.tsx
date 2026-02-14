@@ -551,43 +551,52 @@ const BranchesForm = ({ companyId, hasBranches }: BranchesFormProps) => {
             <div className="space-y-4 text-sm">
               <div>
                 <p className="text-muted-foreground">CNPJ</p>
-                <p className="font-medium">{viewingBranch.cnpj}</p>
+                <p className="font-medium">{viewingBranch.cnpj || '—'}</p>
               </div>
-              {(viewingBranch.address_street || viewingBranch.address_city) && (
+              <div>
+                <p className="text-muted-foreground">CEP</p>
+                <p className="font-medium">{viewingBranch.address_cep || '—'}</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground">Logradouro</p>
+                <p className="font-medium">{viewingBranch.address_street || '—'}</p>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-muted-foreground">Endereço</p>
-                  <p className="font-medium">
-                    {[
-                      viewingBranch.address_street,
-                      viewingBranch.address_number && `nº ${viewingBranch.address_number}`,
-                      viewingBranch.address_complement,
-                      viewingBranch.address_neighborhood,
-                    ].filter(Boolean).join(', ')}
-                  </p>
-                  <p className="font-medium">
-                    {[viewingBranch.address_city, viewingBranch.address_state].filter(Boolean).join(' - ')}
-                    {viewingBranch.address_cep && ` • CEP: ${viewingBranch.address_cep}`}
-                  </p>
+                  <p className="text-muted-foreground">Número</p>
+                  <p className="font-medium">{viewingBranch.address_number || '—'}</p>
                 </div>
-              )}
-              {viewingBranch.phone && (
                 <div>
-                  <p className="text-muted-foreground">Telefone</p>
-                  <p className="font-medium">{viewingBranch.phone}</p>
+                  <p className="text-muted-foreground">Complemento</p>
+                  <p className="font-medium">{viewingBranch.address_complement || '—'}</p>
                 </div>
-              )}
-              {viewingBranch.whatsapp && (
+              </div>
+              <div>
+                <p className="text-muted-foreground">Bairro</p>
+                <p className="font-medium">{viewingBranch.address_neighborhood || '—'}</p>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-muted-foreground">WhatsApp</p>
-                  <p className="font-medium">{viewingBranch.whatsapp}</p>
+                  <p className="text-muted-foreground">Cidade</p>
+                  <p className="font-medium">{viewingBranch.address_city || '—'}</p>
                 </div>
-              )}
-              {viewingBranch.financial_email && (
                 <div>
-                  <p className="text-muted-foreground">E-mail Financeiro</p>
-                  <p className="font-medium">{viewingBranch.financial_email}</p>
+                  <p className="text-muted-foreground">UF</p>
+                  <p className="font-medium">{viewingBranch.address_state || '—'}</p>
                 </div>
-              )}
+              </div>
+              <div>
+                <p className="text-muted-foreground">Telefone Comercial</p>
+                <p className="font-medium">{viewingBranch.phone || '—'}</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground">WhatsApp</p>
+                <p className="font-medium">{viewingBranch.whatsapp || '—'}</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground">E-mail Financeiro</p>
+                <p className="font-medium">{viewingBranch.financial_email || '—'}</p>
+              </div>
             </div>
           )}
         </DialogContent>

@@ -478,6 +478,9 @@ const CompanyInfoForm = ({ companyId, onSave }: CompanyInfoFormProps) => {
                   placeholder="00.000.000/0000-00"
                   maxLength={18}
                   required
+                  readOnly={!!orgCode}
+                  disabled={!!orgCode}
+                  className={orgCode ? 'bg-muted' : ''}
                 />
                 {fetchingCnpj && (
                   <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin" />
