@@ -83,8 +83,41 @@ const CompanyInfoForm = ({ companyId, onSave }: CompanyInfoFormProps) => {
 
   const fetchOrgCode = async () => {
     try {
+      // If viewing an existing company, get org code from the company's organization
+      if (companyId) {
+        const { data: companyData } = await supabase
+          .from('company_info')
+          .select('organization_id')
+          .eq('id', companyId)
+          .single();
+
+        if (companyData?.organization_id) {
+          const { data: orgData } = await supabase
+            .from('organizations')
+            .select('org_code')
+            .eq('id', companyData.organization_id)
+            .single();
+
+          if (orgData?.org_code) {
+            setOrgCode(orgData.org_code);
+            return;
+          }
+        }
+      }
+
+      // Fallback: get from user's own org (only for non-suporte users)
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) return;
+
+      const { data: roleData } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userData.user.id)
+        .eq('role', 'suporte')
+        .maybeSingle();
+
+      // If suporte user and no company yet, don't show any org code
+      if (roleData) return;
 
       const { data: profileData } = await supabase
         .from('profiles')
@@ -170,7 +203,7 @@ const CompanyInfoForm = ({ companyId, onSave }: CompanyInfoFormProps) => {
 
   useEffect(() => {
     fetchOrgCode();
-  }, []);
+  }, [companyId]);
 
   useEffect(() => {
     const fetchCompanyData = async () => {
