@@ -183,6 +183,17 @@ const AdminDashboard = () => {
 
     if (!profiles) return;
 
+    // Filter out suporte users (master user should be invisible)
+    const { data: suporteRoles } = await supabase
+      .from('user_roles')
+      .select('user_id')
+      .eq('role', 'suporte');
+    
+    const suporteUserIds = new Set((suporteRoles || []).map(r => r.user_id));
+    const visibleProfiles = profiles.filter(p => !suporteUserIds.has(p.user_id));
+
+    if (visibleProfiles.length === 0) return;
+
     // Fetch today's records for all users
     const { data: records } = await supabase
       .from('time_records')
@@ -196,7 +207,7 @@ const AdminDashboard = () => {
       .select('*');
 
     // Build employee status list
-    const employeeStatuses: EmployeeStatus[] = profiles.map((profile) => {
+    const employeeStatuses: EmployeeStatus[] = visibleProfiles.map((profile) => {
       const userRecords = (records || []).filter(r => r.user_id === profile.user_id) as TimeRecord[];
       const userBalance = (balances || []).find(b => b.user_id === profile.user_id);
 

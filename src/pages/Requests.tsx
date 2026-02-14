@@ -101,7 +101,7 @@ const Requests = () => {
   const [absenceReason, setAbsenceReason] = useState('');
   const [vacationRange, setVacationRange] = useState<DateRange | undefined>();
 
-  const isAdmin = userRole === 'admin';
+  const isAdmin = userRole === 'admin' || userRole === 'suporte';
 
   useEffect(() => {
     fetchRequests();
