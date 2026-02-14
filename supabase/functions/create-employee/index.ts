@@ -86,13 +86,17 @@ Deno.serve(async (req) => {
     const organizationId = adminProfile.organization_id
 
     const body = await req.json()
-    const { email, password, full_name, profileData } = body
+    const { email, password, full_name, profileData, role: requestedRole, organization_id: targetOrgId } = body
 
     if (!email || !password || !full_name) {
       throw new Error('Email, password and full_name are required')
     }
 
-    console.log('Creating employee:', email, 'for org:', organizationId)
+    // Suporte users can specify a target organization
+    const finalOrgId = (roleData.role === 'suporte' && targetOrgId) ? targetOrgId : organizationId
+    const finalRole = requestedRole === 'admin' ? 'admin' : 'employee'
+
+    console.log('Creating user:', email, 'role:', finalRole, 'for org:', finalOrgId)
 
     // Create user using admin API (doesn't affect current session)
     const { data: authData, error: createError } = await supabaseAdmin.auth.admin.createUser({
@@ -117,7 +121,7 @@ Deno.serve(async (req) => {
         user_id: newUserId,
         email,
         full_name,
-        organization_id: organizationId,
+        organization_id: finalOrgId,
         ...profileData,
       })
 
@@ -125,13 +129,13 @@ Deno.serve(async (req) => {
       console.error('Profile insert error:', profileInsertError.message)
     }
 
-    // Create user role as employee with organization_id
+    // Create user role with organization_id
     const { error: roleInsertError } = await supabaseAdmin
       .from('user_roles')
       .insert({
         user_id: newUserId,
-        role: 'employee',
-        organization_id: organizationId,
+        role: finalRole,
+        organization_id: finalOrgId,
       })
 
     if (roleInsertError) {
@@ -144,7 +148,7 @@ Deno.serve(async (req) => {
       .insert({
         user_id: newUserId,
         balance_minutes: 0,
-        organization_id: organizationId,
+        organization_id: finalOrgId,
       })
 
     if (balanceError) {

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -57,6 +58,7 @@ const MAX_ADMINS = 4;
 
 const CompanyAdminsForm = ({ companyId }: CompanyAdminsFormProps) => {
   const { toast } = useToast();
+  const { userRole } = useAuth();
   const [loading, setLoading] = useState(false);
   const [admins, setAdmins] = useState<Admin[]>([]);
   const [currentAdmin, setCurrentAdmin] = useState<Admin>(emptyAdmin);
@@ -178,12 +180,47 @@ const CompanyAdminsForm = ({ companyId }: CompanyAdminsFormProps) => {
           description: 'Os dados do administrador foram atualizados com sucesso',
         });
       } else {
-        // Create user in auth system via edge function would be ideal
-        // For now, just save to company_admins table
+        // Get organization_id
         const { data: caOrgData } = await supabase.from('profiles').select('organization_id').eq('user_id', (await supabase.auth.getUser()).data.user?.id).single();
+        const orgId = caOrgData?.organization_id;
+
+        // First, get the company's organization_id (for suporte users viewing other orgs)
+        const { data: companyData } = await supabase
+          .from('company_info')
+          .select('organization_id')
+          .eq('id', companyId)
+          .single();
+
+        const targetOrgId = companyData?.organization_id || orgId;
+
+        // Create auth user via edge function
+        const { data: fnData, error: fnError } = await supabase.functions.invoke('create-employee', {
+          body: {
+            email: currentAdmin.email,
+            password: currentAdmin.password,
+            full_name: currentAdmin.full_name,
+            role: 'admin',
+            organization_id: userRole === 'suporte' ? targetOrgId : undefined,
+            profileData: {
+              cpf: cleanCPF,
+              position: currentAdmin.position,
+            },
+          },
+        });
+
+        if (fnError) throw new Error(fnError.message || 'Erro ao criar usuário');
+        if (fnData?.error) throw new Error(fnData.error);
+
+        const newUserId = fnData?.user_id;
+
+        // Save to company_admins table
         const { data, error } = await supabase
           .from('company_admins')
-          .insert({ ...adminData, organization_id: caOrgData?.organization_id })
+          .insert({ 
+            ...adminData, 
+            organization_id: targetOrgId!,
+            user_id: newUserId || null,
+          })
           .select('id')
           .single();
 
@@ -193,7 +230,7 @@ const CompanyAdminsForm = ({ companyId }: CompanyAdminsFormProps) => {
         
         toast({
           title: 'Administrador cadastrado',
-          description: 'O administrador foi adicionado com sucesso. As credenciais de acesso serão enviadas por e-mail.',
+          description: 'O administrador foi criado com sucesso e já pode acessar o sistema.',
         });
       }
 
