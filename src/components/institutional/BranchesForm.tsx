@@ -5,7 +5,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Plus, Trash2, Building2, MapPin } from 'lucide-react';
+import { Loader2, Plus, Trash2, Building2, MapPin, Eye } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { validateCNPJ, formatCNPJ, formatPhone } from '@/utils/cnpjValidation';
 import {
   AlertDialog,
@@ -62,6 +68,7 @@ const BranchesForm = ({ companyId, hasBranches }: BranchesFormProps) => {
   const [cnpjError, setCnpjError] = useState('');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [branchToDelete, setBranchToDelete] = useState<number | null>(null);
+  const [viewingBranch, setViewingBranch] = useState<Branch | null>(null);
 
   useEffect(() => {
     const fetchBranches = async () => {
@@ -318,6 +325,14 @@ const BranchesForm = ({ companyId, hasBranches }: BranchesFormProps) => {
                   <Button
                     variant="outline"
                     size="sm"
+                    onClick={() => setViewingBranch(branch)}
+                  >
+                    <Eye className="h-4 w-4 mr-1" />
+                    Visualizar
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={() => handleEditBranch(index)}
                   >
                     Editar
@@ -522,6 +537,61 @@ const BranchesForm = ({ companyId, hasBranches }: BranchesFormProps) => {
           </div>
         </CardContent>
       </Card>
+
+      {/* View Branch Dialog */}
+      <Dialog open={!!viewingBranch} onOpenChange={(open) => !open && setViewingBranch(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Building2 className="h-5 w-5 text-primary" />
+              Dados da Filial
+            </DialogTitle>
+          </DialogHeader>
+          {viewingBranch && (
+            <div className="space-y-4 text-sm">
+              <div>
+                <p className="text-muted-foreground">CNPJ</p>
+                <p className="font-medium">{viewingBranch.cnpj}</p>
+              </div>
+              {(viewingBranch.address_street || viewingBranch.address_city) && (
+                <div>
+                  <p className="text-muted-foreground">Endereço</p>
+                  <p className="font-medium">
+                    {[
+                      viewingBranch.address_street,
+                      viewingBranch.address_number && `nº ${viewingBranch.address_number}`,
+                      viewingBranch.address_complement,
+                      viewingBranch.address_neighborhood,
+                    ].filter(Boolean).join(', ')}
+                  </p>
+                  <p className="font-medium">
+                    {[viewingBranch.address_city, viewingBranch.address_state].filter(Boolean).join(' - ')}
+                    {viewingBranch.address_cep && ` • CEP: ${viewingBranch.address_cep}`}
+                  </p>
+                </div>
+              )}
+              {viewingBranch.phone && (
+                <div>
+                  <p className="text-muted-foreground">Telefone</p>
+                  <p className="font-medium">{viewingBranch.phone}</p>
+                </div>
+              )}
+              {viewingBranch.whatsapp && (
+                <div>
+                  <p className="text-muted-foreground">WhatsApp</p>
+                  <p className="font-medium">{viewingBranch.whatsapp}</p>
+                </div>
+              )}
+              {viewingBranch.financial_email && (
+                <div>
+                  <p className="text-muted-foreground">E-mail Financeiro</p>
+                  <p className="font-medium">{viewingBranch.financial_email}</p>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
