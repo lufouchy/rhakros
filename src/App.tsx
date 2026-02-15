@@ -7,6 +7,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import AdminRoute from "@/components/auth/AdminRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
+import ResetPassword from "./pages/ResetPassword";
 import RequestsPage from "./pages/RequestsPage";
 import TimesheetPage from "./pages/TimesheetPage";
 import DocumentManagement from "./pages/DocumentManagement";
@@ -30,6 +31,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/requests" element={<RequestsPage />} />
             <Route path="/timesheet" element={<TimesheetPage />} />
             <Route path="/documents" element={<AdminRoute><DocumentManagement /></AdminRoute>} />
