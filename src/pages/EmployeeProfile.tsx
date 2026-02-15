@@ -13,8 +13,13 @@ import {
   Briefcase,
   Loader2,
   IdCard,
-  Clock
+  Clock,
+  KeyRound
 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useEffect, useState } from 'react';
@@ -50,9 +55,39 @@ interface WorkSchedule {
 
 const EmployeeProfile = () => {
   const { user, loading } = useAuth();
+  const { toast } = useToast();
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [workSchedule, setWorkSchedule] = useState<WorkSchedule | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+
+  const handleChangePassword = async () => {
+    if (newPassword.length < 6) {
+      toast({ variant: 'destructive', title: 'Senha muito curta', description: 'A senha deve ter pelo menos 6 caracteres.' });
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast({ variant: 'destructive', title: 'Senhas não conferem', description: 'A confirmação de senha deve ser igual à nova senha.' });
+      return;
+    }
+    setIsChangingPassword(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('update-password', {
+        body: { new_password: newPassword, is_self_update: true },
+      });
+      if (error) throw new Error(error.message);
+      if (data?.error) throw new Error(data.error);
+      toast({ title: 'Senha alterada!', description: 'Sua senha foi atualizada com sucesso.' });
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (error: any) {
+      toast({ variant: 'destructive', title: 'Erro ao alterar senha', description: error.message });
+    } finally {
+      setIsChangingPassword(false);
+    }
+  };
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -272,6 +307,51 @@ const EmployeeProfile = () => {
                 Nenhuma jornada de trabalho atribuída.
               </p>
             )}
+          </CardContent>
+        </Card>
+        {/* Change Password */}
+        <Card className="border-0 shadow-md">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <KeyRound className="h-5 w-5 text-primary" />
+              Alterar Senha de Acesso
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="new_password">Nova Senha</Label>
+              <Input
+                id="new_password"
+                type="password"
+                placeholder="Mínimo 6 caracteres"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirm_password">Confirmar Nova Senha</Label>
+              <Input
+                id="confirm_password"
+                type="password"
+                placeholder="Repita a nova senha"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+              />
+            </div>
+            <Button
+              onClick={handleChangePassword}
+              disabled={isChangingPassword || !newPassword || !confirmPassword}
+              className="w-full"
+            >
+              {isChangingPassword ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Alterando...
+                </>
+              ) : (
+                'Alterar Senha'
+              )}
+            </Button>
           </CardContent>
         </Card>
       </div>
