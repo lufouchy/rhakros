@@ -42,7 +42,7 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { UserPlus, Loader2, Search, Plus, Users, Pencil, Trash2, Filter, X, History, FileDown, FileSpreadsheet, FileText } from 'lucide-react';
+import { UserPlus, Loader2, Search, Plus, Users, Pencil, Trash2, Filter, X, History, FileDown, FileSpreadsheet, FileText, KeyRound } from 'lucide-react';
 import { exportToPDF, exportToExcel } from '@/utils/employeeExport';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -207,6 +207,8 @@ const EmployeeManagement = () => {
 
   const [form, setForm] = useState<EmployeeForm>(initialForm);
   const [editForm, setEditForm] = useState<EmployeeForm>(initialForm);
+  const [newPassword, setNewPassword] = useState('');
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
 
   const [newSchedule, setNewSchedule] = useState<NewScheduleForm>({
     name: '',
@@ -583,6 +585,7 @@ const EmployeeManagement = () => {
       specification: employee.specification || 'normal',
     });
     setEditOpen(true);
+    setNewPassword('');
   };
 
   const handleUpdate = async () => {
@@ -1358,6 +1361,67 @@ const EmployeeManagement = () => {
             </DialogHeader>
 
             {renderEmployeeForm(editForm, setEditForm, true)}
+
+            {/* Change Password Section */}
+            <div className="space-y-4 border-t pt-4 mt-4">
+              <h3 className="font-medium text-sm text-muted-foreground flex items-center gap-2">
+                <KeyRound className="h-4 w-4" />
+                Alterar Senha de Acesso
+              </h3>
+              <div className="space-y-2">
+                <Label htmlFor="edit_new_password">Nova Senha</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="edit_new_password"
+                    type="password"
+                    placeholder="Nova senha (mín. 6 caracteres)"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={isChangingPassword || !newPassword || newPassword.length < 6}
+                    onClick={async () => {
+                      if (!selectedEmployee) return;
+                      setIsChangingPassword(true);
+                      try {
+                        const { data, error } = await supabase.functions.invoke('update-password', {
+                          body: {
+                            target_user_id: selectedEmployee.user_id,
+                            new_password: newPassword,
+                          },
+                        });
+                        if (error) throw new Error(error.message);
+                        if (data?.error) throw new Error(data.error);
+                        toast({
+                          title: 'Senha alterada!',
+                          description: `A senha de ${selectedEmployee.full_name} foi atualizada.`,
+                        });
+                        setNewPassword('');
+                      } catch (error: any) {
+                        toast({
+                          variant: 'destructive',
+                          title: 'Erro ao alterar senha',
+                          description: error.message,
+                        });
+                      } finally {
+                        setIsChangingPassword(false);
+                      }
+                    }}
+                  >
+                    {isChangingPassword ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      'Alterar'
+                    )}
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Use este campo para redefinir a senha de acesso do colaborador.
+                </p>
+              </div>
+            </div>
 
             <Button onClick={handleUpdate} disabled={isLoading} className="w-full mt-4">
               {isLoading ? (

@@ -51,9 +51,9 @@ const SidebarLayout = ({ children }: SidebarLayoutProps) => {
       ]
     : [
         { icon: Home, label: 'Início', path: '/' },
+        { icon: Users, label: 'Meu Perfil', path: '/profile' },
         { icon: CalendarDays, label: 'Espelho do Ponto', path: '/timesheet' },
         { icon: FileText, label: 'Minhas Solicitações', path: '/requests' },
-        { icon: Users, label: 'Meu Perfil', path: '/profile' },
       ];
 
   const handleLogout = async () => {
