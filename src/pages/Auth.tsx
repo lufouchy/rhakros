@@ -89,8 +89,10 @@ const Auth = () => {
     e.preventDefault();
     setForgotLoading(true);
 
+    // Use the published app URL so the reset link always goes to Ponto Certo
+    const siteUrl = 'https://rhakros.lovable.app';
     const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
-      redirectTo: `${window.location.origin}/reset-password`,
+      redirectTo: `${siteUrl}/reset-password`,
     });
 
     if (error) {
