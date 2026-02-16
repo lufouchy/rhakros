@@ -17,6 +17,7 @@ import EmployeeManagement from "./pages/EmployeeManagement";
 import AdminSettings from "./pages/AdminSettings";
 import WorkSchedulesPage from "./pages/WorkSchedulesPage";
 import InstitutionalInfo from "./pages/InstitutionalInfo";
+import EmployeeVacation from "./pages/EmployeeVacation";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,6 +35,7 @@ const App = () => (
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/requests" element={<RequestsPage />} />
             <Route path="/timesheet" element={<TimesheetPage />} />
+            <Route path="/my-vacations" element={<EmployeeVacation />} />
             <Route path="/documents" element={<AdminRoute><DocumentManagement /></AdminRoute>} />
             <Route path="/vacations" element={<AdminRoute><VacationManagement /></AdminRoute>} />
             <Route path="/profile" element={<EmployeeProfile />} />

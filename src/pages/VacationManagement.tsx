@@ -432,7 +432,14 @@ const VacationManagement = () => {
                         <TableCell>
                           {format(parseISO(vacation.start_date), 'dd/MM/yyyy')} - {format(parseISO(vacation.end_date), 'dd/MM/yyyy')}
                         </TableCell>
-                        <TableCell>{vacation.days_count} dias</TableCell>
+                        <TableCell>
+                          {vacation.days_count} dias
+                          {(vacation as any).sell_days > 0 && (
+                            <span className="text-xs text-muted-foreground block">
+                              + {(vacation as any).sell_days} vendidos
+                            </span>
+                          )}
+                        </TableCell>
                         <TableCell>
                           <Badge variant={statusConfig[vacation.status].variant} className="gap-1">
                             <StatusIcon className="h-3 w-3" />

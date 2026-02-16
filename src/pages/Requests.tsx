@@ -32,21 +32,18 @@ import {
   XCircle,
   AlertCircle,
   Loader2,
-  Calendar as CalendarIcon,
   Stethoscope,
   Briefcase,
-  Palmtree,
   Paperclip,
   Download,
   X,
 } from 'lucide-react';
-import { format, differenceInDays } from 'date-fns';
+import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import type { DateRange } from 'react-day-picker';
 
 type RecordType = 'entry' | 'lunch_out' | 'lunch_in' | 'exit';
 type RequestStatus = 'pending' | 'approved' | 'rejected';
-type RequestType = 'adjustment' | 'medical_consultation' | 'medical_leave' | 'justified_absence' | 'vacation';
+type RequestType = 'adjustment' | 'medical_consultation' | 'medical_leave' | 'justified_absence';
 
 interface AdjustmentRequest {
   id: string;
@@ -77,7 +74,6 @@ const requestTypeLabels: Record<RequestType, { label: string; icon: typeof Clock
   medical_consultation: { label: 'Atestado Médico - Consulta', icon: Stethoscope },
   medical_leave: { label: 'Atestado Médico - Afastamento', icon: Stethoscope },
   justified_absence: { label: 'Ausência Justificada', icon: Briefcase },
-  vacation: { label: 'Solicitação de Férias', icon: Palmtree },
 };
 
 const statusConfig: Record<RequestStatus, { label: string; variant: 'default' | 'secondary' | 'destructive'; icon: typeof Clock }> = {
@@ -103,7 +99,6 @@ const Requests = () => {
   const [endTime, setEndTime] = useState('');
   const [absenceDates, setAbsenceDates] = useState<Date[]>([]);
   const [absenceReason, setAbsenceReason] = useState('');
-  const [vacationRange, setVacationRange] = useState<DateRange | undefined>();
   const [attachmentFile, setAttachmentFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -158,7 +153,6 @@ const Requests = () => {
     setEndTime('');
     setAbsenceDates([]);
     setAbsenceReason('');
-    setVacationRange(undefined);
     setAttachmentFile(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
@@ -207,57 +201,10 @@ const Requests = () => {
         });
         return;
       }
-    } else if (requestType === 'vacation') {
-      if (!vacationRange?.from || !vacationRange?.to) {
-        toast({
-          variant: 'destructive',
-          title: 'Campos obrigatórios',
-          description: 'Selecione o período de férias.',
-        });
-        return;
-      }
     }
 
     setSubmitting(true);
 
-    // Handle vacation request separately
-    if (requestType === 'vacation') {
-      const daysCount = differenceInDays(vacationRange!.to!, vacationRange!.from!) + 1;
-      
-      const { data: profileData } = await supabase.from('profiles').select('organization_id').eq('user_id', user?.id).single();
-      const { error } = await supabase
-        .from('vacation_requests')
-        .insert({
-          user_id: user?.id,
-          vacation_type: 'individual',
-          start_date: format(vacationRange!.from!, 'yyyy-MM-dd'),
-          end_date: format(vacationRange!.to!, 'yyyy-MM-dd'),
-          days_count: daysCount,
-          reason: reason || null,
-          status: 'pending',
-          created_by: user?.id,
-          is_admin_created: false,
-          organization_id: profileData?.organization_id,
-        });
-
-      if (error) {
-        toast({
-          variant: 'destructive',
-          title: 'Erro ao solicitar férias',
-          description: error.message,
-        });
-      } else {
-      toast({
-          title: 'Solicitação de férias enviada!',
-          description: `Aguarde a aprovação para ${daysCount} dias de férias.`,
-        });
-        setShowNewDialog(false);
-        resetForm();
-        fetchRequests();
-      }
-      setSubmitting(false);
-      return;
-    }
 
     // Regular adjustment requests
     const attachmentPath = await uploadAttachment();
@@ -393,12 +340,6 @@ const Requests = () => {
                           Ajuste de Ponto
                         </div>
                       </SelectItem>
-                      <SelectItem value="vacation">
-                        <div className="flex items-center gap-2">
-                          <Palmtree className="h-4 w-4" />
-                          Solicitação de Férias
-                        </div>
-                      </SelectItem>
                       <SelectItem value="medical_consultation">
                         <div className="flex items-center gap-2">
                           <Stethoscope className="h-4 w-4" />
@@ -463,38 +404,6 @@ const Requests = () => {
                   </>
                 )}
 
-                {/* Vacation fields */}
-                {requestType === 'vacation' && (
-                  <>
-                    <div className="space-y-2">
-                      <Label>Período das Férias</Label>
-                      <div className="border rounded-lg p-3">
-                        <Calendar
-                          mode="range"
-                          selected={vacationRange}
-                          onSelect={setVacationRange}
-                          locale={ptBR}
-                          numberOfMonths={1}
-                        />
-                      </div>
-                      {vacationRange?.from && vacationRange?.to && (
-                        <p className="text-sm text-muted-foreground">
-                          {differenceInDays(vacationRange.to, vacationRange.from) + 1} dias selecionados
-                        </p>
-                      )}
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label>Observação (opcional)</Label>
-                      <Textarea
-                        placeholder="Adicione uma observação..."
-                        value={reason}
-                        onChange={(e) => setReason(e.target.value)}
-                        rows={2}
-                      />
-                    </div>
-                  </>
-                )}
 
                 {/* Medical consultation and justified absence fields */}
                 {(requestType === 'medical_consultation' || requestType === 'justified_absence') && (
@@ -566,8 +475,8 @@ const Requests = () => {
                   </>
                 )}
 
-                {/* Attachment field - available for all non-vacation types */}
-                {requestType !== 'vacation' && (
+                {/* Attachment field */}
+                {(
                   <div className="space-y-2">
                     <Label>Anexar Documento (opcional)</Label>
                     <div className="flex items-center gap-2">
