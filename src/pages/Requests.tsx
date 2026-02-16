@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -36,6 +36,9 @@ import {
   Stethoscope,
   Briefcase,
   Palmtree,
+  Paperclip,
+  Download,
+  X,
 } from 'lucide-react';
 import { format, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -59,6 +62,7 @@ interface AdjustmentRequest {
   end_time?: string;
   absence_dates?: string[];
   absence_reason?: string;
+  attachment_url?: string | null;
 }
 
 const recordTypeLabels: Record<RecordType, string> = {
@@ -100,6 +104,8 @@ const Requests = () => {
   const [absenceDates, setAbsenceDates] = useState<Date[]>([]);
   const [absenceReason, setAbsenceReason] = useState('');
   const [vacationRange, setVacationRange] = useState<DateRange | undefined>();
+  const [attachmentFile, setAttachmentFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const isAdmin = userRole === 'admin' || userRole === 'suporte';
 
@@ -153,6 +159,23 @@ const Requests = () => {
     setAbsenceDates([]);
     setAbsenceReason('');
     setVacationRange(undefined);
+    setAttachmentFile(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const uploadAttachment = async (): Promise<string | null> => {
+    if (!attachmentFile || !user?.id) return null;
+    const fileExt = attachmentFile.name.split('.').pop();
+    const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+    const { error } = await supabase.storage
+      .from('request-attachments')
+      .upload(fileName, attachmentFile);
+    if (error) {
+      console.error('Upload error:', error);
+      toast({ variant: 'destructive', title: 'Erro ao enviar anexo', description: error.message });
+      return null;
+    }
+    return fileName;
   };
 
   const handleCreateRequest = async () => {
@@ -237,6 +260,7 @@ const Requests = () => {
     }
 
     // Regular adjustment requests
+    const attachmentPath = await uploadAttachment();
     const { data: adjProfileData } = await supabase.from('profiles').select('organization_id').eq('user_id', user?.id).single();
     const insertData: any = {
       user_id: user?.id,
@@ -248,6 +272,7 @@ const Requests = () => {
       reason: reason,
       status: 'pending',
       organization_id: adjProfileData?.organization_id,
+      attachment_url: attachmentPath,
     };
 
     if (requestType === 'medical_consultation' || requestType === 'justified_absence') {
@@ -541,6 +566,41 @@ const Requests = () => {
                   </>
                 )}
 
+                {/* Attachment field - available for all non-vacation types */}
+                {requestType !== 'vacation' && (
+                  <div className="space-y-2">
+                    <Label>Anexar Documento (opcional)</Label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        ref={fileInputRef}
+                        type="file"
+                        accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                        onChange={(e) => setAttachmentFile(e.target.files?.[0] || null)}
+                        className="flex-1"
+                      />
+                      {attachmentFile && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            setAttachmentFile(null);
+                            if (fileInputRef.current) fileInputRef.current.value = '';
+                          }}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                    {attachmentFile && (
+                      <p className="text-xs text-muted-foreground flex items-center gap-1">
+                        <Paperclip className="h-3 w-3" />
+                        {attachmentFile.name}
+                      </p>
+                    )}
+                  </div>
+                )}
+
                 <Button onClick={handleCreateRequest} className="w-full" disabled={submitting}>
                   {submitting ? (
                     <>
@@ -638,6 +698,28 @@ const Requests = () => {
                         <p className="text-muted-foreground">Motivo</p>
                         <p className="text-foreground">{request.reason}</p>
                       </div>
+
+                      {request.attachment_url && (
+                        <div className="text-sm">
+                          <p className="text-muted-foreground">Documento Anexado</p>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="gap-1.5 mt-1"
+                            onClick={async () => {
+                              const { data } = await supabase.storage
+                                .from('request-attachments')
+                                .createSignedUrl(request.attachment_url!, 3600);
+                              if (data?.signedUrl) {
+                                window.open(data.signedUrl, '_blank');
+                              }
+                            }}
+                          >
+                            <Download className="h-3.5 w-3.5" />
+                            Visualizar / Baixar
+                          </Button>
+                        </div>
+                      )}
 
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
                         <Clock className="h-3 w-3" />
