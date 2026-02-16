@@ -941,6 +941,7 @@ export type Database = {
           reason: string | null
           reviewed_at: string | null
           reviewed_by: string | null
+          sell_days: number | null
           start_date: string
           status: Database["public"]["Enums"]["adjustment_status"]
           updated_at: string
@@ -958,6 +959,7 @@ export type Database = {
           reason?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
+          sell_days?: number | null
           start_date: string
           status?: Database["public"]["Enums"]["adjustment_status"]
           updated_at?: string
@@ -975,6 +977,7 @@ export type Database = {
           reason?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
+          sell_days?: number | null
           start_date?: string
           status?: Database["public"]["Enums"]["adjustment_status"]
           updated_at?: string
