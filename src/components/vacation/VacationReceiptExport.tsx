@@ -165,7 +165,10 @@ const VacationReceiptExport = ({
         if (error) throw error;
       } else {
         // Create new document
-        const { data: vrOrgData } = await supabase.from('profiles').select('organization_id').eq('user_id', userId).single();
+        const { data: vrOrgData, error: orgError } = await supabase.from('profiles').select('organization_id').eq('user_id', userId).single();
+        if (orgError) throw new Error('Erro ao buscar dados do perfil: ' + orgError.message);
+        if (!vrOrgData?.organization_id) throw new Error('Organização não encontrada no perfil.');
+        
         const { error } = await supabase
           .from('documents')
           .insert({
@@ -176,7 +179,7 @@ const VacationReceiptExport = ({
             signature_data: signatureData,
             signed_at: signedAt,
             status: 'signed',
-            organization_id: vrOrgData?.organization_id,
+            organization_id: vrOrgData.organization_id,
           });
 
         if (error) throw error;

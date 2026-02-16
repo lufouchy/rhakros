@@ -70,9 +70,16 @@ const VacationReceiptExportAdmin = ({
       ]);
 
       if (profileRes.error) throw profileRes.error;
+      if (docRes.error) {
+        console.error('Error fetching document signature:', docRes.error);
+      }
 
       const freshSignatureData = docRes.data?.signature_data || signedDocument.signature_data;
       const freshSignedAt = docRes.data?.signed_at || signedDocument.signed_at;
+
+      if (!freshSignatureData) {
+        throw new Error('Assinatura do colaborador não encontrada. O colaborador precisa assinar o recibo primeiro.');
+      }
 
       const pdf = await generateVacationReceiptPDF({
         companyInfo: companyRes.data,

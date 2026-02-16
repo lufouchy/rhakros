@@ -234,9 +234,13 @@ export const generateVacationReceiptPDF = async ({
   doc.text('Assinatura do Empregador', firstSignatureX + signatureWidth / 2, currentY + 5, { align: 'center' });
 
   // Second signature line - Employee (with digital signature if available)
-  if (signatureData) {
+  if (signatureData && signatureData.startsWith('data:image/')) {
     // Add the digital signature image
-    doc.addImage(signatureData, 'PNG', secondSignatureX, currentY - 25, signatureWidth, 22);
+    try {
+      doc.addImage(signatureData, 'PNG', secondSignatureX, currentY - 25, signatureWidth, 22);
+    } catch (err) {
+      console.error('Error adding signature image to PDF:', err);
+    }
     doc.line(secondSignatureX, currentY, secondSignatureX + signatureWidth, currentY);
     doc.text('Assinatura do Empregado(a)', secondSignatureX + signatureWidth / 2, currentY + 5, { align: 'center' });
     
