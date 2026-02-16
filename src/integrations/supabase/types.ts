@@ -19,6 +19,7 @@ export type Database = {
           absence_dates: string[] | null
           absence_reason: string | null
           absence_type: Database["public"]["Enums"]["absence_type"] | null
+          attachment_url: string | null
           created_at: string
           end_time: string | null
           id: string
@@ -37,6 +38,7 @@ export type Database = {
           absence_dates?: string[] | null
           absence_reason?: string | null
           absence_type?: Database["public"]["Enums"]["absence_type"] | null
+          attachment_url?: string | null
           created_at?: string
           end_time?: string | null
           id?: string
@@ -55,6 +57,7 @@ export type Database = {
           absence_dates?: string[] | null
           absence_reason?: string | null
           absence_type?: Database["public"]["Enums"]["absence_type"] | null
+          attachment_url?: string | null
           created_at?: string
           end_time?: string | null
           id?: string
