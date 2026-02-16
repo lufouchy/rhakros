@@ -280,7 +280,7 @@ const VacationManagement = () => {
                 Registrar Férias
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-lg max-h-[90vh] flex flex-col">
+            <DialogContent className="max-w-lg max-h-[85vh] flex flex-col overflow-hidden">
               <DialogHeader>
                 <DialogTitle>Registrar Férias</DialogTitle>
                 <DialogDescription>
@@ -288,7 +288,7 @@ const VacationManagement = () => {
                 </DialogDescription>
               </DialogHeader>
 
-              <ScrollArea className="flex-1 pr-4">
+              <ScrollArea className="flex-1 overflow-y-auto pr-4" style={{ maxHeight: 'calc(85vh - 120px)' }}>
                 <div className="space-y-4 pt-4">
                 <div className="space-y-2">
                   <Label>Tipo de Férias</Label>
