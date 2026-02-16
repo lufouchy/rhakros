@@ -35,6 +35,7 @@ import {
 import { format, differenceInDays, parseISO, addMonths, addYears, isBefore, isAfter } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import type { DateRange } from 'react-day-picker';
+import VacationReceiptExport from '@/components/vacation/VacationReceiptExport';
 
 type VacationStatus = 'pending' | 'approved' | 'rejected';
 
@@ -196,7 +197,15 @@ const EmployeeVacation = () => {
     return null;
   };
 
+  // Check if employee has at least one complete acquisition period
+  const hasCompletePeriod = acquisitivePeriods.some(p => !isAfter(p.end, new Date()));
+
   const handleCreateVacation = async () => {
+    if (!hasCompletePeriod) {
+      toast({ variant: 'destructive', title: 'Período aquisitivo incompleto', description: 'Você ainda não completou 12 meses de trabalho. As férias só podem ser solicitadas após completar o período aquisitivo.' });
+      return;
+    }
+
     if (!dateRange?.from || !dateRange?.to) {
       toast({ variant: 'destructive', title: 'Campo obrigatório', description: 'Selecione o período de férias.' });
       return;
@@ -313,7 +322,7 @@ const EmployeeVacation = () => {
           </div>
           <Dialog open={showDialog} onOpenChange={(open) => { setShowDialog(open); if (!open) resetForm(); }}>
             <DialogTrigger asChild>
-              <Button className="gap-2">
+              <Button className="gap-2" disabled={!hasCompletePeriod && !isLoading}>
                 <Plus className="h-4 w-4" />
                 Solicitar Férias
               </Button>
@@ -480,6 +489,16 @@ const EmployeeVacation = () => {
           </Alert>
         )}
 
+        {hireDate && !isLoading && !hasCompletePeriod && (
+          <Alert>
+            <Clock className="h-4 w-4" />
+            <AlertTitle>Período aquisitivo em andamento</AlertTitle>
+            <AlertDescription>
+              Você ainda não completou 12 meses de trabalho. As férias só poderão ser solicitadas após completar o período aquisitivo.
+            </AlertDescription>
+          </Alert>
+        )}
+
         {/* Vacation history */}
         <Card className="border-0 shadow-md">
           <CardHeader>
@@ -523,10 +542,22 @@ const EmployeeVacation = () => {
                           Solicitado em {format(parseISO(vac.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
                         </p>
                       </div>
-                      <Badge variant={statusConfig[vac.status].variant} className="gap-1 mt-2 sm:mt-0 w-fit">
-                        <StatusIcon className="h-3 w-3" />
-                        {statusConfig[vac.status].label}
-                      </Badge>
+                      <div className="flex items-center gap-2 mt-2 sm:mt-0">
+                        <Badge variant={statusConfig[vac.status].variant} className="gap-1 w-fit">
+                          <StatusIcon className="h-3 w-3" />
+                          {statusConfig[vac.status].label}
+                        </Badge>
+                        {vac.status === 'approved' && (
+                          <VacationReceiptExport
+                            vacationId={vac.id}
+                            userId={vac.user_id}
+                            userName={profile?.full_name || 'Colaborador'}
+                            startDate={vac.start_date}
+                            endDate={vac.end_date}
+                            daysCount={vac.days_count}
+                          />
+                        )}
+                      </div>
                     </div>
                   );
                 })}
