@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { FileText, Loader2, Download, Clock } from 'lucide-react';
+import { Loader2, Download, Clock } from 'lucide-react';
 import { generateVacationReceiptPDF, downloadVacationReceiptPDF } from './VacationReceiptPDF';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -59,12 +59,20 @@ const VacationReceiptExportAdmin = ({
     setIsLoading(true);
 
     try {
-      const [profileRes, companyRes] = await Promise.all([
+      // Fetch signature data fresh from DB to ensure it's always included
+      const [profileRes, companyRes, docRes] = await Promise.all([
         supabase.from('profiles').select('full_name, cpf').eq('user_id', userId).single(),
         supabase.from('company_info').select('logo_url, cnpj, nome_fantasia, address_city, address_state').limit(1).single(),
+        supabase.from('documents')
+          .select('signature_data, signed_at')
+          .eq('id', signedDocument.id)
+          .single(),
       ]);
 
       if (profileRes.error) throw profileRes.error;
+
+      const freshSignatureData = docRes.data?.signature_data || signedDocument.signature_data;
+      const freshSignedAt = docRes.data?.signed_at || signedDocument.signed_at;
 
       const pdf = await generateVacationReceiptPDF({
         companyInfo: companyRes.data,
@@ -73,8 +81,8 @@ const VacationReceiptExportAdmin = ({
           cpf: profileRes.data.cpf,
         },
         vacationData: { start_date: startDate, end_date: endDate, days_count: daysCount },
-        signatureData: signedDocument.signature_data,
-        signedAt: signedDocument.signed_at,
+        signatureData: freshSignatureData,
+        signedAt: freshSignedAt,
       });
 
       const filename = `recibo-ferias-assinado-${userName.toLowerCase().replace(/\s+/g, '-')}-${format(new Date(startDate), 'yyyy-MM')}.pdf`;
