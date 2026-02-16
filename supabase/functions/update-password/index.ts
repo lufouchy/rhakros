@@ -43,6 +43,8 @@ Deno.serve(async (req) => {
 
     const body = await req.json()
     const { target_user_id, new_password, is_self_update } = body
+    
+    console.log('Request body:', JSON.stringify({ target_user_id, has_password: !!new_password, password_length: new_password?.length, is_self_update }))
 
     if (!new_password || new_password.length < 6) {
       return new Response(
@@ -117,8 +119,11 @@ Deno.serve(async (req) => {
     })
 
     if (updateError) {
+      console.error('Update error for user', target_user_id, ':', updateError.message)
       throw updateError
     }
+
+    console.log('Password successfully updated for user:', target_user_id)
 
     return new Response(
       JSON.stringify({ success: true }),
