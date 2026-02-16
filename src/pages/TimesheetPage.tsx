@@ -165,7 +165,11 @@ const TimesheetPage = () => {
     const mStart = startOfMonth(date);
     const mEnd = endOfMonth(date);
     const today = new Date();
-    const lastDay = today < mEnd ? today : mEnd;
+    // Exclude current day - only check up to yesterday
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const lastDay = yesterday < mStart ? null : (yesterday < mEnd ? yesterday : mEnd);
+    if (!lastDay) return [];
     const allDays = eachDayOfInterval({ start: mStart, end: lastDay });
     
     const daysWithIssues: string[] = [];
