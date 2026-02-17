@@ -6,8 +6,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Clock, Mail, Lock, Building2, Loader2 } from 'lucide-react';
+import { Mail, Lock, Building2, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import logoKairos from '@/assets/logo-kairos.png';
 
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -118,10 +119,7 @@ const Auth = () => {
       <div className="w-full max-w-md animate-fade-in">
         {/* Logo and branding */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary mb-4">
-            <Clock className="h-8 w-8 text-primary-foreground" />
-          </div>
-          <h1 className="text-2xl font-bold text-foreground">Controle de Ponto</h1>
+          <img src={logoKairos} alt="Kairos RH" className="h-24 mx-auto mb-2" />
           <p className="text-muted-foreground mt-1">Gestão inteligente da jornada de trabalho</p>
         </div>
 
