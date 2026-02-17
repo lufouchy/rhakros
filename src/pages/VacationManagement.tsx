@@ -49,6 +49,7 @@ import { ptBR } from 'date-fns/locale';
 import type { DateRange } from 'react-day-picker';
 import VacationReceiptExport from '@/components/vacation/VacationReceiptExport';
 import VacationReceiptExportAdmin from '@/components/vacation/VacationReceiptExportAdmin';
+import VacationHistoryPanel from '@/components/admin/VacationHistoryPanel';
 import VacationEditDialog from '@/components/vacation/VacationEditDialog';
 import VacationCancelDialog from '@/components/vacation/VacationCancelDialog';
 
@@ -505,6 +506,8 @@ const VacationManagement = () => {
             )}
           </CardContent>
         </Card>
+
+        <VacationHistoryPanel />
       </div>
     </SidebarLayout>
   );
