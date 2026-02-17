@@ -126,57 +126,62 @@ const EmployeeVacation = () => {
     const periods: AcquisitivePeriod[] = [];
     const today = new Date();
     
-    // Generate acquisition periods from hire date
+    // Generate all acquisition periods first
+    const allPeriods: { start: Date; end: Date; concessiveStart: Date; concessiveEnd: Date }[] = [];
     let periodStart = new Date(hd);
     for (let i = 0; i < 10; i++) {
       const periodEnd = addYears(periodStart, 1);
-      // Only show periods that have started
       if (isAfter(periodStart, today)) break;
       
       const concessiveStart = periodEnd;
       const concessiveEnd = addMonths(concessiveStart, 12);
+      allPeriods.push({ start: periodStart, end: periodEnd, concessiveStart, concessiveEnd });
+      periodStart = periodEnd;
+    }
 
-      // Calculate used days in this period
-      const periodVacs = vacs.filter(v => {
-        if (v.status === 'rejected') return false;
-        const vStart = parseISO(v.start_date);
-        // Vacation belongs to the acquisition period whose concessive period it falls in
-        return !isBefore(vStart, concessiveStart) && isBefore(vStart, concessiveEnd)
-          || (!isBefore(vStart, periodStart) && isBefore(vStart, periodEnd));
-      });
+    // Filter valid (non-rejected) vacations
+    const validVacs = vacs.filter(v => v.status !== 'rejected');
 
-      // Better approach: count vacations whose start falls within the concessive window of this period
-      const approvedVacs = vacs.filter(v => {
-        if (v.status === 'rejected') return false;
-        const vStart = parseISO(v.start_date);
-        return !isBefore(vStart, periodStart) && isBefore(vStart, concessiveEnd);
-      });
+    // Assign each vacation to exactly ONE period (the earliest matching)
+    const assignedVacs = new Map<number, VacationRequest[]>();
+    allPeriods.forEach((_, idx) => assignedVacs.set(idx, []));
 
-      const usedDays = approvedVacs.reduce((sum, v) => sum + v.days_count, 0);
-      const soldDays = approvedVacs.reduce((sum, v) => sum + (v.sell_days || 0), 0);
+    for (const vac of validVacs) {
+      const vStart = parseISO(vac.start_date);
+      // Find the earliest period whose concessive window covers the vacation
+      for (let i = 0; i < allPeriods.length; i++) {
+        const p = allPeriods[i];
+        // Vacation belongs to this period if it falls within periodStart -> concessiveEnd
+        if (!isBefore(vStart, p.start) && isBefore(vStart, p.concessiveEnd)) {
+          assignedVacs.get(i)!.push(vac);
+          break; // Only assign to one period
+        }
+      }
+    }
+
+    // Build period objects
+    for (let i = 0; i < allPeriods.length; i++) {
+      const p = allPeriods[i];
+      const periodVacs = assignedVacs.get(i) || [];
+      const usedDays = periodVacs.reduce((sum, v) => sum + v.days_count, 0);
+      const soldDays = periodVacs.reduce((sum, v) => sum + (v.sell_days || 0), 0);
       const remainingDays = 30 - usedDays - soldDays;
+      const periodComplete = !isAfter(p.end, today);
+      const isOverdue = periodComplete && isAfter(today, addMonths(p.concessiveStart, 6)) && usedDays === 0 && soldDays === 0;
 
-      // Period is complete (12 months worked)
-      const periodComplete = !isAfter(periodEnd, today);
-      
-      // Check if overdue: concessive period ending and no vacation taken
-      const isOverdue = periodComplete && isAfter(today, addMonths(concessiveStart, 6)) && usedDays === 0 && soldDays === 0;
-
-      if (periodComplete || isBefore(periodStart, today)) {
+      if (periodComplete || isBefore(p.start, today)) {
         periods.push({
-          start: periodStart,
-          end: periodEnd,
-          concessiveStart,
-          concessiveEnd,
-          label: `${format(periodStart, 'dd/MM/yyyy')} - ${format(periodEnd, 'dd/MM/yyyy')}`,
+          start: p.start,
+          end: p.end,
+          concessiveStart: p.concessiveStart,
+          concessiveEnd: p.concessiveEnd,
+          label: `${format(p.start, 'dd/MM/yyyy')} - ${format(p.end, 'dd/MM/yyyy')}`,
           usedDays,
           soldDays,
           remainingDays: Math.max(0, remainingDays),
           isOverdue,
         });
       }
-
-      periodStart = periodEnd;
     }
 
     setAcquisitivePeriods(periods);
