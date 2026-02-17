@@ -38,6 +38,12 @@ import {
   Download,
   X,
   CalendarDays,
+  Baby,
+  UserPlus,
+  AlertTriangle,
+  ShieldAlert,
+  Ban,
+  ClipboardPlus,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -45,6 +51,7 @@ import { ptBR } from 'date-fns/locale';
 type RecordType = 'entry' | 'lunch_out' | 'lunch_in' | 'exit';
 type RequestStatus = 'pending' | 'approved' | 'rejected';
 type RequestType = 'adjustment' | 'medical_consultation' | 'medical_leave' | 'justified_absence' | 'day_off' | 'bereavement_leave';
+type AdminRecordType = 'maternity_leave' | 'paternity_leave' | 'unjustified_absence' | 'work_accident' | 'suspension';
 
 interface AdjustmentRequest {
   id: string;
@@ -68,6 +75,14 @@ const recordTypeLabels: Record<RecordType, string> = {
   lunch_out: 'Saída Almoço',
   lunch_in: 'Volta Almoço',
   exit: 'Saída',
+};
+
+const adminRecordTypeLabels: Record<AdminRecordType, { label: string; icon: typeof Clock }> = {
+  maternity_leave: { label: 'Licença Maternidade', icon: Baby },
+  paternity_leave: { label: 'Licença Paternidade', icon: UserPlus },
+  unjustified_absence: { label: 'Ausência Não Justificada (Falta)', icon: Ban },
+  work_accident: { label: 'Acidente de Trabalho', icon: AlertTriangle },
+  suspension: { label: 'Suspensão (Punitiva)', icon: ShieldAlert },
 };
 
 const requestTypeLabels: Record<RequestType, { label: string; icon: typeof Clock }> = {
@@ -105,11 +120,29 @@ const Requests = () => {
   const [attachmentFile, setAttachmentFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Admin record form state
+  const [showAdminRecordDialog, setShowAdminRecordDialog] = useState(false);
+  const [adminRecordType, setAdminRecordType] = useState<AdminRecordType>('maternity_leave');
+  const [adminRecordDates, setAdminRecordDates] = useState<Date[]>([]);
+  const [adminRecordReason, setAdminRecordReason] = useState('');
+  const [adminRecordSubmitting, setAdminRecordSubmitting] = useState(false);
+  const [adminEmployees, setAdminEmployees] = useState<{ user_id: string; full_name: string }[]>([]);
+  const [adminSelectedEmployee, setAdminSelectedEmployee] = useState('');
+
   const isAdmin = userRole === 'admin' || userRole === 'suporte';
 
   useEffect(() => {
     fetchRequests();
+    if (isAdmin) fetchEmployees();
   }, [user, isAdmin]);
+
+  const fetchEmployees = async () => {
+    const { data } = await supabase
+      .from('profiles')
+      .select('user_id, full_name')
+      .order('full_name');
+    if (data) setAdminEmployees(data);
+  };
 
   const fetchRequests = async () => {
     setLoading(true);
@@ -158,6 +191,59 @@ const Requests = () => {
     setAbsenceReason('');
     setAttachmentFile(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const resetAdminForm = () => {
+    setAdminRecordType('maternity_leave');
+    setAdminRecordDates([]);
+    setAdminRecordReason('');
+    setAdminSelectedEmployee('');
+  };
+
+  const handleCreateAdminRecord = async () => {
+    if (!adminSelectedEmployee) {
+      toast({ variant: 'destructive', title: 'Selecione um colaborador' });
+      return;
+    }
+    if (adminRecordDates.length === 0) {
+      toast({ variant: 'destructive', title: 'Campos obrigatórios', description: 'Selecione o(s) dia(s) no calendário.' });
+      return;
+    }
+
+    setAdminRecordSubmitting(true);
+
+    const { data: profileData } = await supabase
+      .from('profiles')
+      .select('organization_id')
+      .eq('user_id', adminSelectedEmployee)
+      .single();
+
+    const { error } = await supabase
+      .from('adjustment_requests')
+      .insert({
+        user_id: adminSelectedEmployee,
+        request_type: adminRecordType,
+        requested_time: new Date().toISOString(),
+        record_type: 'entry' as RecordType,
+        reason: adminRecordReason || adminRecordTypeLabels[adminRecordType].label,
+        status: 'approved',
+        organization_id: profileData?.organization_id,
+        absence_dates: adminRecordDates.map(d => format(d, 'yyyy-MM-dd')),
+        absence_type: 'justified_absence',
+        reviewed_by: user?.id,
+        reviewed_at: new Date().toISOString(),
+      });
+
+    if (error) {
+      toast({ variant: 'destructive', title: 'Erro ao incluir registro', description: error.message });
+    } else {
+      toast({ title: 'Registro incluído!', description: 'O registro foi salvo com sucesso.' });
+      setShowAdminRecordDialog(false);
+      resetAdminForm();
+      fetchRequests();
+    }
+
+    setAdminRecordSubmitting(false);
   };
 
   const uploadAttachment = async (): Promise<string | null> => {
@@ -300,7 +386,7 @@ const Requests = () => {
   };
 
   const getRequestTypeInfo = (type: string) => {
-    return requestTypeLabels[type as RequestType] || { label: type, icon: FileText };
+    return requestTypeLabels[type as RequestType] || adminRecordTypeLabels[type as AdminRecordType] || { label: type, icon: FileText };
   };
 
   if (loading) {
@@ -316,11 +402,11 @@ const Requests = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground">
-            {isAdmin ? 'Solicitações de Ajuste' : 'Minhas Solicitações'}
+            {isAdmin ? 'Ajuste de Ponto' : 'Minhas Solicitações'}
           </h1>
           <p className="text-muted-foreground">
             {isAdmin 
-              ? 'Gerencie as solicitações dos colaboradores'
+              ? 'Gerencie as solicitações dos colaboradores e inclua registros'
               : 'Solicite ajustes de ponto, férias e folgas'}
           </p>
         </div>
@@ -552,6 +638,107 @@ const Requests = () => {
               </div>
             </DialogContent>
           </Dialog>
+        )}
+
+        {isAdmin && (
+          <div className="flex flex-col items-end gap-1">
+            <Dialog open={showAdminRecordDialog} onOpenChange={(open) => { setShowAdminRecordDialog(open); if (!open) resetAdminForm(); }}>
+              <DialogTrigger asChild>
+                <Button className="gap-2">
+                  <ClipboardPlus className="h-4 w-4" />
+                  Incluir Registro
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Incluir Registro</DialogTitle>
+                  <DialogDescription>
+                    Inclua registro de ausências não justificadas, licenças e afastamentos.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 pt-4">
+                  <div className="space-y-2">
+                    <Label>Colaborador</Label>
+                    <Select value={adminSelectedEmployee} onValueChange={setAdminSelectedEmployee}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o colaborador" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {adminEmployees.map((emp) => (
+                          <SelectItem key={emp.user_id} value={emp.user_id}>
+                            {emp.full_name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Tipo de Registro</Label>
+                    <Select value={adminRecordType} onValueChange={(v) => setAdminRecordType(v as AdminRecordType)}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {(Object.entries(adminRecordTypeLabels) as [AdminRecordType, { label: string; icon: typeof Clock }][]).map(([key, { label, icon: Icon }]) => (
+                          <SelectItem key={key} value={key}>
+                            <div className="flex items-center gap-2">
+                              <Icon className="h-4 w-4" />
+                              {label}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>
+                      {adminRecordType === 'unjustified_absence' ? 'Dia(s) de Falta' : 'Período'}
+                    </Label>
+                    <div className="border rounded-lg p-3">
+                      <Calendar
+                        mode="multiple"
+                        selected={adminRecordDates}
+                        onSelect={(dates) => setAdminRecordDates(dates || [])}
+                        locale={ptBR}
+                        className="pointer-events-auto"
+                      />
+                    </div>
+                    {adminRecordDates.length > 0 && (
+                      <p className="text-sm text-muted-foreground">
+                        {adminRecordDates.length} dia(s) selecionado(s)
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Observações (opcional)</Label>
+                    <Textarea
+                      placeholder="Adicione observações sobre o registro..."
+                      value={adminRecordReason}
+                      onChange={(e) => setAdminRecordReason(e.target.value)}
+                      rows={3}
+                    />
+                  </div>
+
+                  <Button onClick={handleCreateAdminRecord} className="w-full" disabled={adminRecordSubmitting}>
+                    {adminRecordSubmitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Salvando...
+                      </>
+                    ) : (
+                      'Incluir Registro'
+                    )}
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+            <p className="text-xs text-muted-foreground max-w-xs text-right">
+              Inclua registro de ausências não justificadas, licenças e afastamentos.
+            </p>
+          </div>
         )}
       </div>
 

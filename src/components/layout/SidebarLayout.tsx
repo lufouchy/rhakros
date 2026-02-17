@@ -45,7 +45,7 @@ const SidebarLayout = ({ children }: SidebarLayoutProps) => {
         { icon: Building2, label: 'Informações Institucionais', path: '/institutional' },
         { icon: Users, label: 'Cadastro de Colaborador', path: '/employees' },
         { icon: Clock, label: 'Gestão de Jornada', path: '/schedules' },
-        { icon: FileText, label: 'Solicitações', path: '/requests' },
+        { icon: FileText, label: 'Ajustes de Ponto', path: '/requests' },
         { icon: Palmtree, label: 'Férias', path: '/vacations' },
         { icon: CalendarDays, label: 'Programação de Férias', path: '/vacation-planning' },
         { icon: FolderOpen, label: 'Espelhos Ponto', path: '/documents' },
