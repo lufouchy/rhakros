@@ -129,7 +129,8 @@ const EmployeeVacation = () => {
     // Generate all acquisition periods first
     const allPeriods: { start: Date; end: Date; concessiveStart: Date; concessiveEnd: Date }[] = [];
     let periodStart = new Date(hd);
-    for (let i = 0; i < 10; i++) {
+    const maxPeriods = Math.ceil((today.getTime() - hd.getTime()) / (365.25 * 24 * 60 * 60 * 1000)) + 1;
+    for (let i = 0; i < maxPeriods; i++) {
       const periodEnd = addYears(periodStart, 1);
       if (isAfter(periodStart, today)) break;
       
