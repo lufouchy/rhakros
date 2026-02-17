@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import logoVertical from '@/assets/logo-vertical.png';
 import {
   Sheet,
   SheetContent,
@@ -72,14 +73,14 @@ const SidebarLayout = ({ children }: SidebarLayoutProps) => {
     <div className="flex flex-col h-full bg-[#023047]">
       {/* Logo */}
       <div className={cn(
-        "flex items-center gap-3 p-4 border-b border-[#034a6b]",
-        collapsed && !isMobile && "justify-center"
+        "flex flex-col items-center p-4 border-b border-[#034a6b]",
+        collapsed && !isMobile && "px-2"
       )}>
-        <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-[#219EBC]">
-          <Clock className="h-5 w-5 text-white" />
-        </div>
+        <img src={logoVertical} alt="Kairos RH" className={cn("object-contain", collapsed && !isMobile ? "h-8" : "h-14")} />
         {(!collapsed || isMobile) && (
-          <span className="font-bold text-white text-lg">MINHAS ROTINAS</span>
+          <span className="font-bold text-white text-sm mt-2 tracking-wide">
+            {isAdmin ? 'GESTÃO DE JORNADA' : 'MINHA JORNADA'}
+          </span>
         )}
       </div>
 
