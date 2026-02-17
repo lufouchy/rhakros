@@ -37,13 +37,14 @@ import {
   Paperclip,
   Download,
   X,
+  CalendarDays,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 type RecordType = 'entry' | 'lunch_out' | 'lunch_in' | 'exit';
 type RequestStatus = 'pending' | 'approved' | 'rejected';
-type RequestType = 'adjustment' | 'medical_consultation' | 'medical_leave' | 'justified_absence';
+type RequestType = 'adjustment' | 'medical_consultation' | 'medical_leave' | 'justified_absence' | 'day_off';
 
 interface AdjustmentRequest {
   id: string;
@@ -71,9 +72,10 @@ const recordTypeLabels: Record<RecordType, string> = {
 
 const requestTypeLabels: Record<RequestType, { label: string; icon: typeof Clock }> = {
   adjustment: { label: 'Ajuste de Ponto', icon: AlertCircle },
-  medical_consultation: { label: 'Atestado Médico - Consulta', icon: Stethoscope },
+  medical_consultation: { label: 'Atestado Médico - Consultas/Exames', icon: Stethoscope },
   medical_leave: { label: 'Atestado Médico - Afastamento', icon: Stethoscope },
   justified_absence: { label: 'Ausência Justificada', icon: Briefcase },
+  day_off: { label: 'Folga', icon: CalendarDays },
 };
 
 const statusConfig: Record<RequestStatus, { label: string; variant: 'default' | 'secondary' | 'destructive'; icon: typeof Clock }> = {
@@ -192,12 +194,14 @@ const Requests = () => {
         });
         return;
       }
-    } else if (requestType === 'medical_leave') {
+    } else if (requestType === 'medical_leave' || requestType === 'day_off') {
       if (absenceDates.length === 0 || !reason) {
         toast({
           variant: 'destructive',
           title: 'Campos obrigatórios',
-          description: 'Selecione os dias de afastamento e adicione o motivo.',
+          description: requestType === 'day_off' 
+            ? 'Selecione o(s) dia(s) de folga e adicione o motivo.'
+            : 'Selecione os dias de afastamento e adicione o motivo.',
         });
         return;
       }
@@ -228,7 +232,7 @@ const Requests = () => {
       insertData.absence_reason = requestType === 'justified_absence' ? absenceReason : null;
     }
 
-    if (requestType === 'medical_leave') {
+    if (requestType === 'medical_leave' || requestType === 'day_off') {
       insertData.absence_dates = absenceDates.map(d => format(d, 'yyyy-MM-dd'));
     }
 
@@ -304,7 +308,7 @@ const Requests = () => {
           <p className="text-muted-foreground">
             {isAdmin 
               ? 'Gerencie as solicitações dos colaboradores'
-              : 'Solicite ajustes, férias ou envie atestados'}
+              : 'Solicite ajustes de ponto, férias e folgas'}
           </p>
         </div>
 
@@ -320,7 +324,7 @@ const Requests = () => {
               <DialogHeader>
                 <DialogTitle>Nova Solicitação</DialogTitle>
                 <DialogDescription>
-                  Solicite ajuste de ponto, férias ou envie um atestado.
+                  Solicite ajustes de ponto, férias e folgas.
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 pt-4">
@@ -343,7 +347,7 @@ const Requests = () => {
                       <SelectItem value="medical_consultation">
                         <div className="flex items-center gap-2">
                           <Stethoscope className="h-4 w-4" />
-                          Atestado Médico - Consulta
+                          Atestado Médico - Consultas/Exames
                         </div>
                       </SelectItem>
                       <SelectItem value="medical_leave">
@@ -356,6 +360,12 @@ const Requests = () => {
                         <div className="flex items-center gap-2">
                           <Briefcase className="h-4 w-4" />
                           Ausência Justificada
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="day_off">
+                        <div className="flex items-center gap-2">
+                          <CalendarDays className="h-4 w-4" />
+                          Folga
                         </div>
                       </SelectItem>
                     </SelectContent>
@@ -443,11 +453,11 @@ const Requests = () => {
                   </>
                 )}
 
-                {/* Medical leave (full day) fields */}
-                {requestType === 'medical_leave' && (
+                {/* Medical leave (full day) and day off fields */}
+                {(requestType === 'medical_leave' || requestType === 'day_off') && (
                   <>
                     <div className="space-y-2">
-                      <Label>Dias de Afastamento</Label>
+                      <Label>{requestType === 'day_off' ? 'Dia(s) de Folga' : 'Dias de Afastamento'}</Label>
                       <div className="border rounded-lg p-3">
                         <Calendar
                           mode="multiple"
@@ -464,9 +474,9 @@ const Requests = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <Label>Motivo do Afastamento</Label>
+                      <Label>{requestType === 'day_off' ? 'Motivo da Folga' : 'Motivo do Afastamento'}</Label>
                       <Textarea
-                        placeholder="Descreva o motivo do afastamento..."
+                        placeholder={requestType === 'day_off' ? "Descreva o motivo da folga..." : "Descreva o motivo do afastamento..."}
                         value={reason}
                         onChange={(e) => setReason(e.target.value)}
                         rows={3}
