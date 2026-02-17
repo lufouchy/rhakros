@@ -420,6 +420,17 @@ const EmployeeRegistration = () => {
       return;
     }
 
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(form.email)) {
+      toast({
+        variant: 'destructive',
+        title: 'E-mail inválido',
+        description: 'O e-mail informado não possui um formato válido. Verifique e tente novamente.',
+      });
+      return;
+    }
+
     // Validate CPF if provided
     if (form.cpf && !validateCPF(form.cpf)) {
       toast({
