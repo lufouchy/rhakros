@@ -10,7 +10,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Badge } from '@/components/ui/badge';
+
 import { useToast } from '@/hooks/use-toast';
 import { FileText, Loader2, Download, CheckCircle } from 'lucide-react';
 import { generateVacationReceiptPDF, downloadVacationReceiptPDF } from './VacationReceiptPDF';
@@ -213,8 +213,9 @@ const VacationReceiptExport = ({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="icon" title="Exportar Recibo de Férias">
+        <Button variant="outline" size="sm" className="gap-2" title={isSigned ? 'Recibo Assinado' : 'Assinar Recibo de Férias'}>
           <FileText className="h-4 w-4" />
+          {isSigned ? 'Recibo Assinado' : 'Assinar Recibo'}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-lg max-h-[90vh] flex flex-col">
@@ -222,15 +223,16 @@ const VacationReceiptExport = ({
           <DialogTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5 text-primary" />
             Recibo de Férias
-            {isSigned && (
-              <Badge variant="default" className="ml-2 gap-1">
-                <CheckCircle className="h-3 w-3" />
-                Assinado
-              </Badge>
-            )}
           </DialogTitle>
           <DialogDescription>
-            Assine e exporte o recibo de férias de {userName}.
+            {isSigned ? (
+              <span className="flex items-center gap-1 text-green-600">
+                <CheckCircle className="h-4 w-4" />
+                Recibo assinado digitalmente
+              </span>
+            ) : (
+              'Assine digitalmente o recibo de férias abaixo para validá-lo.'
+            )}
           </DialogDescription>
         </DialogHeader>
 
@@ -257,14 +259,19 @@ const VacationReceiptExport = ({
             </div>
 
             {!isSigned && (
-              <div className="border rounded-lg p-4">
-                <SignatureCanvas onSignatureChange={setSignatureData} />
-              </div>
+              <>
+                <div className="border-2 border-dashed border-primary/40 rounded-lg p-4 bg-primary/5">
+                  <p className="text-sm font-semibold text-primary mb-3 flex items-center gap-2">
+                    ✍️ Assine no campo abaixo para validar o recibo
+                  </p>
+                  <SignatureCanvas onSignatureChange={setSignatureData} />
+                </div>
+              </>
             )}
 
             <div className="flex flex-col gap-2">
               {!isSigned && (
-                <Button onClick={handleSign} disabled={isSigning || !signatureData} className="w-full">
+                <Button onClick={handleSign} disabled={isSigning || !signatureData} className="w-full" size="lg">
                   {isSigning ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -273,30 +280,32 @@ const VacationReceiptExport = ({
                   ) : (
                     <>
                       <CheckCircle className="mr-2 h-4 w-4" />
-                      Assinar e Exportar PDF
+                      Assinar Recibo de Férias
                     </>
                   )}
                 </Button>
               )}
 
-              <Button 
-                onClick={handleExport} 
-                disabled={isLoading} 
-                variant={isSigned ? 'default' : 'outline'}
-                className="w-full"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Gerando PDF...
-                  </>
-                ) : (
-                  <>
-                    <Download className="mr-2 h-4 w-4" />
-                    {isSigned ? 'Baixar Recibo Assinado' : 'Exportar sem Assinatura'}
-                  </>
-                )}
-              </Button>
+              {isSigned && (
+                <Button 
+                  onClick={handleExport} 
+                  disabled={isLoading} 
+                  className="w-full"
+                  size="lg"
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Gerando PDF...
+                    </>
+                  ) : (
+                    <>
+                      <Download className="mr-2 h-4 w-4" />
+                      Baixar Recibo Assinado
+                    </>
+                  )}
+                </Button>
+              )}
             </div>
           </div>
         </ScrollArea>
