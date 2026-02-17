@@ -111,6 +111,7 @@ const PendingRequestsDialog = ({ open, onOpenChange }: PendingRequestsDialogProp
       case 'medical_consultation': return 'Consulta Médica';
       case 'medical_leave': return 'Atestado Médico';
       case 'justified_absence': return 'Ausência Justificada';
+      case 'bereavement_leave': return 'Licença Falecimento';
       default: return 'Ajuste de Ponto';
     }
   };

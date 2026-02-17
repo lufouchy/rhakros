@@ -1094,6 +1094,7 @@ export type Database = {
         | "medical_consultation"
         | "medical_leave"
         | "justified_absence"
+        | "bereavement_leave"
       adjustment_status: "pending" | "approved" | "rejected"
       admin_position:
         | "rh"
@@ -1255,6 +1256,7 @@ export const Constants = {
         "medical_consultation",
         "medical_leave",
         "justified_absence",
+        "bereavement_leave",
       ],
       adjustment_status: ["pending", "approved", "rejected"],
       admin_position: [

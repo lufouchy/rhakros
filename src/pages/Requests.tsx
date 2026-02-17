@@ -44,7 +44,7 @@ import { ptBR } from 'date-fns/locale';
 
 type RecordType = 'entry' | 'lunch_out' | 'lunch_in' | 'exit';
 type RequestStatus = 'pending' | 'approved' | 'rejected';
-type RequestType = 'adjustment' | 'medical_consultation' | 'medical_leave' | 'justified_absence' | 'day_off';
+type RequestType = 'adjustment' | 'medical_consultation' | 'medical_leave' | 'justified_absence' | 'day_off' | 'bereavement_leave';
 
 interface AdjustmentRequest {
   id: string;
@@ -76,6 +76,7 @@ const requestTypeLabels: Record<RequestType, { label: string; icon: typeof Clock
   medical_leave: { label: 'Atestado Médico - Afastamento', icon: Stethoscope },
   justified_absence: { label: 'Ausência Justificada', icon: Briefcase },
   day_off: { label: 'Folga', icon: CalendarDays },
+  bereavement_leave: { label: 'Licença Falecimento de Familiar', icon: CalendarDays },
 };
 
 const statusConfig: Record<RequestStatus, { label: string; variant: 'default' | 'secondary' | 'destructive'; icon: typeof Clock }> = {
@@ -205,6 +206,15 @@ const Requests = () => {
         });
         return;
       }
+    } else if (requestType === 'bereavement_leave') {
+      if (absenceDates.length === 0 || !reason) {
+        toast({
+          variant: 'destructive',
+          title: 'Campos obrigatórios',
+          description: 'Selecione a data de início e fim e adicione o motivo.',
+        });
+        return;
+      }
     }
 
     setSubmitting(true);
@@ -232,8 +242,11 @@ const Requests = () => {
       insertData.absence_reason = requestType === 'justified_absence' ? absenceReason : null;
     }
 
-    if (requestType === 'medical_leave' || requestType === 'day_off') {
+    if (requestType === 'medical_leave' || requestType === 'day_off' || requestType === 'bereavement_leave') {
       insertData.absence_dates = absenceDates.map(d => format(d, 'yyyy-MM-dd'));
+      if (requestType === 'bereavement_leave') {
+        insertData.absence_type = 'bereavement_leave';
+      }
     }
 
     const { error } = await supabase
@@ -368,6 +381,12 @@ const Requests = () => {
                           Folga
                         </div>
                       </SelectItem>
+                      <SelectItem value="bereavement_leave">
+                        <div className="flex items-center gap-2">
+                          <CalendarDays className="h-4 w-4" />
+                          Licença Falecimento de Familiar
+                        </div>
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -453,11 +472,11 @@ const Requests = () => {
                   </>
                 )}
 
-                {/* Medical leave (full day) and day off fields */}
-                {(requestType === 'medical_leave' || requestType === 'day_off') && (
+                {/* Medical leave (full day), day off, and bereavement leave fields */}
+                {(requestType === 'medical_leave' || requestType === 'day_off' || requestType === 'bereavement_leave') && (
                   <>
                     <div className="space-y-2">
-                      <Label>{requestType === 'day_off' ? 'Dia(s) de Folga' : 'Dias de Afastamento'}</Label>
+                      <Label>{requestType === 'day_off' ? 'Dia(s) de Folga' : requestType === 'bereavement_leave' ? 'Período da Licença' : 'Dias de Afastamento'}</Label>
                       <div className="border rounded-lg p-3">
                         <Calendar
                           mode="multiple"
@@ -474,9 +493,9 @@ const Requests = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <Label>{requestType === 'day_off' ? 'Motivo da Folga' : 'Motivo do Afastamento'}</Label>
+                      <Label>{requestType === 'day_off' ? 'Motivo da Folga' : requestType === 'bereavement_leave' ? 'Grau de Parentesco / Observações' : 'Motivo do Afastamento'}</Label>
                       <Textarea
-                        placeholder={requestType === 'day_off' ? "Descreva o motivo da folga..." : "Descreva o motivo do afastamento..."}
+                        placeholder={requestType === 'day_off' ? "Descreva o motivo da folga..." : requestType === 'bereavement_leave' ? "Informe o grau de parentesco e observações..." : "Descreva o motivo do afastamento..."}
                         value={reason}
                         onChange={(e) => setReason(e.target.value)}
                         rows={3}
