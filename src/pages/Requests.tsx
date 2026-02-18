@@ -44,7 +44,12 @@ import {
   ShieldAlert,
   Ban,
   ClipboardPlus,
+  Search,
+  ChevronDown,
+  ChevronUp,
+  Filter,
 } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -129,7 +134,37 @@ const Requests = () => {
   const [adminEmployees, setAdminEmployees] = useState<{ user_id: string; full_name: string }[]>([]);
   const [adminSelectedEmployee, setAdminSelectedEmployee] = useState('');
 
+  // Filter state
+  const [filterName, setFilterName] = useState('');
+  const [filterType, setFilterType] = useState('all');
+  const [filterDate, setFilterDate] = useState('');
+  const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
+
   const isAdmin = userRole === 'admin' || userRole === 'suporte';
+
+  const toggleCard = (id: string) => {
+    setExpandedCards(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const allTypeOptions = [
+    ...Object.entries(requestTypeLabels).map(([key, { label }]) => ({ key, label })),
+    ...Object.entries(adminRecordTypeLabels).map(([key, { label }]) => ({ key, label })),
+  ];
+
+  const filteredRequests = requests.filter((r) => {
+    if (filterName && !r.userName?.toLowerCase().includes(filterName.toLowerCase())) return false;
+    if (filterType !== 'all' && r.request_type !== filterType) return false;
+    if (filterDate) {
+      const requestDate = format(new Date(r.created_at), 'yyyy-MM-dd');
+      if (requestDate !== filterDate) return false;
+    }
+    return true;
+  });
 
   useEffect(() => {
     fetchRequests();
@@ -399,19 +434,19 @@ const Requests = () => {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 animate-fade-in">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">
-            {isAdmin ? 'Ajuste de Ponto' : 'Minhas Solicitações'}
-          </h1>
-          <p className="text-muted-foreground">
-            {isAdmin 
-              ? 'Gerencie as solicitações dos colaboradores e inclua registros'
-              : 'Solicite ajustes de ponto, férias e folgas'}
-          </p>
-        </div>
+      <div>
+        <h1 className="text-2xl font-bold text-foreground">
+          {isAdmin ? 'Ajuste de Ponto' : 'Minhas Solicitações'}
+        </h1>
+        <p className="text-muted-foreground">
+          {isAdmin 
+            ? 'Gerencie as solicitações dos colaboradores e inclua registros'
+            : 'Solicite ajustes de ponto, férias e folgas'}
+        </p>
+      </div>
 
-        {!isAdmin && (
+      {!isAdmin && (
+        <div className="flex justify-end">
           <Dialog open={showNewDialog} onOpenChange={(open) => { setShowNewDialog(open); if (!open) resetForm(); }}>
             <DialogTrigger asChild>
               <Button className="gap-2">
@@ -519,7 +554,6 @@ const Requests = () => {
                   </>
                 )}
 
-
                 {/* Medical consultation and justified absence fields */}
                 {(requestType === 'medical_consultation' || requestType === 'justified_absence') && (
                   <>
@@ -558,7 +592,7 @@ const Requests = () => {
                   </>
                 )}
 
-                {/* Medical leave (full day), day off, and bereavement leave fields */}
+                {/* Medical leave, day off, bereavement leave fields */}
                 {(requestType === 'medical_leave' || requestType === 'day_off' || requestType === 'bereavement_leave') && (
                   <>
                     <div className="space-y-2">
@@ -638,10 +672,12 @@ const Requests = () => {
               </div>
             </DialogContent>
           </Dialog>
-        )}
+        </div>
+      )}
 
-        {isAdmin && (
-          <div className="flex flex-col items-end gap-1">
+      {isAdmin && (
+        <>
+          <div>
             <Dialog open={showAdminRecordDialog} onOpenChange={(open) => { setShowAdminRecordDialog(open); if (!open) resetAdminForm(); }}>
               <DialogTrigger asChild>
                 <Button className="gap-2">
@@ -735,14 +771,51 @@ const Requests = () => {
                 </div>
               </DialogContent>
             </Dialog>
-            <p className="text-xs text-muted-foreground max-w-xs text-right">
+            <p className="text-xs text-muted-foreground mt-1">
               Inclua registro de ausências não justificadas, licenças e afastamentos.
             </p>
           </div>
-        )}
-      </div>
 
-      {requests.length === 0 ? (
+          {/* Filters */}
+          <Card className="border-0 shadow-sm">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Filter className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm font-medium text-foreground">Filtros</span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Nome do colaborador..."
+                    value={filterName}
+                    onChange={(e) => setFilterName(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
+                <Select value={filterType} onValueChange={setFilterType}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Tipo de registro" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os tipos</SelectItem>
+                    {allTypeOptions.map(({ key, label }) => (
+                      <SelectItem key={key} value={key}>{label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Input
+                  type="date"
+                  value={filterDate}
+                  onChange={(e) => setFilterDate(e.target.value)}
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </>
+      )}
+
+      {(isAdmin ? filteredRequests : requests).length === 0 ? (
         <Card className="border-0 shadow-md">
           <CardContent className="flex flex-col items-center justify-center py-12">
             <FileText className="h-12 w-12 text-muted-foreground mb-4" />
@@ -758,10 +831,131 @@ const Requests = () => {
         </Card>
       ) : (
         <div className="space-y-4">
-          {requests.map((request) => {
+          {(isAdmin ? filteredRequests : requests).map((request) => {
             const StatusIcon = statusConfig[request.status].icon;
             const typeInfo = getRequestTypeInfo(request.request_type);
             const TypeIcon = typeInfo.icon;
+            const isResolved = request.status === 'approved' || request.status === 'rejected';
+            const isExpanded = expandedCards.has(request.id);
+
+            const summaryRow = (
+              <div className="flex items-center justify-between w-full">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary/10 shrink-0">
+                    <TypeIcon className="h-5 w-5 text-primary" />
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="font-semibold text-foreground truncate">
+                      {typeInfo.label}
+                    </h3>
+                    {isAdmin && request.userName && (
+                      <p className="text-sm text-muted-foreground truncate">
+                        {request.userName}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <Badge 
+                    variant={statusConfig[request.status].variant}
+                    className="gap-1.5"
+                  >
+                    <StatusIcon className="h-3 w-3" />
+                    {statusConfig[request.status].label}
+                  </Badge>
+                  {isResolved && (
+                    isExpanded ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                  )}
+                </div>
+              </div>
+            );
+
+            const detailContent = (
+              <div className="space-y-2 pt-3 border-t mt-3">
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  {request.request_type === 'adjustment' && (
+                    <>
+                      <div>
+                        <p className="text-muted-foreground">Tipo de Registro</p>
+                        <p className="font-medium">{recordTypeLabels[request.record_type]}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Horário Solicitado</p>
+                        <p className="font-medium">
+                          {format(new Date(request.requested_time), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                        </p>
+                      </div>
+                    </>
+                  )}
+                  
+                  {(request.request_type === 'medical_consultation' || request.request_type === 'justified_absence') && request.start_time && request.end_time && (
+                    <div className="col-span-2">
+                      <p className="text-muted-foreground">Horário de Afastamento</p>
+                      <p className="font-medium">
+                        {request.start_time} às {request.end_time}
+                      </p>
+                    </div>
+                  )}
+
+                  {request.request_type === 'medical_leave' && request.absence_dates && (
+                    <div className="col-span-2">
+                      <p className="text-muted-foreground">Dias de Afastamento</p>
+                      <p className="font-medium">
+                        {request.absence_dates.length} dia(s)
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                <div className="text-sm">
+                  <p className="text-muted-foreground">Motivo</p>
+                  <p className="text-foreground">{request.reason}</p>
+                </div>
+
+                {request.attachment_url && (
+                  <div className="text-sm">
+                    <p className="text-muted-foreground">Documento Anexado</p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-1.5 mt-1"
+                      onClick={async () => {
+                        const { data } = await supabase.storage
+                          .from('request-attachments')
+                          .createSignedUrl(request.attachment_url!, 3600);
+                        if (data?.signedUrl) {
+                          window.open(data.signedUrl, '_blank');
+                        }
+                      }}
+                    >
+                      <Download className="h-3.5 w-3.5" />
+                      Visualizar / Baixar
+                    </Button>
+                  </div>
+                )}
+
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Clock className="h-3 w-3" />
+                  Solicitado em {format(new Date(request.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                </div>
+              </div>
+            );
+
+            if (isResolved) {
+              return (
+                <Card key={request.id} className="border-0 shadow-md">
+                  <CardContent className="p-6">
+                    <div
+                      className="cursor-pointer"
+                      onClick={() => toggleCard(request.id)}
+                    >
+                      {summaryRow}
+                    </div>
+                    {isExpanded && detailContent}
+                  </CardContent>
+                </Card>
+              );
+            }
             
             return (
               <Card key={request.id} className="border-0 shadow-md">
@@ -783,73 +977,7 @@ const Requests = () => {
                           )}
                         </div>
                       </div>
-
-                      <div className="grid grid-cols-2 gap-4 text-sm">
-                        {request.request_type === 'adjustment' && (
-                          <>
-                            <div>
-                              <p className="text-muted-foreground">Tipo de Registro</p>
-                              <p className="font-medium">{recordTypeLabels[request.record_type]}</p>
-                            </div>
-                            <div>
-                              <p className="text-muted-foreground">Horário Solicitado</p>
-                              <p className="font-medium">
-                                {format(new Date(request.requested_time), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
-                              </p>
-                            </div>
-                          </>
-                        )}
-                        
-                        {(request.request_type === 'medical_consultation' || request.request_type === 'justified_absence') && request.start_time && request.end_time && (
-                          <div className="col-span-2">
-                            <p className="text-muted-foreground">Horário de Afastamento</p>
-                            <p className="font-medium">
-                              {request.start_time} às {request.end_time}
-                            </p>
-                          </div>
-                        )}
-
-                        {request.request_type === 'medical_leave' && request.absence_dates && (
-                          <div className="col-span-2">
-                            <p className="text-muted-foreground">Dias de Afastamento</p>
-                            <p className="font-medium">
-                              {request.absence_dates.length} dia(s)
-                            </p>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="text-sm">
-                        <p className="text-muted-foreground">Motivo</p>
-                        <p className="text-foreground">{request.reason}</p>
-                      </div>
-
-                      {request.attachment_url && (
-                        <div className="text-sm">
-                          <p className="text-muted-foreground">Documento Anexado</p>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="gap-1.5 mt-1"
-                            onClick={async () => {
-                              const { data } = await supabase.storage
-                                .from('request-attachments')
-                                .createSignedUrl(request.attachment_url!, 3600);
-                              if (data?.signedUrl) {
-                                window.open(data.signedUrl, '_blank');
-                              }
-                            }}
-                          >
-                            <Download className="h-3.5 w-3.5" />
-                            Visualizar / Baixar
-                          </Button>
-                        </div>
-                      )}
-
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <Clock className="h-3 w-3" />
-                        Solicitado em {format(new Date(request.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
-                      </div>
+                      {detailContent}
                     </div>
 
                     <div className="flex flex-col items-end gap-3">
