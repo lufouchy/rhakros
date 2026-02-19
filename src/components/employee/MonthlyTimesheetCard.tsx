@@ -102,12 +102,23 @@ const MonthlyTimesheetCard = ({ onBalanceCalculated }: MonthlyTimesheetCardProps
           .eq('status', 'approved'),
         supabase
           .from('profiles')
-          .select('work_schedule_id')
+          .select('work_schedule_id, organization_id')
           .eq('user_id', user.id)
           .single(),
       ]);
 
       if (recordsRes.data) setRecords(recordsRes.data as TimeRecord[]);
+
+      // Fetch holidays using org id from profile
+      const orgId = profileRes.data?.organization_id;
+      const holidaysRes = orgId
+        ? await supabase
+            .from('holidays')
+            .select('date, name')
+            .eq('organization_id', orgId)
+            .gte('date', startDate)
+            .lte('date', endDate)
+        : { data: null };
 
       // Build absence map
       const absMap = new Map<string, AbsenceInfo>();
@@ -139,6 +150,13 @@ const MonthlyTimesheetCard = ({ onBalanceCalculated }: MonthlyTimesheetCardProps
           if (adjDate >= startDate && adjDate <= endDate) {
             adjSet.add(adjDate);
           }
+        }
+      });
+
+      // Holidays - add to absence map (won't overwrite existing absences like vacation)
+      holidaysRes.data?.forEach(h => {
+        if (!absMap.has(h.date)) {
+          absMap.set(h.date, { type: 'holiday', label: `Feriado: ${h.name}` });
         }
       });
 
