@@ -18,7 +18,6 @@ import AdminSettings from "./pages/AdminSettings";
 import WorkSchedulesPage from "./pages/WorkSchedulesPage";
 import InstitutionalInfo from "./pages/InstitutionalInfo";
 import EmployeeVacation from "./pages/EmployeeVacation";
-import VacationPlanningPage from "./pages/VacationPlanningPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -39,7 +38,7 @@ const App = () => (
             <Route path="/my-vacations" element={<EmployeeVacation />} />
             <Route path="/documents" element={<AdminRoute><DocumentManagement /></AdminRoute>} />
             <Route path="/vacations" element={<AdminRoute><VacationManagement /></AdminRoute>} />
-            <Route path="/vacation-planning" element={<AdminRoute><VacationPlanningPage /></AdminRoute>} />
+            
             <Route path="/profile" element={<EmployeeProfile />} />
             <Route path="/employees" element={<AdminRoute><EmployeeManagement /></AdminRoute>} />
             <Route path="/schedules" element={<AdminRoute><WorkSchedulesPage /></AdminRoute>} />
