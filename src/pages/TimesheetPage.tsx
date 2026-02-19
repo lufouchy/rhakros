@@ -355,6 +355,8 @@ const TimesheetPage = () => {
                 <Calendar
                   mode="single"
                   selected={date}
+                  month={date}
+                  onMonthChange={(m) => setDate(m)}
                   onSelect={(d) => d && setDate(d)}
                   locale={ptBR}
                   modifiers={{ weekend: (d) => isWeekend(d) }}

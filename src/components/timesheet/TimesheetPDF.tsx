@@ -320,14 +320,7 @@ function loadImage(url: string): Promise<string> {
 }
 
 export const downloadPDF = (doc: jsPDF, filename: string) => {
-  const pdfDataUri = doc.output('datauristring', { filename });
-  const link = document.createElement('a');
-  link.href = pdfDataUri;
-  link.download = filename;
-  link.style.display = 'none';
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
+  doc.save(filename);
 };
 
 export const getPDFBase64 = (doc: jsPDF): string => {
