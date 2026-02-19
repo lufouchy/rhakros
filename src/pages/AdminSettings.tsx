@@ -1,11 +1,11 @@
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import SidebarLayout from '@/components/layout/SidebarLayout';
-import WorkScheduleManagement from '@/components/admin/WorkScheduleManagement';
+
 import PayrollSettings from '@/components/admin/PayrollSettings';
 import MonthlyClosingPanel from '@/components/admin/MonthlyClosingPanel';
 import HolidaysCalendar from '@/components/admin/HolidaysCalendar';
-import { Settings, Clock, Loader2, Calendar, FileText, CalendarDays } from 'lucide-react';
+import { Settings, Loader2, Calendar, FileText, CalendarDays } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const AdminSettings = () => {
@@ -38,13 +38,8 @@ const AdminSettings = () => {
           </p>
         </div>
 
-        <Tabs defaultValue="schedules" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="schedules" className="flex items-center gap-2">
-              <Clock className="h-4 w-4" />
-              <span className="hidden sm:inline">Jornadas</span>
-              <span className="sm:hidden">Jornadas</span>
-            </TabsTrigger>
+        <Tabs defaultValue="overtime" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="overtime" className="flex items-center gap-2">
               <Calendar className="h-4 w-4" />
               <span className="hidden sm:inline">Horas Extras</span>
@@ -61,14 +56,6 @@ const AdminSettings = () => {
               <span className="sm:hidden">Fecham.</span>
             </TabsTrigger>
           </TabsList>
-
-          <TabsContent value="schedules" className="space-y-4">
-            <div className="flex items-center gap-2 text-lg font-medium">
-              <Clock className="h-5 w-5 text-primary" />
-              Jornadas de Trabalho
-            </div>
-            <WorkScheduleManagement />
-          </TabsContent>
 
           <TabsContent value="overtime" className="space-y-4">
             <PayrollSettings />
