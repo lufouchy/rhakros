@@ -56,7 +56,7 @@ import { ptBR } from 'date-fns/locale';
 type RecordType = 'entry' | 'lunch_out' | 'lunch_in' | 'exit';
 type RequestStatus = 'pending' | 'approved' | 'rejected';
 type RequestType = 'adjustment' | 'medical_consultation' | 'medical_leave' | 'justified_absence' | 'day_off' | 'bereavement_leave';
-type AdminRecordType = 'maternity_leave' | 'paternity_leave' | 'unjustified_absence' | 'work_accident' | 'suspension';
+type AdminRecordType = 'maternity_leave' | 'paternity_leave' | 'unjustified_absence' | 'work_accident' | 'punitive_suspension';
 
 interface AdjustmentRequest {
   id: string;
@@ -87,7 +87,7 @@ const adminRecordTypeLabels: Record<AdminRecordType, { label: string; icon: type
   paternity_leave: { label: 'Licença Paternidade', icon: UserPlus },
   unjustified_absence: { label: 'Ausência Não Justificada (Falta)', icon: Ban },
   work_accident: { label: 'Acidente de Trabalho', icon: AlertTriangle },
-  suspension: { label: 'Suspensão (Punitiva)', icon: ShieldAlert },
+  punitive_suspension: { label: 'Suspensão (Punitiva)', icon: ShieldAlert },
 };
 
 const requestTypeLabels: Record<RequestType, { label: string; icon: typeof Clock }> = {
@@ -257,14 +257,14 @@ const Requests = () => {
       .from('adjustment_requests')
       .insert({
         user_id: adminSelectedEmployee,
-        request_type: adminRecordType,
+        request_type: 'absence',
         requested_time: new Date().toISOString(),
         record_type: 'entry' as RecordType,
         reason: adminRecordReason || adminRecordTypeLabels[adminRecordType].label,
         status: 'approved',
         organization_id: profileData?.organization_id,
         absence_dates: adminRecordDates.map(d => format(d, 'yyyy-MM-dd')),
-        absence_type: 'justified_absence',
+        absence_type: adminRecordType,
         reviewed_by: user?.id,
         reviewed_at: new Date().toISOString(),
       });
