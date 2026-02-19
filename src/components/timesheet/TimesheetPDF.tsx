@@ -322,13 +322,9 @@ function loadImage(url: string): Promise<string> {
 export const downloadPDF = (doc: jsPDF, filename: string) => {
   const blob = doc.output('blob');
   const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = filename;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  setTimeout(() => URL.revokeObjectURL(url), 100);
+  // Use window.open to bypass iframe download restrictions
+  window.open(url, '_blank');
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
 };
 
 export const getPDFBase64 = (doc: jsPDF): string => {
