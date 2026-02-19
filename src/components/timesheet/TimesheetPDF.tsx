@@ -320,11 +320,14 @@ function loadImage(url: string): Promise<string> {
 }
 
 export const downloadPDF = (doc: jsPDF, filename: string) => {
-  const blob = doc.output('blob');
-  const url = URL.createObjectURL(blob);
-  // Use window.open to bypass iframe download restrictions
-  window.open(url, '_blank');
-  setTimeout(() => URL.revokeObjectURL(url), 5000);
+  const pdfDataUri = doc.output('datauristring', { filename });
+  const link = document.createElement('a');
+  link.href = pdfDataUri;
+  link.download = filename;
+  link.style.display = 'none';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 };
 
 export const getPDFBase64 = (doc: jsPDF): string => {
