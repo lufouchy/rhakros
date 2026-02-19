@@ -9,7 +9,7 @@ interface HoursBalanceCardProps {
 const HoursBalanceCard = ({ 
   balanceMinutes, 
   previousPeriod = 0, 
-  currentPeriod = 0 
+  currentPeriod 
 }: HoursBalanceCardProps) => {
   const formatTime = (minutes: number) => {
     const absMinutes = Math.abs(minutes);
@@ -19,8 +19,8 @@ const HoursBalanceCard = ({
     return `${sign}${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
   };
 
-  const saldoAnterior = previousPeriod || Math.floor(balanceMinutes * 0.6);
-  const saldoPeriodo = currentPeriod || Math.floor(balanceMinutes * 0.4);
+  const periodBalance = currentPeriod ?? balanceMinutes;
+  const total = previousPeriod + periodBalance;
 
   return (
     <Card className="border-0 shadow-md">
@@ -30,21 +30,19 @@ const HoursBalanceCard = ({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Saldo Período - centralizado e destacado */}
         <div className="flex flex-col items-center justify-center py-2">
-          <span className={`text-3xl sm:text-4xl font-bold tabular-nums ${balanceMinutes < 0 ? 'text-destructive' : 'text-primary'}`}>
-            {formatTime(balanceMinutes)}
+          <span className={`text-3xl sm:text-4xl font-bold tabular-nums ${total < 0 ? 'text-destructive' : 'text-primary'}`}>
+            {formatTime(total)}
           </span>
           <span className="text-xs text-muted-foreground uppercase tracking-wide mt-1">
-            Saldo Período {balanceMinutes < 0 ? '(a descontar)' : balanceMinutes > 0 ? '(a pagar)' : ''}
+            Saldo Total {total < 0 ? '(a descontar)' : total > 0 ? '(a pagar)' : ''}
           </span>
         </div>
 
-        {/* Detalhes */}
         <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 pt-3 border-t border-border text-sm">
           <div className="flex items-center gap-2">
             <span className="text-lg font-bold text-foreground tabular-nums whitespace-nowrap">
-              {formatTime(saldoAnterior)}
+              {formatTime(previousPeriod)}
             </span>
             <span className="text-[10px] sm:text-xs text-muted-foreground uppercase leading-tight">
               Saldo<br/>Anterior
@@ -55,7 +53,7 @@ const HoursBalanceCard = ({
           
           <div className="flex items-center gap-2">
             <span className="text-lg font-bold text-foreground tabular-nums whitespace-nowrap">
-              {formatTime(saldoPeriodo)}
+              {formatTime(periodBalance)}
             </span>
             <span className="text-[10px] sm:text-xs text-muted-foreground uppercase leading-tight">
               Horas<br/>Período

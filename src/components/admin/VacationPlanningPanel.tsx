@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CalendarDays, List, ChevronLeft, ChevronRight, Palmtree, Loader2, UserX, Stethoscope } from 'lucide-react';
+import { CalendarDays, List, ChevronLeft, ChevronRight, Palmtree, Loader2, UserX, Stethoscope, Baby, HardHat, Ban, Clock, Heart } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, addMonths, subMonths, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -31,8 +31,15 @@ const WEEKDAY_LABELS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 const ABSENCE_COLORS: Record<string, string> = {
   vacation: 'bg-primary',
   medical_leave: 'bg-destructive',
-  medical_consultation: 'bg-orange',
+  medical_consultation: 'bg-orange-500',
   justified_absence: 'bg-warning',
+  maternity_leave: 'bg-pink-500',
+  paternity_leave: 'bg-sky-500',
+  unjustified_absence: 'bg-red-700',
+  work_accident: 'bg-amber-600',
+  punitive_suspension: 'bg-gray-700',
+  day_off: 'bg-teal-500',
+  bereavement_leave: 'bg-violet-600',
   default: 'bg-muted-foreground',
 };
 
@@ -41,6 +48,13 @@ const ABSENCE_LABELS: Record<string, string> = {
   medical_leave: 'Licença Médica',
   medical_consultation: 'Consulta Médica',
   justified_absence: 'Ausência Justificada',
+  maternity_leave: 'Licença Maternidade',
+  paternity_leave: 'Licença Paternidade',
+  unjustified_absence: 'Falta',
+  work_accident: 'Acidente de Trabalho',
+  punitive_suspension: 'Suspensão',
+  day_off: 'Folga',
+  bereavement_leave: 'Falecimento Familiar',
 };
 
 const VacationPlanningPanel = () => {
@@ -149,6 +163,12 @@ const VacationPlanningPanel = () => {
   const getTypeIcon = (emp: AbsentEmployee) => {
     if (emp.type === 'vacation') return <Palmtree className="h-3 w-3" />;
     if (emp.subType === 'medical_leave' || emp.subType === 'medical_consultation') return <Stethoscope className="h-3 w-3" />;
+    if (emp.subType === 'maternity_leave' || emp.subType === 'paternity_leave') return <Baby className="h-3 w-3" />;
+    if (emp.subType === 'work_accident') return <HardHat className="h-3 w-3" />;
+    if (emp.subType === 'punitive_suspension') return <Ban className="h-3 w-3" />;
+    if (emp.subType === 'day_off') return <Clock className="h-3 w-3" />;
+    if (emp.subType === 'bereavement_leave') return <Heart className="h-3 w-3" />;
+    if (emp.subType === 'unjustified_absence') return <UserX className="h-3 w-3" />;
     return <UserX className="h-3 w-3" />;
   };
 
@@ -187,6 +207,13 @@ const VacationPlanningPanel = () => {
               <SelectItem value="medical_leave">Licença Médica</SelectItem>
               <SelectItem value="medical_consultation">Consulta Médica</SelectItem>
               <SelectItem value="justified_absence">Ausência Justificada</SelectItem>
+              <SelectItem value="maternity_leave">Licença Maternidade</SelectItem>
+              <SelectItem value="paternity_leave">Licença Paternidade</SelectItem>
+              <SelectItem value="unjustified_absence">Falta</SelectItem>
+              <SelectItem value="work_accident">Acidente de Trabalho</SelectItem>
+              <SelectItem value="punitive_suspension">Suspensão</SelectItem>
+              <SelectItem value="day_off">Folga</SelectItem>
+              <SelectItem value="bereavement_leave">Falecimento Familiar</SelectItem>
             </SelectContent>
           </Select>
 
@@ -298,19 +325,12 @@ const VacationPlanningPanel = () => {
                   })}
                 </div>
 
-                <div className="flex flex-wrap gap-4 mt-4 pt-4 border-t">
-                  <div className="flex items-center gap-1.5 text-xs">
-                    <div className="w-3 h-3 rounded-sm bg-primary" /> Férias
-                  </div>
-                  <div className="flex items-center gap-1.5 text-xs">
-                    <div className="w-3 h-3 rounded-sm bg-destructive" /> Licença Médica
-                  </div>
-                  <div className="flex items-center gap-1.5 text-xs">
-                    <div className="w-3 h-3 rounded-sm bg-orange" /> Consulta Médica
-                  </div>
-                  <div className="flex items-center gap-1.5 text-xs">
-                    <div className="w-3 h-3 rounded-sm bg-warning" /> Ausência Justificada
-                  </div>
+                <div className="flex flex-wrap gap-3 mt-4 pt-4 border-t">
+                  {Object.entries(ABSENCE_LABELS).map(([key, label]) => (
+                    <div key={key} className="flex items-center gap-1.5 text-xs">
+                      <div className={cn('w-3 h-3 rounded-sm', ABSENCE_COLORS[key] || ABSENCE_COLORS.default)} /> {label}
+                    </div>
+                  ))}
                 </div>
               </CardContent>
             </Card>

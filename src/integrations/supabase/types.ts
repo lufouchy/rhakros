@@ -1095,6 +1095,12 @@ export type Database = {
         | "medical_leave"
         | "justified_absence"
         | "bereavement_leave"
+        | "maternity_leave"
+        | "paternity_leave"
+        | "unjustified_absence"
+        | "work_accident"
+        | "punitive_suspension"
+        | "day_off"
       adjustment_status: "pending" | "approved" | "rejected"
       admin_position:
         | "rh"
@@ -1257,6 +1263,12 @@ export const Constants = {
         "medical_leave",
         "justified_absence",
         "bereavement_leave",
+        "maternity_leave",
+        "paternity_leave",
+        "unjustified_absence",
+        "work_accident",
+        "punitive_suspension",
+        "day_off",
       ],
       adjustment_status: ["pending", "approved", "rejected"],
       admin_position: [

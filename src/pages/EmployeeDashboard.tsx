@@ -33,6 +33,8 @@ const EmployeeDashboard = () => {
   const { validateLocation, isValidating } = useLocationValidation();
   const [todayRecords, setTodayRecords] = useState<TimeRecord[]>([]);
   const [hoursBalance, setHoursBalance] = useState(0);
+  const [previousBalance, setPreviousBalance] = useState(0);
+  const [currentPeriodBalance, setCurrentPeriodBalance] = useState(0);
   const [isRegistering, setIsRegistering] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [lastRegisteredTime, setLastRegisteredTime] = useState<string | null>(null);
@@ -85,8 +87,13 @@ const EmployeeDashboard = () => {
       .single();
 
     if (!error && data) {
-      setHoursBalance(data.balance_minutes);
+      setPreviousBalance(data.balance_minutes);
     }
+  };
+
+  const handleBalanceCalculated = (periodBalance: number) => {
+    setCurrentPeriodBalance(periodBalance);
+    setHoursBalance(previousBalance + periodBalance);
   };
 
   const getNextRecordType = (): TimeRecordType => {
@@ -223,14 +230,14 @@ const EmployeeDashboard = () => {
 
         {/* Right column */}
         <div className="space-y-6">
-          <HoursBalanceCard balanceMinutes={hoursBalance} />
+          <HoursBalanceCard balanceMinutes={hoursBalance} previousPeriod={previousBalance} currentPeriod={currentPeriodBalance} />
           <TodayScheduleCard />
         </div>
       </div>
 
       {/* Monthly timesheet */}
       <div className="mt-6">
-        <MonthlyTimesheetCard />
+        <MonthlyTimesheetCard onBalanceCalculated={handleBalanceCalculated} />
       </div>
 
       {/* Location map dialog */}
