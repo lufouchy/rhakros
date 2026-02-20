@@ -216,31 +216,37 @@ const MonthlyTimesheetCard = ({ onBalanceCalculated }: MonthlyTimesheetCardProps
       const lunchIn = dayRecords.find(r => r.record_type === 'lunch_in');
       const exit = dayRecords.find(r => r.record_type === 'exit');
 
-      let workedMinutes = 0;
-      if (entry && lunchOut) {
-        workedMinutes += differenceInMinutes(new Date(lunchOut.recorded_at), new Date(entry.recorded_at));
-      }
-      if (lunchIn && exit) {
-        workedMinutes += differenceInMinutes(new Date(exit.recorded_at), new Date(lunchIn.recorded_at));
-      }
-
       const expectedMinutesForDay = expectedHours[dayOfWeek] ?? 0;
       const absence = absences.get(dateStr);
       const hasAdjustment = adjustments.has(dateStr);
+      const isToday = format(day, 'yyyy-MM-dd') === format(now, 'yyyy-MM-dd');
+      const isPastDay = dayStart < now && !isToday;
 
+      // Check for inconsistency: has records but fewer than 4 (only for past days)
+      const hasInconsistency = isPastDay && dayRecords.length > 0 && dayRecords.length < 4 && !absence;
+
+      let workedMinutes = 0;
       let balanceMinutes = 0;
-      if (absence) {
-        // Only falta and suspensão generate negative balance
+
+      if (hasInconsistency) {
+        // Don't calculate hours for inconsistent days
+        workedMinutes = 0;
+        balanceMinutes = 0;
+      } else if (absence) {
         if (NEGATIVE_BALANCE_TYPES.includes(absence.type)) {
           balanceMinutes = -expectedMinutesForDay;
         }
-        // All other absences: balance = 0 (justified)
-      } else if (workedMinutes > 0) {
-        balanceMinutes = workedMinutes - expectedMinutesForDay;
-      } else if (expectedMinutesForDay > 0 && dayStart < now) {
-        // No records and not today - missed day (but only if before today)
-        const isToday = format(day, 'yyyy-MM-dd') === format(now, 'yyyy-MM-dd');
-        if (!isToday) {
+      } else {
+        if (entry && lunchOut) {
+          workedMinutes += differenceInMinutes(new Date(lunchOut.recorded_at), new Date(entry.recorded_at));
+        }
+        if (lunchIn && exit) {
+          workedMinutes += differenceInMinutes(new Date(exit.recorded_at), new Date(lunchIn.recorded_at));
+        }
+
+        if (workedMinutes > 0) {
+          balanceMinutes = workedMinutes - expectedMinutesForDay;
+        } else if (expectedMinutesForDay > 0 && isPastDay) {
           balanceMinutes = -expectedMinutesForDay;
         }
       }
@@ -258,6 +264,7 @@ const MonthlyTimesheetCard = ({ onBalanceCalculated }: MonthlyTimesheetCardProps
         hasRecords: dayRecords.length > 0,
         absence,
         hasAdjustment,
+        hasInconsistency,
       };
     });
   }, [records, monthStart, monthEnd, absences, adjustments, expectedHours]);
@@ -320,6 +327,18 @@ const MonthlyTimesheetCard = ({ onBalanceCalculated }: MonthlyTimesheetCardProps
                     <TableCell className="tabular-nums py-1 text-xs">{day.exit || '-'}</TableCell>
                     <TableCell className="py-1 text-xs">
                       <div className="flex items-center gap-1">
+                        {day.hasInconsistency && (
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <Badge variant="destructive" className="text-[9px] h-4 px-1">
+                                Inconsistência
+                              </Badge>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p className="text-xs">Menos de 4 marcações registradas</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
                         {day.absence && (
                           <Badge variant="secondary" className="text-[9px] h-4 px-1">
                             {day.absence.label}
