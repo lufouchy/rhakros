@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { CalendarIcon, Plus, Pencil, Trash2, MapPin, Loader2 } from 'lucide-react';
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, startOfMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 
@@ -358,7 +358,8 @@ const HolidaysCalendar = () => {
                 month={calendarMonth}
                 onMonthChange={setCalendarMonth}
               numberOfMonths={1}
-              className="rounded-md border pointer-events-auto"
+                className="rounded-md border pointer-events-auto"
+                locale={ptBR}
               modifiers={{
                 holiday: holidayDates
               }}
