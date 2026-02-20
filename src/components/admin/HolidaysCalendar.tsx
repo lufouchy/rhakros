@@ -61,6 +61,7 @@ const HolidaysCalendar = () => {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
+    setCalendarMonth(new Date(selectedYear, 0));
     fetchCompanyLocation();
     fetchHolidays();
   }, [selectedYear]);
@@ -200,6 +201,7 @@ const HolidaysCalendar = () => {
     }
   };
 
+  const [calendarMonth, setCalendarMonth] = useState(new Date(selectedYear, 0));
   const holidayDates = holidays.map(h => parseISO(h.date));
 
   const years = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() + i - 1);
@@ -350,10 +352,11 @@ const HolidaysCalendar = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="flex justify-center">
-            <Calendar
-              mode="multiple"
-              selected={holidayDates}
-              month={new Date(selectedYear, 0)}
+              <Calendar
+                mode="multiple"
+                selected={holidayDates}
+                month={calendarMonth}
+                onMonthChange={setCalendarMonth}
               numberOfMonths={1}
               className="rounded-md border pointer-events-auto"
               modifiers={{
