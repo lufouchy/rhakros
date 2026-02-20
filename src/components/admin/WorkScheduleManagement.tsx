@@ -370,7 +370,7 @@ const WorkScheduleManagement = () => {
               Nova Jornada
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-xl">
+          <DialogContent className="max-w-xl max-h-[85vh] flex flex-col">
             <DialogHeader>
               <DialogTitle>
                 {editingSchedule ? 'Editar Jornada' : 'Nova Jornada'}
@@ -382,7 +382,7 @@ const WorkScheduleManagement = () => {
               </DialogDescription>
             </DialogHeader>
 
-            <div className="space-y-4 pt-4">
+            <div className="space-y-4 pt-4 overflow-y-auto flex-1 pr-2">
               <div className="space-y-2">
                 <Label htmlFor="schedule_name">Nome da Jornada *</Label>
                 <Input
