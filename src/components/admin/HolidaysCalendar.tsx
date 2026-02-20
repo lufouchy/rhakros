@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,9 +12,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { CalendarIcon, Plus, Pencil, Trash2, MapPin, Loader2 } from 'lucide-react';
-import { format, parseISO, startOfMonth } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { getStateHolidaysForYear, getMunicipalHolidaysForYear } from '@/utils/brazilianHolidays';
 
 interface Holiday {
   id: string;
@@ -60,6 +61,52 @@ const HolidaysCalendar = () => {
   });
   const [saving, setSaving] = useState(false);
 
+  const autoPopulateRegionalHolidays = useCallback(async (state: string | null, city: string | null, year: number, existingHolidays: Holiday[]) => {
+    if (!state && !city) return;
+
+    // Get organization_id
+    const { data: userData } = await supabase.auth.getUser();
+    if (!userData.user) return;
+    const { data: profileData } = await supabase
+      .from('profiles')
+      .select('organization_id')
+      .eq('user_id', userData.user.id)
+      .single();
+    if (!profileData?.organization_id) return;
+
+    const existingDates = new Set(existingHolidays.map(h => h.date));
+    const toInsert: any[] = [];
+
+    // State holidays
+    if (state) {
+      const stateHols = getStateHolidaysForYear(state, year);
+      for (const h of stateHols) {
+        if (!existingDates.has(h.date)) {
+          toInsert.push({ ...h, organization_id: profileData.organization_id, state_code: state });
+        }
+      }
+    }
+
+    // Municipal holidays
+    if (city) {
+      const municipalHols = getMunicipalHolidaysForYear(city, year);
+      for (const h of municipalHols) {
+        if (!existingDates.has(h.date)) {
+          toInsert.push({ ...h, organization_id: profileData.organization_id, city_name: city.toUpperCase() });
+        }
+      }
+    }
+
+    if (toInsert.length > 0) {
+      const { error } = await supabase.from('holidays').insert(toInsert);
+      if (error) {
+        console.error('Error auto-populating holidays:', error);
+      }
+      return toInsert.length;
+    }
+    return 0;
+  }, []);
+
   useEffect(() => {
     setCalendarMonth(new Date(selectedYear, 0));
     fetchCompanyLocation();
@@ -100,9 +147,41 @@ const HolidaysCalendar = () => {
         description: error.message,
         variant: 'destructive'
       });
-    } else {
-      setHolidays((data || []) as Holiday[]);
+      setLoading(false);
+      return;
     }
+
+    const currentHolidays = (data || []) as Holiday[];
+    
+    // Auto-populate state/municipal holidays if company location is set
+    const { data: companyData } = await supabase
+      .from('company_info')
+      .select('address_state, address_city')
+      .limit(1)
+      .maybeSingle();
+
+    if (companyData?.address_state || companyData?.address_city) {
+      const inserted = await autoPopulateRegionalHolidays(
+        companyData.address_state,
+        companyData.address_city,
+        selectedYear,
+        currentHolidays
+      );
+      if (inserted && inserted > 0) {
+        // Re-fetch to get the newly inserted holidays
+        const { data: updatedData } = await supabase
+          .from('holidays')
+          .select('*')
+          .gte('date', startDate)
+          .lte('date', endDate)
+          .order('date', { ascending: true });
+        setHolidays((updatedData || []) as Holiday[]);
+        setLoading(false);
+        return;
+      }
+    }
+
+    setHolidays(currentHolidays);
     setLoading(false);
   };
 
