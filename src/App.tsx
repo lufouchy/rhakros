@@ -15,6 +15,7 @@ import VacationManagement from "./pages/VacationManagement";
 import EmployeeProfile from "./pages/EmployeeProfile";
 import EmployeeManagement from "./pages/EmployeeManagement";
 import AdminSettings from "./pages/AdminSettings";
+import ManagementReports from "./pages/ManagementReports";
 import WorkSchedulesPage from "./pages/WorkSchedulesPage";
 import InstitutionalInfo from "./pages/InstitutionalInfo";
 import EmployeeVacation from "./pages/EmployeeVacation";
@@ -42,6 +43,7 @@ const App = () => (
             <Route path="/profile" element={<EmployeeProfile />} />
             <Route path="/employees" element={<AdminRoute><EmployeeManagement /></AdminRoute>} />
             <Route path="/schedules" element={<AdminRoute><WorkSchedulesPage /></AdminRoute>} />
+            <Route path="/reports" element={<AdminRoute><ManagementReports /></AdminRoute>} />
             <Route path="/settings" element={<AdminRoute><AdminSettings /></AdminRoute>} />
             <Route path="/institutional" element={<AdminRoute><InstitutionalInfo /></AdminRoute>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
