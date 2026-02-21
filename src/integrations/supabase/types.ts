@@ -600,6 +600,8 @@ export type Database = {
           payment_saturday_percent: number | null
           payment_sunday_percent: number | null
           payment_weekday_percent: number | null
+          schedule_flexibility_mode: string
+          tolerance_entry_minutes: number
           tolerance_minutes: number
           updated_at: string
         }
@@ -627,6 +629,8 @@ export type Database = {
           payment_saturday_percent?: number | null
           payment_sunday_percent?: number | null
           payment_weekday_percent?: number | null
+          schedule_flexibility_mode?: string
+          tolerance_entry_minutes?: number
           tolerance_minutes?: number
           updated_at?: string
         }
@@ -654,6 +658,8 @@ export type Database = {
           payment_saturday_percent?: number | null
           payment_sunday_percent?: number | null
           payment_weekday_percent?: number | null
+          schedule_flexibility_mode?: string
+          tolerance_entry_minutes?: number
           tolerance_minutes?: number
           updated_at?: string
         }
@@ -808,6 +814,71 @@ export type Database = {
             columns: ["work_schedule_id"]
             isOneToOne: false
             referencedRelation: "work_schedules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      schedule_adjustments: {
+        Row: {
+          adjustment_type: string
+          created_at: string
+          created_by: string
+          custom_break_end: string | null
+          custom_break_start: string | null
+          custom_end_time: string | null
+          custom_start_time: string | null
+          end_date: string
+          id: string
+          organization_id: string
+          overtime_authorized: boolean
+          overtime_max_minutes: number | null
+          reason: string | null
+          start_date: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          adjustment_type?: string
+          created_at?: string
+          created_by: string
+          custom_break_end?: string | null
+          custom_break_start?: string | null
+          custom_end_time?: string | null
+          custom_start_time?: string | null
+          end_date: string
+          id?: string
+          organization_id: string
+          overtime_authorized?: boolean
+          overtime_max_minutes?: number | null
+          reason?: string | null
+          start_date: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          adjustment_type?: string
+          created_at?: string
+          created_by?: string
+          custom_break_end?: string | null
+          custom_break_start?: string | null
+          custom_end_time?: string | null
+          custom_start_time?: string | null
+          end_date?: string
+          id?: string
+          organization_id?: string
+          overtime_authorized?: boolean
+          overtime_max_minutes?: number | null
+          reason?: string | null
+          start_date?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "schedule_adjustments_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]

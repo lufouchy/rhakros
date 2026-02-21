@@ -5,7 +5,8 @@ import SidebarLayout from '@/components/layout/SidebarLayout';
 import PayrollSettings from '@/components/admin/PayrollSettings';
 import MonthlyClosingPanel from '@/components/admin/MonthlyClosingPanel';
 import HolidaysCalendar from '@/components/admin/HolidaysCalendar';
-import { Settings, Loader2, Calendar, FileText, CalendarDays } from 'lucide-react';
+import ScheduleFlexibilitySettings from '@/components/admin/ScheduleFlexibilitySettings';
+import { Settings, Loader2, Calendar, FileText, CalendarDays, Clock } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const AdminSettings = () => {
@@ -39,11 +40,16 @@ const AdminSettings = () => {
         </div>
 
         <Tabs defaultValue="overtime" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="overtime" className="flex items-center gap-2">
               <Calendar className="h-4 w-4" />
               <span className="hidden sm:inline">Horas Extras</span>
               <span className="sm:hidden">H. Extras</span>
+            </TabsTrigger>
+            <TabsTrigger value="journey" className="flex items-center gap-2">
+              <Clock className="h-4 w-4" />
+              <span className="hidden sm:inline">Jornada</span>
+              <span className="sm:hidden">Jornada</span>
             </TabsTrigger>
             <TabsTrigger value="holidays" className="flex items-center gap-2">
               <CalendarDays className="h-4 w-4" />
@@ -59,6 +65,10 @@ const AdminSettings = () => {
 
           <TabsContent value="overtime" className="space-y-4">
             <PayrollSettings />
+          </TabsContent>
+
+          <TabsContent value="journey" className="space-y-4">
+            <ScheduleFlexibilitySettings />
           </TabsContent>
 
           <TabsContent value="holidays" className="space-y-4">
