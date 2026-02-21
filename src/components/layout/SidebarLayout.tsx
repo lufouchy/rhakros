@@ -17,6 +17,7 @@ import {
   Menu,
   Settings,
   Building2,
+  BarChart3,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -48,6 +49,7 @@ const SidebarLayout = ({ children }: SidebarLayoutProps) => {
         { icon: FileText, label: 'Ajustes de Ponto', path: '/requests' },
         { icon: Palmtree, label: 'Férias', path: '/vacations' },
         { icon: FolderOpen, label: 'Espelhos Ponto', path: '/documents' },
+        { icon: BarChart3, label: 'Relatórios Gerenciais', path: '/reports' },
         { icon: Settings, label: 'Configurações', path: '/settings' },
       ]
     : [
