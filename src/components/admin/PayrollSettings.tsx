@@ -182,75 +182,39 @@ const PayrollSettings = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="grid gap-6 md:grid-cols-2">
-            {/* Cycle Start Day */}
-            <div className="space-y-2">
-              <Label className="flex items-center gap-2">
-                Dia de Início do Ciclo
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger>
-                      <Info className="h-4 w-4 text-muted-foreground" />
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p className="max-w-xs">
-                        Define o dia de fechamento para a folha de pagamento. 
-                        Muitas empresas não fecham no dia 30/31.
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </Label>
-              <Select
-                value={String(settings.cycle_start_day)}
-                onValueChange={(value) => handleChange('cycle_start_day', parseInt(value))}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {cycleStartOptions.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Tolerance */}
-            <div className="space-y-2">
-              <Label className="flex items-center gap-2">
-                Tolerância de Jornada (CLT Art. 58)
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger>
-                      <Info className="h-4 w-4 text-muted-foreground" />
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p className="max-w-xs">
-                        Variações de até 5 minutos no registro de ponto, observando 
-                        o limite máximo de 10 minutos diários, não contam como horas 
-                        extras nem faltas.
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </Label>
-              <div className="flex items-center gap-4">
-                <Slider
-                  value={[settings.tolerance_minutes]}
-                  onValueChange={([value]) => handleChange('tolerance_minutes', value)}
-                  max={30}
-                  min={0}
-                  step={1}
-                  className="flex-1"
-                />
-                <span className="w-16 text-right font-medium">
-                  {settings.tolerance_minutes} min
-                </span>
-              </div>
-            </div>
+          {/* Cycle Start Day */}
+          <div className="space-y-2 max-w-xs">
+            <Label className="flex items-center gap-2">
+              Dia de Início do Ciclo
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger>
+                    <Info className="h-4 w-4 text-muted-foreground" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="max-w-xs">
+                      Define o dia de fechamento para a folha de pagamento. 
+                      Muitas empresas não fecham no dia 30/31.
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </Label>
+            <Select
+              value={String(settings.cycle_start_day)}
+              onValueChange={(value) => handleChange('cycle_start_day', parseInt(value))}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {cycleStartOptions.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </CardContent>
       </Card>

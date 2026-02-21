@@ -193,12 +193,26 @@ const ScheduleFlexibilitySettings = () => {
       {mode === 'tolerance' && (
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
+           <CardTitle className="flex items-center gap-2 text-lg">
               <Timer className="h-5 w-5 text-primary" />
               Tolerância de Entrada/Saída
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="flex items-center gap-2">
               Minutos de antecedência ou atraso permitidos para registrar o ponto
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger>
+                    <Info className="h-4 w-4 text-muted-foreground" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="max-w-xs">
+                      Exemplo: Com 10 minutos de tolerância e jornada das 8h às 17h, o
+                      colaborador pode bater o ponto entre 7:50 e 8:10. Se bater às 8:10,
+                      a saída se ajusta para 17:10 para completar a carga horária.
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -212,9 +226,9 @@ const ScheduleFlexibilitySettings = () => {
                     </TooltipTrigger>
                     <TooltipContent>
                       <p className="max-w-xs">
-                        Exemplo: Com 10 minutos de tolerância e jornada das 8h às 17h, o
-                        colaborador pode bater o ponto entre 7:50 e 8:10. Se bater às 8:10,
-                        a saída se ajusta para 17:10 para completar a carga horária.
+                        Variações de até 5 minutos no registro de ponto, observando o limite
+                        máximo de 10 minutos diários, não contam como horas extras nem faltas.
+                        (Art. 58 da CLT)
                       </p>
                     </TooltipContent>
                   </Tooltip>
