@@ -3,6 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { format, startOfDay, endOfDay } from 'date-fns';
+import { validateSchedulePunch } from '@/utils/scheduleValidation';
 import EmployeeHero from '@/components/employee/EmployeeHero';
 import TodayRecordsCard from '@/components/employee/TodayRecordsCard';
 import HoursBalanceCard from '@/components/employee/HoursBalanceCard';
@@ -125,6 +126,18 @@ const EmployeeDashboard = () => {
     }
 
     setIsRegistering(true);
+
+    // Validate schedule before allowing punch
+    const scheduleResult = await validateSchedulePunch(user!.id);
+    if (!scheduleResult.allowed) {
+      toast({
+        variant: 'destructive',
+        title: 'Ponto bloqueado',
+        description: scheduleResult.message || 'Você está fora da sua jornada de trabalho.',
+      });
+      setIsRegistering(false);
+      return;
+    }
     
     // Validate location before allowing punch
     const locationResult = await validateLocation();
