@@ -7,8 +7,9 @@ import { Download, Users, UserCheck, UserX, Loader2 } from 'lucide-react';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { toast } from '@/hooks/use-toast';
 import { exportReportToPDF, exportReportToExcel } from '@/utils/reportExport';
+import { differenceInYears, differenceInMonths, parseISO } from 'date-fns';
 
-const COLORS = ['hsl(var(--primary))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))'];
+const BRAND_COLORS = ['#023047', '#219EBC', '#8ECAE6', '#FFB703', '#FB8500'];
 
 const EmployeeReportsTab = () => {
   const { organizationId } = useAuth();
@@ -33,7 +34,6 @@ const EmployeeReportsTab = () => {
 
   if (loading) return <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
 
-  // Stats
   const total = employees.length;
   const active = employees.filter(e => e.status === 'ativo').length;
   const away = employees.filter(e => e.status === 'afastado').length;
@@ -58,6 +58,40 @@ const EmployeeReportsTab = () => {
     scheduleMap[name] = (scheduleMap[name] || 0) + 1;
   });
   const scheduleData = Object.entries(scheduleMap).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
+
+  // Age distribution
+  const ageBuckets: Record<string, number> = { '18-25': 0, '26-35': 0, '36-45': 0, '46-55': 0, '56+': 0 };
+  employees.forEach(e => {
+    if (!e.birth_date) return;
+    const age = differenceInYears(new Date(), parseISO(e.birth_date));
+    if (age <= 25) ageBuckets['18-25']++;
+    else if (age <= 35) ageBuckets['26-35']++;
+    else if (age <= 45) ageBuckets['36-45']++;
+    else if (age <= 55) ageBuckets['46-55']++;
+    else ageBuckets['56+']++;
+  });
+  const ageData = Object.entries(ageBuckets).filter(([, v]) => v > 0).map(([name, value]) => ({ name, value }));
+
+  // Tenure distribution
+  const tenureBuckets: Record<string, number> = { '< 1 ano': 0, '1-3 anos': 0, '3-5 anos': 0, '5-10 anos': 0, '10+ anos': 0 };
+  employees.forEach(e => {
+    if (!e.hire_date) return;
+    const months = differenceInMonths(new Date(), parseISO(e.hire_date));
+    if (months < 12) tenureBuckets['< 1 ano']++;
+    else if (months < 36) tenureBuckets['1-3 anos']++;
+    else if (months < 60) tenureBuckets['3-5 anos']++;
+    else if (months < 120) tenureBuckets['5-10 anos']++;
+    else tenureBuckets['10+ anos']++;
+  });
+  const tenureData = Object.entries(tenureBuckets).filter(([, v]) => v > 0).map(([name, value]) => ({ name, value }));
+
+  // Gender — inferred from specification or a simple heuristic (not available in schema, so we show if data exists)
+  // Since there's no gender field, we skip this or show placeholder
+  // For now, we'll omit gender chart since no field exists in profiles
+
+  const renderCustomLabel = ({ name, percent }: any) => {
+    return `${(percent * 100).toFixed(0)}%`;
+  };
 
   const handleExportPDF = () => {
     exportReportToPDF({
@@ -93,31 +127,29 @@ const EmployeeReportsTab = () => {
 
   return (
     <div className="space-y-6">
-      {/* Export buttons */}
       <div className="flex gap-2 justify-end">
         <Button variant="outline" size="sm" onClick={handleExportPDF}><Download className="h-4 w-4 mr-2" />PDF</Button>
         <Button variant="outline" size="sm" onClick={handleExportExcel}><Download className="h-4 w-4 mr-2" />Excel</Button>
       </div>
 
-      {/* KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card><CardContent className="pt-6 text-center"><Users className="h-8 w-8 mx-auto text-primary mb-2" /><p className="text-2xl font-bold">{total}</p><p className="text-sm text-muted-foreground">Total</p></CardContent></Card>
-        <Card><CardContent className="pt-6 text-center"><UserCheck className="h-8 w-8 mx-auto text-green-600 mb-2" /><p className="text-2xl font-bold">{active}</p><p className="text-sm text-muted-foreground">Ativos</p></CardContent></Card>
-        <Card><CardContent className="pt-6 text-center"><UserX className="h-8 w-8 mx-auto text-yellow-600 mb-2" /><p className="text-2xl font-bold">{away}</p><p className="text-sm text-muted-foreground">Afastados</p></CardContent></Card>
-        <Card><CardContent className="pt-6 text-center"><UserX className="h-8 w-8 mx-auto text-red-600 mb-2" /><p className="text-2xl font-bold">{inactive}</p><p className="text-sm text-muted-foreground">Inativos</p></CardContent></Card>
+        <Card><CardContent className="pt-6 text-center"><Users className="h-8 w-8 mx-auto mb-2" style={{ color: '#023047' }} /><p className="text-2xl font-bold">{total}</p><p className="text-sm text-muted-foreground">Total</p></CardContent></Card>
+        <Card><CardContent className="pt-6 text-center"><UserCheck className="h-8 w-8 mx-auto mb-2" style={{ color: '#219EBC' }} /><p className="text-2xl font-bold">{active}</p><p className="text-sm text-muted-foreground">Ativos</p></CardContent></Card>
+        <Card><CardContent className="pt-6 text-center"><UserX className="h-8 w-8 mx-auto mb-2" style={{ color: '#FFB703' }} /><p className="text-2xl font-bold">{away}</p><p className="text-sm text-muted-foreground">Afastados</p></CardContent></Card>
+        <Card><CardContent className="pt-6 text-center"><UserX className="h-8 w-8 mx-auto mb-2" style={{ color: '#FB8500' }} /><p className="text-2xl font-bold">{inactive}</p><p className="text-sm text-muted-foreground">Inativos</p></CardContent></Card>
       </div>
 
-      {/* Charts */}
       <div className="grid md:grid-cols-2 gap-6">
         <Card>
           <CardHeader><CardTitle className="text-base">Distribuição por Status</CardTitle></CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={250}>
+            <ResponsiveContainer width="100%" height={280}>
               <PieChart>
-                <Pie data={statusData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
-                  {statusData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                <Pie data={statusData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label={renderCustomLabel} labelLine={true}>
+                  {statusData.map((_, i) => <Cell key={i} fill={BRAND_COLORS[i % BRAND_COLORS.length]} />)}
                 </Pie>
                 <Tooltip />
+                <Legend />
               </PieChart>
             </ResponsiveContainer>
           </CardContent>
@@ -126,13 +158,13 @@ const EmployeeReportsTab = () => {
         <Card>
           <CardHeader><CardTitle className="text-base">Colaboradores por Setor</CardTitle></CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={250}>
+            <ResponsiveContainer width="100%" height={280}>
               <BarChart data={sectorData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="name" tick={{ fontSize: 11 }} />
                 <YAxis allowDecimals={false} />
                 <Tooltip />
-                <Bar dataKey="value" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="value" fill="#219EBC" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -147,11 +179,46 @@ const EmployeeReportsTab = () => {
                 <XAxis type="number" allowDecimals={false} />
                 <YAxis dataKey="name" type="category" width={150} tick={{ fontSize: 11 }} />
                 <Tooltip />
-                <Bar dataKey="value" fill="hsl(var(--chart-2))" radius={[0, 4, 4, 0]} />
+                <Bar dataKey="value" fill="#8ECAE6" radius={[0, 4, 4, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
+
+        {/* Demographics */}
+        {ageData.length > 0 && (
+          <Card>
+            <CardHeader><CardTitle className="text-base">Faixa Etária</CardTitle></CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={280}>
+                <BarChart data={ageData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+                  <YAxis allowDecimals={false} />
+                  <Tooltip />
+                  <Bar dataKey="value" fill="#FFB703" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        )}
+
+        {tenureData.length > 0 && (
+          <Card>
+            <CardHeader><CardTitle className="text-base">Tempo de Empresa</CardTitle></CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={280}>
+                <BarChart data={tenureData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+                  <YAxis allowDecimals={false} />
+                  <Tooltip />
+                  <Bar dataKey="value" fill="#FB8500" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );
