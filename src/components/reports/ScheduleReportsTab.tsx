@@ -4,12 +4,12 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Download, Loader2, Clock, Calendar, AlertTriangle } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import { toast } from '@/hooks/use-toast';
 import { exportReportToPDF, exportReportToExcel } from '@/utils/reportExport';
-import { format, parseISO, isAfter } from 'date-fns';
+import { isAfter, parseISO } from 'date-fns';
 
-const COLORS = ['hsl(var(--primary))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))'];
+const BRAND_COLORS = ['#023047', '#219EBC', '#8ECAE6', '#FFB703', '#FB8500'];
 
 const ScheduleReportsTab = () => {
   const { organizationId } = useAuth();
@@ -43,7 +43,6 @@ const ScheduleReportsTab = () => {
   const tempChanges = adjustments.filter(a => a.adjustment_type === 'temporary_change');
   const noSchedule = employees.filter(e => !e.work_schedule_id).length;
 
-  // Schedule type distribution
   const typeMap: Record<string, number> = {};
   schedules.forEach(s => {
     const type = s.schedule_type === 'weekly' ? 'Semanal' : s.schedule_type === 'shift' ? 'Escala' : s.schedule_type;
@@ -51,11 +50,12 @@ const ScheduleReportsTab = () => {
   });
   const typeData = Object.entries(typeMap).map(([name, value]) => ({ name, value }));
 
-  // Employees per schedule
   const scheduleDistribution = schedules.map(s => ({
     name: s.name,
     value: employees.filter(e => e.work_schedule_id === s.id).length,
   })).sort((a, b) => b.value - a.value);
+
+  const renderCustomLabel = ({ percent }: any) => `${(percent * 100).toFixed(0)}%`;
 
   const handleExportPDF = () => {
     exportReportToPDF({
@@ -104,22 +104,23 @@ const ScheduleReportsTab = () => {
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card><CardContent className="pt-6 text-center"><Clock className="h-8 w-8 mx-auto text-primary mb-2" /><p className="text-2xl font-bold">{schedules.length}</p><p className="text-sm text-muted-foreground">Jornadas</p></CardContent></Card>
-        <Card><CardContent className="pt-6 text-center"><Calendar className="h-8 w-8 mx-auto text-blue-600 mb-2" /><p className="text-2xl font-bold">{activeAdj.length}</p><p className="text-sm text-muted-foreground">Ajustes Ativos</p></CardContent></Card>
-        <Card><CardContent className="pt-6 text-center"><Clock className="h-8 w-8 mx-auto text-green-600 mb-2" /><p className="text-2xl font-bold">{overtimeAuth.length}</p><p className="text-sm text-muted-foreground">Autorizações HE</p></CardContent></Card>
-        <Card><CardContent className="pt-6 text-center"><AlertTriangle className="h-8 w-8 mx-auto text-yellow-600 mb-2" /><p className="text-2xl font-bold">{noSchedule}</p><p className="text-sm text-muted-foreground">Sem Jornada</p></CardContent></Card>
+        <Card><CardContent className="pt-6 text-center"><Clock className="h-8 w-8 mx-auto mb-2" style={{ color: '#023047' }} /><p className="text-2xl font-bold">{schedules.length}</p><p className="text-sm text-muted-foreground">Jornadas</p></CardContent></Card>
+        <Card><CardContent className="pt-6 text-center"><Calendar className="h-8 w-8 mx-auto mb-2" style={{ color: '#219EBC' }} /><p className="text-2xl font-bold">{activeAdj.length}</p><p className="text-sm text-muted-foreground">Ajustes Ativos</p></CardContent></Card>
+        <Card><CardContent className="pt-6 text-center"><Clock className="h-8 w-8 mx-auto mb-2" style={{ color: '#FFB703' }} /><p className="text-2xl font-bold">{overtimeAuth.length}</p><p className="text-sm text-muted-foreground">Autorizações HE</p></CardContent></Card>
+        <Card><CardContent className="pt-6 text-center"><AlertTriangle className="h-8 w-8 mx-auto mb-2" style={{ color: '#FB8500' }} /><p className="text-2xl font-bold">{noSchedule}</p><p className="text-sm text-muted-foreground">Sem Jornada</p></CardContent></Card>
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
         <Card>
           <CardHeader><CardTitle className="text-base">Tipos de Jornada</CardTitle></CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={250}>
+            <ResponsiveContainer width="100%" height={280}>
               <PieChart>
-                <Pie data={typeData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
-                  {typeData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                <Pie data={typeData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label={renderCustomLabel} labelLine={true}>
+                  {typeData.map((_, i) => <Cell key={i} fill={BRAND_COLORS[i % BRAND_COLORS.length]} />)}
                 </Pie>
                 <Tooltip />
+                <Legend />
               </PieChart>
             </ResponsiveContainer>
           </CardContent>
@@ -128,13 +129,13 @@ const ScheduleReportsTab = () => {
         <Card>
           <CardHeader><CardTitle className="text-base">Colaboradores por Jornada</CardTitle></CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={250}>
+            <ResponsiveContainer width="100%" height={280}>
               <BarChart data={scheduleDistribution}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="name" tick={{ fontSize: 11 }} />
                 <YAxis allowDecimals={false} />
                 <Tooltip />
-                <Bar dataKey="value" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="value" fill="#219EBC" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>

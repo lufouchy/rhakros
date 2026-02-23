@@ -10,7 +10,7 @@ import { exportReportToPDF, exportReportToExcel } from '@/utils/reportExport';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
-const COLORS = ['hsl(var(--primary))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))'];
+const BRAND_COLORS = ['#023047', '#219EBC', '#8ECAE6', '#FFB703', '#FB8500'];
 
 const OvertimeReportsTab = () => {
   const { organizationId } = useAuth();
@@ -45,7 +45,6 @@ const OvertimeReportsTab = () => {
 
   const fmtHours = (min: number) => `${Math.floor(Math.abs(min) / 60)}h${String(Math.abs(min) % 60).padStart(2, '0')}`;
 
-  // Destination distribution
   const destMap: Record<string, number> = {};
   decisions.forEach(d => { destMap[d.destination] = (destMap[d.destination] || 0) + 1; });
   const destData = Object.entries(destMap).map(([name, value]) => ({
@@ -53,7 +52,6 @@ const OvertimeReportsTab = () => {
     value,
   }));
 
-  // Monthly overtime trend (last 6 months)
   const monthlyMap: Record<string, number> = {};
   decisions.forEach(d => {
     if (d.reference_month) {
@@ -65,12 +63,13 @@ const OvertimeReportsTab = () => {
   });
   const monthlyData = Object.entries(monthlyMap).slice(-6).map(([name, value]) => ({ name, hours: +(value / 60).toFixed(1) }));
 
-  // Top employees by overtime
   const empOvertimeMap: Record<string, number> = {};
   decisions.forEach(d => { empOvertimeMap[d.user_id] = (empOvertimeMap[d.user_id] || 0) + (d.overtime_minutes || 0); });
   const topEmployees = Object.entries(empOvertimeMap)
     .map(([userId, min]) => ({ name: employees.find(e => e.user_id === userId)?.full_name || 'Desconhecido', hours: +(min / 60).toFixed(1) }))
     .sort((a, b) => b.hours - a.hours).slice(0, 10);
+
+  const renderCustomLabel = ({ percent }: any) => `${(percent * 100).toFixed(0)}%`;
 
   const handleExportPDF = () => {
     exportReportToPDF({
@@ -127,22 +126,23 @@ const OvertimeReportsTab = () => {
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card><CardContent className="pt-6 text-center"><TrendingUp className="h-8 w-8 mx-auto text-primary mb-2" /><p className="text-2xl font-bold">{fmtHours(totalOvertimeMin)}</p><p className="text-sm text-muted-foreground">Total HE</p></CardContent></Card>
-        <Card><CardContent className="pt-6 text-center"><Clock className="h-8 w-8 mx-auto text-blue-600 mb-2" /><p className="text-2xl font-bold">{fmtHours(totalBankMin)}</p><p className="text-sm text-muted-foreground">Banco de Horas</p></CardContent></Card>
-        <Card><CardContent className="pt-6 text-center"><Wallet className="h-8 w-8 mx-auto text-green-600 mb-2" /><p className="text-2xl font-bold">{fmtHours(totalPaymentMin)}</p><p className="text-sm text-muted-foreground">Pagamento</p></CardContent></Card>
-        <Card><CardContent className="pt-6 text-center"><Clock className="h-8 w-8 mx-auto text-orange-600 mb-2" /><p className="text-2xl font-bold">{fmtHours(totalBalanceMin)}</p><p className="text-sm text-muted-foreground">Saldo Total</p></CardContent></Card>
+        <Card><CardContent className="pt-6 text-center"><TrendingUp className="h-8 w-8 mx-auto mb-2" style={{ color: '#023047' }} /><p className="text-2xl font-bold">{fmtHours(totalOvertimeMin)}</p><p className="text-sm text-muted-foreground">Total HE</p></CardContent></Card>
+        <Card><CardContent className="pt-6 text-center"><Clock className="h-8 w-8 mx-auto mb-2" style={{ color: '#219EBC' }} /><p className="text-2xl font-bold">{fmtHours(totalBankMin)}</p><p className="text-sm text-muted-foreground">Banco de Horas</p></CardContent></Card>
+        <Card><CardContent className="pt-6 text-center"><Wallet className="h-8 w-8 mx-auto mb-2" style={{ color: '#FFB703' }} /><p className="text-2xl font-bold">{fmtHours(totalPaymentMin)}</p><p className="text-sm text-muted-foreground">Pagamento</p></CardContent></Card>
+        <Card><CardContent className="pt-6 text-center"><Clock className="h-8 w-8 mx-auto mb-2" style={{ color: '#FB8500' }} /><p className="text-2xl font-bold">{fmtHours(totalBalanceMin)}</p><p className="text-sm text-muted-foreground">Saldo Total</p></CardContent></Card>
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
         <Card>
           <CardHeader><CardTitle className="text-base">Destino das Horas Extras</CardTitle></CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={250}>
+            <ResponsiveContainer width="100%" height={280}>
               <PieChart>
-                <Pie data={destData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
-                  {destData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                <Pie data={destData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label={renderCustomLabel} labelLine={true}>
+                  {destData.map((_, i) => <Cell key={i} fill={BRAND_COLORS[i % BRAND_COLORS.length]} />)}
                 </Pie>
                 <Tooltip />
+                <Legend />
               </PieChart>
             </ResponsiveContainer>
           </CardContent>
@@ -151,13 +151,13 @@ const OvertimeReportsTab = () => {
         <Card>
           <CardHeader><CardTitle className="text-base">Evolução Mensal de HE (horas)</CardTitle></CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={250}>
+            <ResponsiveContainer width="100%" height={280}>
               <BarChart data={monthlyData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="name" tick={{ fontSize: 11 }} />
                 <YAxis />
                 <Tooltip />
-                <Bar dataKey="hours" fill="hsl(var(--chart-2))" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="hours" fill="#219EBC" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -173,7 +173,7 @@ const OvertimeReportsTab = () => {
                   <XAxis type="number" />
                   <YAxis dataKey="name" type="category" width={150} tick={{ fontSize: 11 }} />
                   <Tooltip formatter={(v: number) => `${v}h`} />
-                  <Bar dataKey="hours" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
+                  <Bar dataKey="hours" fill="#023047" radius={[0, 4, 4, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
