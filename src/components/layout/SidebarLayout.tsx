@@ -40,20 +40,23 @@ const SidebarLayout = ({ children }: SidebarLayoutProps) => {
   const [collapsed, setCollapsed] = useState(false);
 
   const isAdmin = userRole === 'admin' || userRole === 'suporte';
+  const isSuporte = userRole === 'suporte';
+
+  const adminItems = [
+    { icon: Home, label: 'Início', path: '/' },
+    { icon: Building2, label: 'Informações Institucionais', path: '/institutional' },
+    { icon: Users, label: 'Cadastro de Colaborador', path: '/employees' },
+    { icon: Clock, label: 'Gestão de Jornada', path: '/schedules' },
+    { icon: FileText, label: 'Ajustes de Ponto', path: '/requests' },
+    { icon: Palmtree, label: 'Férias', path: '/vacations' },
+    { icon: FolderOpen, label: 'Espelhos Ponto', path: '/documents' },
+    { icon: BarChart3, label: 'Relatórios Gerenciais', path: '/reports' },
+    ...(isSuporte ? [{ icon: DatabaseBackup, label: 'Exporta', path: '/exporta' }] : []),
+    { icon: Settings, label: 'Configurações', path: '/settings' },
+  ];
 
   const navItems = isAdmin
-    ? [
-        { icon: Home, label: 'Início', path: '/' },
-        { icon: Building2, label: 'Informações Institucionais', path: '/institutional' },
-        { icon: Users, label: 'Cadastro de Colaborador', path: '/employees' },
-        { icon: Clock, label: 'Gestão de Jornada', path: '/schedules' },
-        { icon: FileText, label: 'Ajustes de Ponto', path: '/requests' },
-        { icon: Palmtree, label: 'Férias', path: '/vacations' },
-        { icon: FolderOpen, label: 'Espelhos Ponto', path: '/documents' },
-        { icon: BarChart3, label: 'Relatórios Gerenciais', path: '/reports' },
-        { icon: DatabaseBackup, label: 'Exporta', path: '/exporta' },
-        { icon: Settings, label: 'Configurações', path: '/settings' },
-      ]
+    ? adminItems
     : [
         { icon: Home, label: 'Início', path: '/' },
         { icon: Users, label: 'Meu Perfil', path: '/profile' },
