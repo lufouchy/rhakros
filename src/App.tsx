@@ -47,6 +47,7 @@ const App = () => (
             <Route path="/reports" element={<AdminRoute><ManagementReports /></AdminRoute>} />
             <Route path="/settings" element={<AdminRoute><AdminSettings /></AdminRoute>} />
             <Route path="/data-export" element={<AdminRoute><DataExport /></AdminRoute>} />
+            <Route path="/exporta" element={<AdminRoute><DataExport /></AdminRoute>} />
             <Route path="/institutional" element={<AdminRoute><InstitutionalInfo /></AdminRoute>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
