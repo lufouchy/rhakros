@@ -51,7 +51,7 @@ const SidebarLayout = ({ children }: SidebarLayoutProps) => {
         { icon: Palmtree, label: 'Férias', path: '/vacations' },
         { icon: FolderOpen, label: 'Espelhos Ponto', path: '/documents' },
         { icon: BarChart3, label: 'Relatórios Gerenciais', path: '/reports' },
-        { icon: DatabaseBackup, label: 'Exportar Dados', path: '/data-export' },
+        { icon: DatabaseBackup, label: 'Exportar', path: '/data-export' },
         { icon: Settings, label: 'Configurações', path: '/settings' },
       ]
     : [
