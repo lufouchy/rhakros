@@ -12,6 +12,7 @@ import RequestsPage from "./pages/RequestsPage";
 import TimesheetPage from "./pages/TimesheetPage";
 import DocumentManagement from "./pages/DocumentManagement";
 import VacationManagement from "./pages/VacationManagement";
+import DataExport from "./pages/DataExport";
 import EmployeeProfile from "./pages/EmployeeProfile";
 import EmployeeManagement from "./pages/EmployeeManagement";
 import AdminSettings from "./pages/AdminSettings";
@@ -45,6 +46,7 @@ const App = () => (
             <Route path="/schedules" element={<AdminRoute><WorkSchedulesPage /></AdminRoute>} />
             <Route path="/reports" element={<AdminRoute><ManagementReports /></AdminRoute>} />
             <Route path="/settings" element={<AdminRoute><AdminSettings /></AdminRoute>} />
+            <Route path="/data-export" element={<AdminRoute><DataExport /></AdminRoute>} />
             <Route path="/institutional" element={<AdminRoute><InstitutionalInfo /></AdminRoute>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
